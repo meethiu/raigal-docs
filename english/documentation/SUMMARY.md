@@ -1,0 +1,16 @@
+# Table of contents
+
+* [Welcome to Raigal](README.md)
+* [Installation](installation.md)
+* [Quickstart](quickstart.md)
+* [First Client Setup](first-client-setup.md)
+* [Scoring Engine](scoring-engine.md)
+* [Rules & Detection Engines](rules-and-detection-engines.md)
+* [Security Model & Credentials](security-model-and-credentials.md)
+* [CLI Commands & Flags](cli-commands-and-flags.md)
+* [Configuration](configuration.md)
+* [Agent Real-Time Hooks](agent-real-time-hooks.md)
+* [CI/CD Pipelines & GitHub Actions](ci-cd-pipelines-and-github-actions.md)
+* [Automated Agent Repairs](automated-agent-repairs.md)
+* [Raigal Cloud Architecture](raigal-cloud-architecture.md)
+* [Admin API & Licensing](admin-api-and-licensing.md)
