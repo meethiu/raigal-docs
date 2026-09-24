@@ -1,6 +1,31 @@
-# GitBook site-wide configuration
-spaces:
-  en:
-    path: docs/en
-  es:
-    path: docs/es
+$schema: https://api.gitbook.com/gitbook-docs.yaml
+site:
+  title: Raigal Docs
+  structure:
+    - type: section
+      key: section-1
+      title: English
+      path: english
+      icon: book-open
+      default: true
+      children:
+        - type: space
+          key: space-1
+          title: English
+          path: documentation
+          default: true
+          content:
+            directory: ./english/documentation
+    - type: section
+      key: section-2
+      title: Español
+      path: espanol
+      icon: language
+      children:
+        - type: space
+          key: space-2
+          title: Español
+          path: documentacion-espanol
+          default: true
+          content:
+            directory: ./espanol/documentacion-espanol
