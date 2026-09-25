@@ -1,95 +1,120 @@
 ---
-description: "Architecture of Raigal Cloud backend, Heroku services, Clerk auth, GitHub App integration, and PostgreSQL database."
+description: "Enterprise architecture, zero-code exfiltration guarantee, hybrid GitHub App model, and security controls in Raigal Cloud."
 icon: network-wired
 ---
 
-# Raigal Cloud Architecture
+# Platform Architecture & Security
 
-Raigal Cloud is the centralized quality control plane for managing organizations, analyzing CI/CD quality gates, tracking autonomous coding agent PRs, enforcing GitHub App branch protection checks, and issuing offline cryptographic entitlement leases.
+Raigal Cloud (`https://app.raigal.dev`) serves as the centralized code-quality control plane for enterprise engineering teams. It coordinates automated Pull Request quality gates, remediates AI slop patterns, powers developer dashboards, and issues cryptographic entitlement leases while strictly adhering to a **Zero Code Exfiltration** security model.
+
+---
 
 ## High-Level Topology
 
 ```mermaid
 graph TD
-    subgraph Client Environments
-        Dev["Local CLI: raigal scan / fix"]
+    subgraph Client Compute Environments
+        Dev["Local Workstation: raigal scan / fix"]
         Agent["Autonomous Agent: raigal agent --pr"]
-        CI["GitHub Actions / Runner"]
+        CI["GitHub Actions / CI Runners"]
     end
 
-    subgraph GitHub Platform
-        GHApp["GitHub App Webhooks"]
-        GHChecks["GitHub Checks API"]
+    subgraph GitHub Cloud
+        GHApp["Official GitHub App (raigal-cloud)"]
+        GHChecks["GitHub Checks API & Status"]
     end
 
-    subgraph Raigal Cloud Control Plane
-        Ingress["Express 5 API Gateway (https://app.raigal.dev)"]
-        Auth["Clerk Auth & GitHub Account Sync"]
-        OIDC["Zero-Token GitHub Actions OIDC"]
-        AppEngine["GitHub App Engine (RS256 JWT & Check Runs)"]
-        Signer["Ed25519 JWT Signing Service"]
-        DB[("Heroku PostgreSQL - Drizzle ORM")]
+    subgraph Raigal Cloud Control Plane (app.raigal.dev)
+        Gateway["REST API Gateway (HTTPS / TLS 1.3)"]
+        Auth["Clerk Identity & GitHub Organization Sync"]
+        OIDC["Zero-Token GitHub Actions OIDC Verifier"]
+        CheckManager["Check Run & Status Orchestrator"]
+        LeaseSigner["Ed25519 Cryptographic Lease Signer"]
+        Store[("Encrypted Multi-Tenant Metadata Store")]
     end
 
-    subgraph Frontend Workspace
+    subgraph Customer Management UI
         Board["4-Stage Remediation Kanban"]
         Drawers["Contextual Inspection Drawers"]
-        Activity["Live Execution Telemetry Log"]
-        Settings["Clerk Profile & Token Management"]
+        Telemetry["Execution History & Diff Audits"]
+        Settings["Token & Repository Governance"]
     end
 
     Dev -- "raigal login (OAuth Device Flow)" --> Auth
-    Dev -- "POST /v1/runs (Telemetry)" --> Ingress
-    Agent -- "raigal agent --pr (PR & Diffs)" --> Ingress
-    CI -- "X-GitHub-OIDC or RAIGAL_TOKEN" --> Ingress
-    GHApp -- "POST /api/webhooks/github (PR & App Events)" --> Ingress
+    Dev -- "POST /v1/runs (Metadata & Score)" --> Gateway
+    Agent -- "raigal agent --pr (PR & Diff Stats)" --> Gateway
+    CI -- "X-GitHub-OIDC or RAIGAL_TOKEN" --> Gateway
+    GHApp -- "Webhook (PR & Installation Events)" --> Gateway
 
-    Ingress --> DB
-    Ingress --> Signer
-    Ingress --> AppEngine
-    AppEngine -- "Create / Resolve Checks" --> GHChecks
+    Gateway --> Store
+    Gateway --> LeaseSigner
+    Gateway --> CheckManager
+    CheckManager -- "Create / Resolve Checks" --> GHChecks
 
-    DB --> Board
-    DB --> Drawers
-    DB --> Activity
+    Store --> Board
+    Store --> Drawers
+    Store --> Telemetry
     Auth --> Settings
 ```
 
-## Core Infrastructure Components
+---
 
-### 1. Web Application & API Gateway
-- **Backend Framework:** Express 5 running on Node.js 22 LTS.
-- **Frontend Dashboard:** React 19 + TypeScript + Vite + Tailwind CSS + Lucide icons.
-- **Runtime:** Heroku dyno ecosystem with automatic HTTPS at `https://app.raigal.dev`.
+## The Zero Code Exfiltration Guarantee
 
-### 2. Identity, Authentication & Permissions
-- **Identity Provider:** Clerk (`@clerk/express` and `@clerk/clerk-react`) with multi-tenant organization switching.
-- **GitHub Automatic Sync:** Automatically queries and maps verified GitHub accounts and organization owners into the platform's allowlist.
-- **OAuth Device Authorization:** Enables terminal authentication (`raigal login` / `npx @methiu/raigal login`) using RFC 8628 OAuth device flow to bind local developer machines to cloud organizations.
-- **Zero-Token GitHub Actions OIDC:** Exchanges GitHub runner OIDC tokens (`X-GitHub-OIDC`) for ephemeral entitlements, eliminating long-lived static secrets in CI.
+Enterprise engineering teams require absolute certainty that proprietary intellectual property, trade secrets, and source code remain completely confidential.
 
-### 3. Hybrid GitHub App Engine
-- **Webhook Processing:** Cryptographically validates HMAC-SHA256 signatures via raw body capture.
-- **Lifecycle Events:** Listens to `installation`, `installation_repositories`, and `pull_request` (opened, synchronize, closed, reopened).
-- **Check Run Management:** Mints RS256 App JWTs via `jose`, exchanges them for installation tokens, and manages native `"Raigal Quality Gate"` checks correlated by commit `head_sha`.
-- **Fail-Open Check Resolution:** Ingestion of CI runs in `POST /v1/runs` resolves check runs asynchronously; GitHub API latency or rate limits never block run ingestion.
-- **Orphan Sweeper:** Automatically sweeps pending check runs older than 20 minutes and marks them `timed_out`.
+{% hint style="success" %}
+**Zero Code Exfiltration:** Raigal is explicitly architected so that **no customer source code is ever transmitted to, processed by, or stored on Raigal Cloud servers.**
+{% endhint %}
 
-### 4. Database Layer & Schema
-- **Database Engine:** Heroku PostgreSQL.
-- **ORM & Migrations:** Drizzle ORM and `drizzle-kit`.
-- **Core Entities:**
-  - `organizations`: Account profiles, subscription status, and trial clocks.
-  - `allowed_owners`: Allowlist of GitHub organizations and personal accounts authorized to ingest telemetry.
-  - `pull_requests`: Persistent tracking of CI pull request gates and agent remediations. Unique constraint on `(org_id, repo_id, pr_number)` with guarded in-place updates.
-  - `github_installations`: Installed GitHub App installations mapped to authorized organizations.
-  - `github_check_runs`: Active and resolved checks indexed by `head_sha` and `(status, created_at)`.
-  - `runs`: Ingested CLI scans, exit codes, overall scores, and timing metrics.
-  - `findings`: Granular diagnostic violations scoped to runs, rule IDs, and source lines.
-  - `api_keys`: SHA-256 hashed secret tokens (`rgl_live_...`).
+### How Compute vs. Control Plane Separation Works:
+1. **Local & Runner Execution**: All AST parsing, linters (oxlint, ruff, biome, etc.), complexity analyzers, and AI slop detection algorithms execute **entirely inside your compute environment** (your local terminal or your GitHub Actions runner).
+2. **Metadata-Only Ingestion**: When a scan completes, only anonymized metadata is sent to Raigal Cloud:
+   - Final Quality Score (0–100) and category breakdowns.
+   - Diagnostic rule IDs (e.g. `ai-slop/trivial-comment`, `security/no-eval`).
+   - Relative file paths and line numbers of flagged findings.
+   - Diff statistics (number of files changed, lines added, lines deleted).
+3. **In-Flight Secret Scrubbing**: Before any telemetry payload leaves your workstation or runner, Raigal's CLI scanner redacts authorization headers, tokens, private keys, and credential strings.
 
-### 5. Zero-Mock Data Guarantee
-Every view and metric on the Raigal Cloud board reflects real ingested telemetry:
-- Scan findings, quality scores, and PR gates are pulled directly from live database tables.
-- Out-of-order webhook delivery is prevented using timestamp-guarded SQL updates (`WHERE excluded.started_at >= pull_requests.started_at`).
-- No fabricated default scores or artificial durations are injected into the pipeline.
+---
+
+## Hybrid GitHub App Integration
+
+Raigal integrates natively with GitHub via the official **`raigal-cloud`** GitHub App (`https://github.com/apps/raigal-cloud`):
+
+- **Event-Driven Check Runs**: When a developer opens or updates a Pull Request, GitHub notifies Raigal Cloud via secure webhooks. Raigal immediately creates a pending `"Raigal Quality Gate"` check run on the commit head SHA.
+- **Fail-Open Check Resolution**: When your CI runner completes the quality evaluation, it submits the score and metadata back to Raigal Cloud. Raigal instantly marks the check as passed or failed, resolving branch protection constraints.
+- **Automated Lifecycle Sync**: Merges and closures are reported automatically by GitHub's webhook bus, ensuring your Kanban board always reflects real-time repository state without custom cleanup scripts.
+- **Orphan Sweeper**: If a CI job crashes or is cancelled upstream, Raigal Cloud sweeps orphaned pending checks after 20 minutes to prevent PRs from being blocked indefinitely.
+
+---
+
+## Authentication & Access Control
+
+### 1. Multi-Tenant Organization Isolation
+Raigal Cloud enforces multi-tenant organization boundaries powered by Clerk enterprise identity. Every repository, run, finding, and API token is strictly scoped to your organization. Cross-tenant access is cryptographically and logically prohibited.
+
+### 2. Zero-Token GitHub Actions OIDC
+For enterprise CI pipelines, Raigal eliminates the risks associated with static API keys:
+- Your GitHub Actions runner requests a short-lived OIDC JSON Web Token (JWT) from GitHub's OpenID Connect provider (`token.actions.githubusercontent.com`).
+- The runner transmits the token to Raigal Cloud via the `X-GitHub-OIDC` header.
+- Raigal validates the token's cryptographic signature and matches the repository owner against your organization's verified GitHub account.
+- If verified, the runner is granted ephemeral ingestion rights for that specific run.
+
+### 3. Developer CLI Authentication (RFC 8628)
+Developers authenticate their local workstations seamlessly via `raigal login`. This initiates an RFC 8628 OAuth 2.0 Device Authorization flow, opening a browser verification page without requiring engineers to manually copy secret tokens.
+
+### 4. Cryptographic Offline Leases (Ed25519)
+To prevent network latency from slowing down developer workflows and allow full offline operation:
+- Upon authentication, Raigal Cloud issues a cryptographically signed Ed25519 entitlement token.
+- The local CLI verifies this token offline using a public key bundled into the binary.
+- Leases remain valid for 72 hours, allowing developers to scan and fix code while travelling or in air-gapped environments without continuous internet connectivity.
+
+---
+
+## Data Governance & Repository Lifecycle
+
+Raigal Cloud provides administrators with complete control over their repository footprint:
+
+- **Hashed Secrets**: API keys are hashed using SHA-256 before storage; raw tokens are never persisted in databases.
+- **On-Demand Repository Purge**: Administrators can remove tracked repositories at any time from **Settings** > **Repositories**. Deleting a repository cascades through the database, permanently purging all associated historical runs, Pull Request cards, and diagnostic findings.

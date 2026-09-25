@@ -1,11 +1,11 @@
 ---
-description: "Tablero Kanban de remediación en 4 fases, telemetría de PRs en vivo, integraciones con agentes y paneles de inspección contextual."
+description: "Tablero Kanban de remediación en 4 etapas, telemetría de PRs en vivo, traspaso de agentes, gestión de repositorios y paneles de inspección."
 icon: kanban
 ---
 
-# Tablero Kanban y Telemetría
+# Tablero Kanban de Remediación y Telemetría
 
-Raigal Cloud ofrece un tablero Kanban en tiempo real, ponderado por densidad de código, que transforma los hallazgos estáticos en flujos de trabajo accionables para desarrolladores y agentes.
+Raigal Cloud (`https://app.raigal.dev`) proporciona un tablero Kanban interactivo y ponderado por densidad que transforma la telemetría de calidad de código en flujos de trabajo priorizados para desarrolladores.
 
 ```mermaid
 graph LR
@@ -28,41 +28,43 @@ graph LR
     Agent --> Col4
 ```
 
-## Las 4 Columnas del Tablero Kanban
+---
 
-El Tablero de Remediación organiza los hallazgos de cada repositorio en cuatro columnas especializadas:
+## El Tablero Kanban en 4 Etapas
 
-### 1. Prioridad Media (Medium Priority)
-- **Alcance:** Advertencias no bloqueantes, incoherencias de estilo, código muerto secundario y patrones leves de AI slop (comentarios obvios, comprobaciones de nulidad redundantes).
-- **Acciones:** Copia en 1 clic del comando de corrección determinista (`npx @methiu/raigal fix --rule <rule-id>`).
-- **Inspección:** Al pulsar sobre una tarjeta se despliega el panel lateral de inspección con la línea y fragmento exacto de código.
+El tablero de remediación organiza los hallazgos de sus repositorios en cuatro columnas especializadas:
 
-### 2. Alto Riesgo (High Risk)
-- **Alcance:** Errores críticos que bloquean los gates de CI, secretos de API expuestos, inyecciones SQL/comandos, evasiones de tipado (`as any`) y excepciones silenciadas (`silent-catch`).
-- **Acciones:** Etiquetas destacadas de gravedad crítica con instrucciones precisas de solución.
+### 1. Prioridad Media
+- **Enfoque:** Advertencias no bloqueantes, aspectos de estilo, código muerto secundario y patrones leves de AI slop (comentarios triviales, comprobaciones nulas redundantes).
+- **Acciones:** Copia directa en un clic del comando de autocorrección (`npx @methiu/raigal fix --rule <rule-id>`).
+- **Inspección:** Al hacer clic en cualquier tarjeta se abre el panel lateral de inspección con fragmentos de código y números de línea.
+
+### 2. Alto Riesgo
+- **Enfoque:** Bloqueadores críticos que detienen las puertas de CI, secretos de API expuestos, inyecciones SQL/comandos, conversiones inseguras (`as any`) y controladores de excepción vacíos (`silent-catch`).
+- **Acciones:** Indicadores críticos destacados con recomendaciones de corrección determinista.
 
 ### 3. Pull Requests (Puertas de CI)
-- **Alcance:** Pull Requests activos evaluados en tiempo real por el Quality Gate de Raigal mediante GitHub Actions o webhooks de GitHub App.
-- **Distintivos de Estado:**
-  - `PASSED [score]`: El PR cumple o supera el umbral de calidad configurado (la puntuación se muestra al evaluarse).
-  - `BLOCKED [score]`: El PR contiene vulnerabilidades críticas o está por debajo de la puntuación mínima.
-  - `IN REVIEW / PENDING`: El PR está abierto esperando evaluación de CI (creado al instante por la GitHub App).
-  - `MERGED`: El PR ha sido fusionado en la rama principal (actualizado automáticamente vía webhook de GitHub App).
-  - `CLOSED`: El PR fue cerrado sin fusionar.
-- **Idempotencia y Aislamiento:** Múltiples pushes sobre el mismo PR actualizan la tarjeta in-place. Se filtran entregas fuera de orden para que ejecuciones antiguas nunca sobreescriban datos recientes. Los PRs estándar y las remediaciones de agentes se segregan limpiamente.
+- **Enfoque:** Pull Requests activos evaluados por la puerta de calidad de Raigal mediante GitHub Actions o webhooks de la GitHub App.
+- **Insignias de Estado:**
+  - `APROBADO [puntuación]`: El PR cumple o supera el umbral de calidad configurado.
+  - `BLOQUEADO [puntuación]`: El PR contiene infracciones bloqueantes o no alcanza la puntuación mínima.
+  - `EN REVISIÓN / PENDIENTE`: El PR está abierto y a la espera de la evaluación de CI (creado instantáneamente por la GitHub App).
+  - `FUSIONADO`: El PR ha sido integrado en la rama base (actualizado automáticamente por el webhook de la GitHub App).
+  - `CERRADO`: El PR se cerró sin fusionar.
+- **Idempotencia y Aislamiento:** Los envíos sucesivos de commits en el mismo PR actualizan la tarjeta existente sin duplicarla. Se previene la sobreescritura por entregas de webhooks fuera de orden.
 
 ### 4. Remediaciones de Agentes (`--pr`)
-- **Alcance:** Pull requests generados de forma autónoma por agentes de programación (`raigal agent --provider <opencode|claude|codex> --pr`).
+- **Enfoque:** Pull Requests generados de manera autónoma por agentes de programación de IA (`raigal agent --provider <opencode|claude|codex> --pr`).
 - **Telemetría:**
-  - **Identificador de Proveedor:** Muestra el agente autor (`opencode`, `claude`, `codex` u orquestadores personalizados).
-  - **Mejora de Puntuación:** Refleja la diferencia cuantitativa de calidad (ej. `72 → 88 (+16 pts)`).
-  - **Diff de Parche:** Muestra los parches unificados creados y verificados en worktrees aislados.
+  - **Insignia del Proveedor:** Identifica al agente autor (`opencode`, `claude`, `codex`, u orquestadores a medida).
+  - **Mejora de Puntuación:** Refleja la variación medida antes y después (p. ej., `72 → 88 (+16 pts)`).
+  - **Parche de Diferencias:** Muestra el diff unificado exacto generado y verificado en worktrees aislados.
 
 ---
 
-## Paneles Laterales de Inspección Contextual (Drawers)
+## Paneles Laterales de Inspección Contextual
 
-Cada tarjeta del tablero permite abrir un panel lateral detallado con herramientas integradas:
+Cada tarjeta del tablero puede desplegar un panel lateral interactivo con información en profundidad:
 
 <table data-view="cards">
   <thead>
@@ -74,36 +76,56 @@ Cada tarjeta del tablero permite abrir un panel lateral detallado con herramient
   </thead>
   <tbody>
     <tr>
-      <td><strong>Panel de Vulnerabilidad</strong></td>
-      <td>Identificador de regla, motor, número de línea, ruta y explicación.</td>
-      <td><code>Copy CLI Fix</code> — Copia al portapapeles el comando de corrección.</td>
+      <td><strong>Panel de Vulnerabilidades</strong></td>
+      <td>ID de regla, motor, línea, ruta de archivo y explicación técnica.</td>
+      <td><code>Copiar Fix CLI</code> — Copia el comando exacto al portapapeles.</td>
     </tr>
     <tr>
       <td><strong>Panel de Pull Request</strong></td>
-      <td>Nombre de rama, autor, puntuación, registros de CI y fallos bloqueantes.</td>
-      <td><code>Copy git checkout</code> — Copia el comando para inspeccionar la rama.</td>
+      <td>Rama, autor, puntuación, registros de la puerta de CI y hallazgos bloqueantes.</td>
+      <td><code>Copiar git checkout</code> — Copia el comando para revisar la rama.</td>
     </tr>
     <tr>
-      <td><strong>Panel de Agente</strong></td>
-      <td>Proveedor de IA, comparativa antes/después y diff completo del parche.</td>
-      <td><code>Copy gh merge</code> — Copia el comando de fusión inmediata en GitHub.</td>
+      <td><strong>Panel de Agente Autónomo</strong></td>
+      <td>Proveedor del agente, comparación de puntuaciones y diff del parche.</td>
+      <td><code>Copiar gh merge</code> — Copia el comando de fusión en GitHub.</td>
     </tr>
   </tbody>
 </table>
 
 ---
 
-## Aislamiento por Rama y Cero Fuga de Estado
+## Gobernanza y Gestión de Repositorios
 
-Para garantizar que los hallazgos no se mezclen entre ramas:
-- El tablero consulta únicamente la **última ejecución completada** en la rama activa seleccionada.
-- Cambiar de rama mediante el desplegable superior recalcula de inmediato los hallazgos y métricas sin arrastrar datos obsoletos.
-- Las URLs con enlaces directos preservan el contexto completo: `/repos/:repoId?branch=feat/auth&drawer=vuln&id=...`.
+Desde el panel de **Configuración** (`https://app.raigal.dev/settings`), los administradores gestionan el acceso del equipo y el ciclo de vida de los proyectos:
+
+### 1. Selector de Repositorios Activos y Filtro de Ramas
+- Utilice el selector del encabezado para cambiar entre los repositorios monitoreados.
+- Use el menú desplegable de ramas para cambiar de rama (`main`, `develop`, ramas de características). El tablero reajusta inmediatamente las métricas a la rama seleccionada.
+- Los enlaces directos preservan el estado del espacio de trabajo: `/repos/:repoId?branch=feat/auth&drawer=vuln&id=...`.
+
+### 2. Eliminación de Repositorios en Desuso
+Si un repositorio es retirado, renombrado o deja de estar monitorizado:
+1. Diríjase a **Configuración** > **Repositorios**.
+2. Localice el repositorio en la lista.
+3. Haga clic en el botón **Eliminar** (icono de papelera).
+4. Confirme la solicitud de eliminación.
+
+{% hint style="warning" %}
+Eliminar un repositorio purga de forma irreversible todas las ejecuciones de escaneo históricas, puntuaciones de calidad, evaluaciones de Pull Requests y tarjetas de hallazgos asociadas.
+{% endhint %}
+
+### 3. Gobernanza de Tokens de API
+- Genere claves granulares para diferentes entornos de CI o equipos de desarrollo.
+- Revoque claves comprometidas o desactualizadas con un solo clic.
 
 ---
 
-## Navegación y Acciones Rápidas (⌘K)
+## Navegación Rápida y Paleta de Comandos (`⌘ K`)
 
-- **Barra Superior:** Selector interactivo de repositorios en el encabezado sticky, selector de rama activa y accesos rápidos.
-- **Paleta de Comandos (`⌘ K`):** Búsqueda instantánea para copiar comandos de escaneo o fix, acceder a la documentación oficial, filtrar por motor (AI Slop o Seguridad) o sincronizar repositorios de GitHub.
-- **Panel de Configuración (Settings):** Consulta de `RAIGAL_API_URL`, gestión de tokens `RAIGAL_TOKEN` enmascarados, propietarios de GitHub autorizados e inspección de ejecuciones.
+Raigal Cloud incluye una paleta de comandos global para acceder rápidamente a cualquier función:
+- Presione `⌘ K` (o `Ctrl K` en Windows/Linux) en cualquier lugar del panel.
+- Busque rápidamente entre repositorios y ramas.
+- Acceda directamente a guías de documentación.
+- Copie comandos de escaneo y corrección del CLI.
+- Solicite la sincronización manual de repositorios de GitHub.

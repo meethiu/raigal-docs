@@ -1,11 +1,11 @@
 ---
-description: "4-Stage Remediation Kanban Board, live PR telemetry, agent PR handoffs, and contextual inspection drawers."
+description: "4-Stage Remediation Kanban Board, live PR telemetry, agent PR handoffs, repository management, and inspection drawers."
 icon: kanban
 ---
 
 # Remediation Kanban & Telemetry
 
-Raigal Cloud provides a real-time, density-aware Kanban board that translates raw code-quality findings into prioritized developer workflows.
+Raigal Cloud (`https://app.raigal.dev`) provides an interactive, density-aware Kanban dashboard that translates code-quality telemetry into prioritized developer workflows.
 
 ```mermaid
 graph LR
@@ -27,6 +27,8 @@ graph LR
     CI --> Col3
     Agent --> Col4
 ```
+
+---
 
 ## The 4-Stage Kanban Board
 
@@ -93,17 +95,37 @@ Every card on the board can be clicked to open a detailed slide-over panel:
 
 ---
 
-## Branch Isolation & Zero State Leakage
+## Repository Governance & Management
 
-To prevent finding duplication across feature branches:
-- The board queries the **single latest completed run** on the active branch.
-- Switching branches via the header dropdown instantly re-scopes all findings and metric cards without stale data carry-over.
-- Deep-linked URLs preserve your exact workspace state: `/repos/:repoId?branch=feat/auth&drawer=vuln&id=...`.
+From the **Settings Dashboard** (`https://app.raigal.dev/settings`), administrators can manage team access and repository lifecycles:
+
+### 1. Active Repository Switcher & Branch Filtering
+- Use the header selector to toggle between tracked repositories.
+- Use the branch dropdown to switch between branches (e.g., `main`, `develop`, feature branches). The board instantly re-scopes metrics and cards to the selected branch.
+- Deep links preserve workspace state: `/repos/:repoId?branch=feat/auth&drawer=vuln&id=...`.
+
+### 2. Removing Decommissioned Repositories
+If a repository is retired, renamed, or no longer monitored:
+1. Navigate to **Settings** > **Repositories**.
+2. Locate the repository in the list.
+3. Click the **Remove** button (trash icon).
+4. Confirm the deletion prompt.
+
+{% hint style="warning" %}
+Removing a repository permanently purges all historical scan runs, quality scores, Pull Request evaluations, and finding cards for that repository.
+{% endhint %}
+
+### 3. API Token Governance
+- Mint granular tokens for different CI runners or developer teams.
+- Revoke compromised or outdated tokens in one click.
 
 ---
 
-## Navigation & Quick Actions (⌘K)
+## Navigation & Quick Actions (`⌘ K`)
 
-- **Top Navigation:** Sticky repository selector dropdown, active branch switcher, and quick view toggles.
-- **Command Palette (`⌘ K`):** Instant search to copy CLI scan/fix commands, jump to documentation, filter by engine (AI Slop or Security), or trigger a manual GitHub repository sync.
-- **Settings Dashboard:** Access your `RAIGAL_API_URL`, manage masked `RAIGAL_TOKEN` keys, manage allowed GitHub owners, and inspect repository runs.
+Raigal Cloud features a global Command Palette for rapid navigation:
+- Press `⌘ K` (or `Ctrl K` on Windows/Linux) anywhere in the dashboard.
+- Quickly search across repositories and branches.
+- Jump directly to documentation guides.
+- Copy CLI scan and fix commands.
+- Trigger manual GitHub repository synchronization.

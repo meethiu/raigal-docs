@@ -6,7 +6,7 @@
 
 * [Installation](getting-started/installation.md)
 * [Quickstart (60s Scan)](getting-started/quickstart.md)
-* [First Client Setup](getting-started/first-client-setup.md)
+* [Organization Setup & Onboarding](getting-started/first-client-setup.md)
 
 ## Core Concepts
 
@@ -28,6 +28,6 @@
 
 ## Cloud Platform
 
-* [Raigal Cloud Architecture](cloud-platform/architecture.md)
+* [Platform Architecture & Security](cloud-platform/architecture.md)
 * [Remediation Kanban & Telemetry](cloud-platform/dashboard.md)
-* [Admin API & Licensing](cloud-platform/admin-api.md)
+* [Organization API & Token Management](cloud-platform/admin-api.md)

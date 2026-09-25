@@ -1,77 +1,148 @@
 ---
-description: "Guía paso a paso para administradores de plataforma y bienvenida de organizaciones de clientes."
+description: "Guía paso a paso de incorporación para equipos de ingeniería, directores de tecnología y administradores que utilizan Raigal Cloud."
 icon: building
 ---
 
-# Configuración de Primer Cliente
+# Configuración y Onboarding de la Organización
 
-Esta guía describe el proceso completo para configurar Raigal para un cliente corporativo o equipo empresarial desde cero.
+Esta guía detalla la configuración de Raigal para su organización de ingeniería utilizando la plataforma alojada en **[app.raigal.dev](https://app.raigal.dev)** y la **[GitHub App Oficial de Raigal](https://github.com/apps/raigal-cloud)**.
 
-## Resumen de Responsabilidades
+---
 
-| Tarea | Responsable | Notas |
-|---|---|---|
-| **Crear Organización y Licencias** | Administrador de Plataforma | Se gestiona en la plataforma Raigal Cloud |
-| **Obtener API Key (`rgl_live_...`)** | Administrador de Organización | Disponible en la vista de **Settings** |
-| **Configurar `RAIGAL_API_URL`** | Administrador / DevOps | Apunta a su instancia dedicada de Raigal Cloud |
-| **Invitar al Equipo** | Administrador de Organización | Vía Clerk OAuth / Invitación en Settings |
-| **Inicio de Sesión en CLI** | Desarrolladores del Cliente | Ejecutan `raigal login` en su terminal |
-| **Filtro de Calidad en CI/CD** | DevOps / Administradores de Repo | Configuran `RAIGAL_TOKEN` y `RAIGAL_API_URL` en secrets |
+## Lista de Comprobación de Onboarding
 
-## Navegación de la Plataforma y Ajustes
+| Paso | Acción | Dónde | Tiempo |
+|---|---|---|---|
+| **1. Crear Organización** | Iniciar sesión con GitHub, Google o correo corporativo | [app.raigal.dev](https://app.raigal.dev) | 1 min |
+| **2. Instalar GitHub App** | Instalar la App oficial en sus repositorios | [github.com/apps/raigal-cloud](https://github.com/apps/raigal-cloud) | 1 min |
+| **3. Obtener Token de Org** | Copiar su token de API `rgl_live_...` | Configuración &rarr; Tokens de API | 30 seg |
+| **4. Configurar CI/CD** | Añadir `.github/workflows/raigal.yml` | Sus repositorios | 2 min |
+| **5. Invitar Ingenieros** | Enviar invitaciones al equipo o configurar SSO | Configuración &rarr; Miembros de la Organización | 1 min |
 
-El panel web de Raigal Cloud ofrece una interfaz optimizada:
+---
 
-- **Overview:** El Tablero Kanban de Remediación en 4 columnas (Medium Priority, High Risk, Pull Requests CI Gates, Agent Remediations).
-- **Activity:** Flujo en tiempo real de análisis de repositorios, sesiones de agentes y evolución de notas.
-- **Settings:** Configuración de la organización, credenciales y opciones de cuenta.
-- **Docs:** Enlace directo a la documentación oficial completa en GitBook.
-- **Paleta de Comandos ⌘K:** Búsqueda rápida de repositorios, cambio de ramas y navegación instantánea.
+## Paso 1: Registro y Creación de su Organización
 
-### El Panel de Settings (Ajustes)
+1. Acceda a **[app.raigal.dev](https://app.raigal.dev)**.
+2. Inicie sesión con GitHub, Google o su correo corporativo.
+3. En el selector de organizaciones situado en la esquina superior izquierda, seleccione **Crear Organización** (o elija el espacio de trabajo existente de su equipo).
+4. Introduzca el nombre de su organización (p. ej., *Acme Engineering*).
 
-En la sección **Settings**, los administradores pueden configurar sus integraciones:
+{% hint style="info" %}
+Raigal admite el cambio de organización multi-inquilino. Si pertenece a varios equipos o gestiona cuentas de clientes independientes, puede alternar entre ellos cómodamente desde el selector superior izquierdo.
+{% endhint %}
 
-1. **Token API de Raigal:**
-   - Muestra el token activo de la organización (`rgl_live_...`).
-   - Dispone de selector de enmascaramiento seguro (`••••••••` vs texto legible).
-   - El botón de copia garantiza copiar siempre el valor real y no la máscara de puntos.
-2. **URL de la API de Raigal:**
-   - Muestra el endpoint activo del backend (ej: `https://app.raigal.dev`).
-   - Copia en un clic para pegar en pipelines de CI/CD.
-3. **Instrucciones para la Línea de Comandos:**
-   - Proporciona comandos listos para exportar variables de entorno en la terminal:
-     ```bash
-     export RAIGAL_TOKEN="rgl_live_..."
-     export RAIGAL_API_URL="https://app.raigal.dev"
-     ```
-4. **Perfil de Usuario y Ajustes de Cuenta (Clerk):**
-   - Botón directo para abrir el modal de Clerk y actualizar correo, contraseña, autenticación multifactor (MFA) y datos de organización.
+---
 
-## Configuración del Desarrollador en el Cliente
+## Paso 2: Instalar la GitHub App Oficial de Raigal
 
-### 1. Autenticación Local en CLI
-Cada desarrollador inicia sesión interactivamente en su navegador:
+La GitHub App de Raigal gestiona el ciclo de vida de la puerta de calidad en Pull Requests: publica comprobaciones pendientes inmediatas al abrir PRs, actualiza el estado de la comprobación al finalizar el CI y sincroniza los estados de fusión y cierre de forma automática.
+
+1. En el panel de Raigal Cloud, vaya a **Configuración** &rarr; haga clic en **Sincronizar Cuentas de GitHub** (o visite **[github.com/apps/raigal-cloud](https://github.com/apps/raigal-cloud)** directamente).
+2. Haga clic en **Install App** (Instalar App).
+3. Seleccione su organización o cuenta personal de GitHub.
+4. Elija **All repositories** (Todos los repositorios) o seleccione los repositorios específicos que desea proteger con Raigal.
+5. Haga clic en **Install & Authorize** (Instalar y autorizar).
+
+Una vez instalada, GitHub vincula automáticamente sus repositorios con su organización en Raigal Cloud.
+
+---
+
+## Paso 3: Obtener las Credenciales de la Organización
+
+Para que GitHub Actions o las sesiones locales de los desarrolladores puedan enviar métricas de calidad a su panel en la nube, obtenga la clave de API de su organización:
+
+1. Abra **[app.raigal.dev/settings](https://app.raigal.dev)**.
+2. En la tarjeta **Token Activo de la Organización**, se muestra su clave en vivo (`rgl_live_...`).
+3. Haga clic en **Copiar** para copiar el token.
+4. Si necesita generar una nueva clave o rotar credenciales, haga clic en **Generar Nuevo Token** en la sección **Claves de API**.
+
+{% hint style="tip" %}
+**GitHub Actions sin Secretos (OIDC):** Si prefiere no gestionar tokens estáticos en GitHub Secrets, active `permissions: id-token: write` en su flujo de trabajo. Raigal Cloud autentica de forma nativa los tokens OIDC del runner de GitHub sin requerir secretos estáticos.
+{% endhint %}
+
+---
+
+## Paso 4: Añadir la Puerta de Calidad en GitHub Actions
+
+Añada el archivo `.github/workflows/raigal.yml` a cada repositorio que desee proteger:
+
+```yaml
+name: Puerta de Calidad Raigal
+
+on:
+  pull_request:
+    branches: [main, develop]
+  push:
+    branches: [main]
+
+jobs:
+  quality-gate:
+    name: Control de Calidad y Slop
+    runs-on: ubuntu-latest
+    permissions:
+      contents: read
+      id-token: write  # Habilita OIDC de GitHub sin secretos estáticos
+
+    steps:
+      - name: Descargar Código
+        uses: actions/checkout@v4
+        with:
+          fetch-depth: 0 # Necesario para calcular diferencias precisas respecto a la rama base
+
+      - name: Configurar Node.js
+        uses: actions/setup-node@v4
+        with:
+          node-version: 22
+
+      - name: Ejecutar Puerta de Calidad Raigal
+        env:
+          RAIGAL_TOKEN: ${{ secrets.RAIGAL_TOKEN }}
+          RAIGAL_API_URL: https://app.raigal.dev
+        run: |
+          npx @methiu/raigal ci --changes --base origin/${{ github.base_ref || 'main' }} --human
+```
+
+En su repositorio de GitHub:
+- Vaya a **Settings** &rarr; **Secrets and variables** &rarr; **Actions**.
+- Añada un nuevo secreto de repositorio:
+  - Nombre: `RAIGAL_TOKEN`
+  - Valor: Su token `rgl_live_...` obtenido en el Paso 3.
+
+---
+
+## Paso 5: Invitar a su Equipo de Ingeniería
+
+1. En **Configuración**, haga clic en el nombre de su organización o en la pestaña **Miembros**.
+2. Haga clic en **Invitar Miembros** para enviar invitaciones por correo electrónico.
+3. Asigne los roles correspondientes (**Admin** para responsables de plataforma, **Member** para ingenieros).
+4. Los ingenieros invitados recibirán un correo para unirse al espacio de trabajo de su organización en **[app.raigal.dev](https://app.raigal.dev)**.
+
+---
+
+## Configuración en las Máquinas de los Desarrolladores
+
+Los desarrolladores pueden autenticar sus entornos locales para transmitir métricas de escaneo, acceder a las políticas de la organización y ejecutar reparaciones autónomas:
 
 ```bash
+# Autenticarse mediante el navegador
 npx @methiu/raigal login
-```
 
-Esto inicia un flujo OAuth. Una vez autenticado, las credenciales y un token de concesión Ed25519 se almacenan localmente en `~/.raigal/credentials.json` (con permisos `0600`), permitiendo escaneos offline de hasta 72 horas.
-
-Para entornos sin interfaz gráfica o dotfiles automatizados:
-```bash
-echo "rgl_live_..." | npx @methiu/raigal login --with-token
-```
-
-Verifique el estado de la sesión en cualquier momento:
-```bash
+# Verificar la organización activa
 npx @methiu/raigal whoami
 ```
 
-### 2. Instalación de Hooks para Agentes de IA
-Para interceptar y prevenir de forma automática la entrada de AI slop mientras los desarrolladores programan con Claude Code, Cursor u OpenCode:
+Para instalar hooks de intercepción en tiempo real en Claude Code o Cursor:
 
 ```bash
 npx @methiu/raigal hook install
 ```
+
+---
+
+## Gestión de Repositorios Conectados
+
+En **Configuración &rarr; Repositorios Conectados**, los administradores pueden:
+- **Supervisar la Actividad en Directo:** Expandir cualquier repositorio para revisar escaneos recientes, principales hallazgos y puntuaciones de calidad por rama.
+- **Acceder al Tablero Kanban:** Hacer clic en **Tablero** para ir directamente al panel de remediación en 4 etapas de ese repositorio.
+- **Eliminar Repositorios en Desuso:** Hacer clic en **Eliminar** (icono de papelera) para borrar permanentemente un repositorio inactivo, eliminando en cascada sus ejecuciones históricas y registros de PR asociados.
