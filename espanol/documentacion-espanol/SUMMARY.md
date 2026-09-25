@@ -1,4 +1,4 @@
-# Tabla de contenidos
+# Table of contents
 
 * [Visión general de Raigal](README.md)
 
@@ -22,9 +22,9 @@
 
 ## Automatización y CI/CD
 
-* [Pipelines de CI/CD y GitHub Actions](automatizacion/ci-cd.md)
-* [Puerta de Calidad en Pull Requests y Tablero](automatizacion/pull-requests.md)
-* [Reparación Automatizada con Agentes](automatizacion/reparacion-agentes.md)
+* [Pipelines de CI/CD y GitHub Actions](automatizacion-y-ci-cd/ci-cd.md)
+* [Puerta de Calidad en Pull Requests y Tablero](automatizacion-y-ci-cd/pull-requests.md)
+* [Reparación Automatizada con Agentes](automatizacion-y-ci-cd/reparacion-agentes.md)
 
 ## Plataforma Cloud
 
