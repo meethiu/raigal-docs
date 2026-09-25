@@ -1,11 +1,11 @@
 ---
-description: "Catálogo de motores de detección integrados y reglas especializadas contra AI Slop."
+description: "Motores de detección integrados y catálogo de reglas de patrones."
 icon: list-check
 ---
 
-# Reglas y Motores de Detección
+# Reglas y motores de análisis
 
-Raigal ejecuta 6 motores especializados en paralelo durante cada análisis:
+Raigal ejecuta seis motores en paralelo durante cada análisis:
 
 ```mermaid
 graph TD
@@ -24,22 +24,22 @@ graph TD
     H --> I[Puntuación de Calidad 0-100]
 ```
 
-## Catálogo de Reglas contra AI Slop
+## Reglas integradas de patrones
 
-| Identificador | Severidad | Qué detecta | Autofix |
+| Identificador | Severidad | Qué detecta | Corrección automática |
 |---|---|---|---|
-| `ai-slop/trivial-comment` | Warning | Comentarios que repiten literalmente lo que hace el código. | Sí |
-| `ai-slop/defensive-null` | Warning | Comprobaciones de nulos innecesarias en tipos garantizados. | Sí |
-| `ai-slop/fake-polyfill` | Error | Métodos auxiliares redundantes que reinventan la librería estándar. | No (Agente) |
-| `ai-slop/silent-catch` | Error | Bloques `catch` vacíos que ocultan excepciones sin registrar. | No (Agente) |
-| `ai-slop/any-cast` | Warning | Casts de tipo `as any` para silenciar el verificador estático. | No (Agente) |
-| `ai-slop/over-engineered-regex` | Warning | Expresiones regulares sobre-complejas para tareas simples de texto. | No (Agente) |
-| `ai-slop/duplicate-logic` | Warning | Funciones duplicadas por copiar y pegar entre módulos contiguos. | Sí |
-| `ai-slop/unhandled-todo` | Info | Comentarios TODO o stubs sin implementar creados por IA. | No |
+| `ai-slop/trivial-comment` | Warning | Comentarios que solo repiten nombres de funciones o variables | Sí |
+| `ai-slop/defensive-null` | Warning | Comprobaciones de nulos en tipos ya garantizados | Sí |
+| `ai-slop/fake-polyfill` | Error | Métodos auxiliares redundantes que reinventan la librería estándar | No (Agente) |
+| `ai-slop/silent-catch` | Error | Bloques `catch` vacíos que descartan errores sin registrar ni relanzar | No (Agente) |
+| `ai-slop/any-cast` | Warning | Casts de tipo `as any` para ignorar el comprobador estático | No (Agente) |
+| `ai-slop/over-engineered-regex` | Warning | Expresiones regulares complejas donde bastan métodos de cadena | No (Agente) |
+| `ai-slop/duplicate-logic` | Warning | Funciones auxiliares duplicadas entre módulos cercanos | Sí |
+| `ai-slop/unhandled-todo` | Info | Comentarios TODO o stubs vacíos sin implementar | No |
 
-## Personalización de Reglas
+## Ajustes de reglas
 
-En su archivo `.raigal/rules.yml` puede ajustar el comportamiento de cada regla:
+En el archivo `.raigal/rules.yml` puede cambiar la severidad o desactivar reglas:
 
 ```yaml
 rules:

@@ -1,13 +1,13 @@
 ---
-description: "Configuración de reglas del proyecto, umbrales de puntuación y parámetros mediante .raigal/config.yml."
+description: "Configuración de reglas del proyecto, umbrales y motores mediante .raigal/config.yml."
 icon: gear
 ---
 
 # Configuración
 
-Raigal utiliza un archivo de configuración tipado situado en `.raigal/config.yml` en la raíz del repositorio.
+Raigal lee su configuración del archivo `.raigal/config.yml` en la raíz del repositorio.
 
-## Configuración Mínima
+## Configuración mínima
 
 ```yaml
 version: 1
@@ -30,28 +30,30 @@ ignore:
   - "**/*.min.js"
 ```
 
-## Referencia de Parámetros
+## Referencia de opciones
 
 ### `scoring`
 
-- `threshold` (numérico, por defecto: 80): Puntuación objetivo recomendada para el repositorio.
-- `fail_under` (numérico, por defecto: 80): Puntuación mínima exigida en CI (`raigal ci`). Cualquier valor inferior provocará un código de salida `1`.
+- `threshold` (numérico, por defecto: 80): puntuación de referencia deseada para el repositorio.
+- `fail_under` (numérico, por defecto: 80): puntuación mínima exigida en CI (`raigal ci`). Cualquier valor inferior devuelve código de salida `1`.
 
 ### `engines`
 
 Activa o desactiva módulos de diagnóstico individuales:
-- `ai_slop`: Detecta patrones repetitivos, verificaciones defensivas innecesarias y comentarios obvios generados por IA.
-- `security`: Detecta secretos expuestos, claves privadas y funciones vulnerables.
-- `lint`: Análisis estático ultrarrápido mediante Oxlint y Ruff.
-- `format`: Comprobación de formato mediante Biome, Gofmt y Ruff.
-- `quality`: Detección de código muerto (Knip) y control de complejidad ciclomática.
-- `architecture`: Verificación de límites entre capas e imports no permitidos.
+- `ai_slop`: patrones repetitivos, comprobaciones defensivas innecesarias y comentarios obvios.
+- `security`: secretos expuestos, claves privadas y llamadas a funciones vulnerables.
+- `lint`: análisis estático con Oxlint y Ruff.
+- `format`: comprobación de estilo con Biome, Gofmt y Ruff.
+- `quality`: detección de código sin uso (Knip) y límites de complejidad ciclomática.
+- `architecture`: límites de arquitectura e importaciones entre capas.
 
 ### `telemetry`
 
-Raigal respeta la privacidad de los desarrolladores:
+Para desactivar el envío de telemetría a la nube:
+
 ```yaml
 telemetry:
   enabled: false
 ```
-*(Los eventos de telemetría son estrictamente métricas anónimas. Nunca se transmiten rutas de archivos ni fragmentos de código).*
+
+Los eventos de telemetría solo incluyen métricas numéricas y recuentos de reglas. El contenido del código y de los archivos nunca se transmite.

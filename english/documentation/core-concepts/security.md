@@ -1,19 +1,19 @@
 ---
-description: "Security model, credential storage, RAIGAL_TOKEN resolution, and offline Ed25519 signing."
+description: "Security model, credential storage, environment variables, and offline leases."
 icon: lock
 ---
 
-# Security Model & Credentials
+# Security model and credentials
 
-Raigal is built with zero-trust principles, cryptographic offline verification, and strict secret hygiene.
+Raigal stores local credentials securely, scrubs secrets before sending metrics, and supports tokenless authentication through GitHub Actions OIDC.
 
-## Credential Storage
+## Credential storage
 
-On local developer environments, user credentials and offline leases are isolated in the user's home directory:
+On local machines, credentials and offline leases are stored in your home directory:
 
-- **Path:** `~/.raigal/credentials.json`
-- **File Mode:** `0600` (POSIX user-only read/write; group and world permissions are blocked).
-- **Structure:**
+- Path: `~/.raigal/credentials.json`
+- Permissions: `0600` (read and write for the file owner only)
+- File format:
   ```json
   {
     "token": "rgl_sess_...",
@@ -23,12 +23,12 @@ On local developer environments, user credentials and offline leases are isolate
   }
   ```
 
-## Setting `RAIGAL_TOKEN` & `RAIGAL_API_URL`
+## Setting `RAIGAL_TOKEN` and `RAIGAL_API_URL`
 
-In CI/CD environments, headless Docker containers, or automated scripts, provide authentication and endpoint configuration via environment variables:
+In CI pipelines, Docker containers, or scripts, pass authentication using environment variables:
 
-- `RAIGAL_TOKEN`: Your organization's live API token (`rgl_live_...`). Takes immediate precedence over `~/.raigal/credentials.json`.
-- `RAIGAL_API_URL`: (Optional) Explicit backend endpoint (e.g., `https://app.raigal.dev`).
+- `RAIGAL_TOKEN`: your organization's API token (`rgl_live_...`). This overrides `~/.raigal/credentials.json`.
+- `RAIGAL_API_URL`: custom backend URL (defaults to `https://app.raigal.dev`).
 
 {% tabs %}
 {% tab title="GitHub Actions" %}
@@ -58,27 +58,26 @@ npx @methiu/raigal whoami
 {% endtab %}
 {% endtabs %}
 
-## Telemetry Secret Scrubbing & Data Hygiene
+## Metric scrubbing and data handling
 
-Raigal enforces strict data hygiene before telemetry ever leaves your workstation or is written to the cloud:
+Before telemetry is sent to the cloud:
+1. The CLI redacts authorization headers, tokens, private keys, and credential patterns.
+2. Only aggregate counts, rule IDs, file paths, and score deltas are uploaded. Source code is never sent to Raigal Cloud.
+3. The backend stores run records in PostgreSQL tables (`telemetry_runs`, `pull_requests`) using idempotent upserts.
 
-1. **In-Flight Scrubbing:** The CLI automatically sanitizes telemetry payloads, redacting authorization headers, bearer tokens, AWS credentials, and common secret patterns before queuing.
-2. **Zero-Code Ingestion:** Telemetry only transmits aggregate diagnostic counts, rule names, file paths, and score deltas. Your actual proprietary source code is never uploaded to Raigal Cloud.
-3. **Database Guardrails & Zero-Mock Guarantee:** The cloud backend stores telemetry directly into relational PostgreSQL tables (`telemetry_runs`, `pull_requests`) with guarded, idempotent upserts (`ON CONFLICT`). In-memory mock stores are forbidden in production.
+## GitHub Actions OIDC authentication
 
-## Zero-Token GitHub Actions OIDC Entitlement
+To run in GitHub Actions without static repository secrets:
 
-For enterprise environments running GitHub Actions, Raigal eliminates the security liability of long-lived static tokens:
+1. Add `permissions: id-token: write` to your workflow job.
+2. The GitHub runner mints an OIDC token signed by GitHub.
+3. Raigal passes this token in the `X-GitHub-OIDC` header to `/api/v1/telemetry/runs`.
+4. Raigal Cloud validates the signature against `https://token.actions.githubusercontent.com` and confirms that the repository owner is registered to your organization.
 
-1. Configure `permissions: id-token: write` on your GitHub Actions workflow job.
-2. The GitHub runner generates a signed OIDC JSON Web Token (JWT) attesting to repository owner, repo name, ref, and workflow identity.
-3. Raigal sends this token via the `X-GitHub-OIDC` header to `/api/v1/telemetry/runs`.
-4. Raigal Cloud verifies the cryptographic signature directly with GitHub's OIDC provider (`https://token.actions.githubusercontent.com`) and confirms that the repository owner is registered under your organization's entitlement before ingesting run results.
+## Offline leases (Ed25519)
 
-## Cryptographic Offline Leases (Ed25519)
+Raigal does not contact the server on every scan:
 
-Raigal does **not** phone home on every single file scan:
-
-1. When you authenticate via `raigal login` or with `RAIGAL_TOKEN`, the cloud server signs a JWT entitlement using an Ed25519 private key (`RAIGAL_PRIVATE_KEY`).
-2. The CLI verifies this signature offline using the bundled public key (`src/cloud/keys.ts`).
-3. The valid lease is cached at `~/.raigal/entitlement.json` for up to 72 hours, ensuring uninterrupted scanning during flights, offline periods, or air-gapped dev environments.
+1. When you run `raigal login` or supply `RAIGAL_TOKEN`, the server signs a lease token using an Ed25519 private key.
+2. The CLI verifies this signature offline using a public key bundled in the binary (`src/cloud/keys.ts`).
+3. The lease is saved to `~/.raigal/entitlement.json` for up to 72 hours, allowing scans to run without an active internet connection.

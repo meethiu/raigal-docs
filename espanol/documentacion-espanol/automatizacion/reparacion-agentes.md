@@ -1,42 +1,42 @@
 ---
-description: "Ejecute sesiones de reparación automatizadas en git worktrees con agentes de IA locales sin riesgo para su rama principal."
+description: "Sesiones de reparación automatizadas en git worktrees con agentes de IA locales."
 icon: robot
 ---
 
-# Reparación Automatizada con Agentes
+# Reparación automatizada con agentes
 
-Cuando el análisis estático identifica problemas que requieren refactorización arquitectónica o modificaciones semánticas, `raigal agent` traslada la tarea a su herramienta local de IA en un **git worktree completamente aislado**.
+Para hallazgos que requieran refactorización o cambios semánticos, `raigal agent` ejecuta una sesión de reparación con una herramienta local de IA en un git worktree.
 
-## La Garantía del Worktree
+## Cómo funcionan las reparaciones en worktrees
 
-Raigal nunca permite que un agente autónomo realice modificaciones masivas directamente sobre su rama de trabajo activa:
+Para proteger la rama activa de modificaciones no verificadas, `raigal agent` aísla los cambios:
 
-1. **Aislamiento Total:** `raigal agent` genera un Git worktree temporal (`.git/raigal-worktrees/<session-id>`).
-2. **Entrega de Contexto:** El proveedor del agente (Claude Code, OpenCode o Codex) se inicia con el contexto diagnóstico exacto y los requisitos de cada regla.
-3. **Ejecución y Verificación:** El agente edita el código y ejecuta las pruebas de verificación dentro del worktree.
-4. **Publicación o Fusión:** Tras comprobar los cambios, puede revisar el diff y ejecutar `raigal agent apply <session-id>` para fusionar localmente, o permitir que Raigal cree una rama y abra un Pull Request automáticamente mediante `--pr`.
+1. Raigal crea un git worktree temporal en `.git/raigal-worktrees/<session-id>`.
+2. El proveedor del agente (Claude Code, OpenCode o Codex) recibe el diagnóstico y las reglas a cumplir.
+3. El agente modifica los archivos y ejecuta las pruebas dentro del worktree.
+4. Tras revisar los cambios, puede ejecutar `raigal agent apply <session-id>` para fusionarlos en local o usar `--pr` para abrir un pull request en GitHub.
 
-## Proveedores Compatibles
+## Proveedores compatibles
 
-Raigal se integra de forma transparente con los principales agentes locales de desarrollo:
+Raigal se conecta con tres herramientas de programación locales:
 
-| Proveedor | Invocación | Comando de Configuración |
+| Proveedor | Invocación | Comando de configuración |
 |---|---|---|
-| **Claude Code** | `claude` | `raigal agent connect claude` |
-| **OpenCode** | `opencode` | `raigal agent connect opencode` |
-| **Codex** | `codex` | `raigal agent connect codex` |
-| **Detección Automática** | Selección automática | `raigal agent use auto` |
+| Claude Code | `claude` | `raigal agent connect claude` |
+| OpenCode | `opencode` | `raigal agent connect opencode` |
+| Codex | `codex` | `raigal agent connect codex` |
+| Detección automática | Selección automática | `raigal agent use auto` |
 
-Consulte la disponibilidad de proveedores en su equipo en cualquier momento:
+Compruebe los proveedores disponibles en su máquina:
 ```bash
 raigal agent providers
 ```
 
-## Flujos de Trabajo
+## Flujos de trabajo
 
-### 1. Sesión de Reparación Interactiva Local
+### 1. Sesión de reparación interactiva local
 
-Pruebe y valide cambios localmente antes de generar commits en git:
+Pruebe y valide las modificaciones antes de crear un commit en git:
 
 ```bash
 # Previsualizar qué abordará la sesión de reparación
@@ -55,22 +55,24 @@ raigal agent show <session-id>
 raigal agent apply <session-id>
 ```
 
-### 2. Creación Autónoma de Pull Requests (`--pr`)
+### 2. Creación automática de pull requests (`--pr`)
 
-Para remediaciones completamente autónomas, utilice `--pr`. Raigal realizará las siguientes acciones:
-1. Ejecuta arreglos deterministas seguros y transfiere los problemas restantes al agente.
-2. Verifica que las pruebas pasen y que la puntuación de calidad alcance `--target-score` (por defecto: 90).
-3. Confirma los cambios en una rama aislada (`raigal/repair-...`).
-4. Publica la rama en el repositorio remoto y abre un Pull Request en GitHub.
-5. Transmite la telemetría a Raigal Cloud, registrando una tarjeta en la columna **Agent Remediations** del Tablero Kanban.
+Para generar una rama y abrir un pull request directamente:
 
 ```bash
 raigal agent --provider claude --pr --target-score 95
 ```
 
-### 3. Sincronización del Ciclo de Vida (`report-pr-closed`)
+Con la opción `--pr`, Raigal:
+1. Aplica arreglos seguros y traslada los problemas restantes al agente.
+2. Comprueba que las pruebas pasan y la puntuación alcanza `--target-score` (por defecto: 90).
+3. Confirma los cambios en una rama aislada (`raigal/repair-...`).
+4. Publica la rama en el repositorio remoto y abre un pull request en GitHub.
+5. Envía la telemetría a Raigal Cloud para crear una tarjeta en la columna **Agent Remediations**.
 
-Cuando un Pull Request de reparación es revisado y fusionado (o cerrado) en GitHub, el Tablero Kanban de Raigal Cloud puede actualizarse automáticamente mediante un flujo en GitHub Actions:
+### 3. Sincronización del ciclo de vida (`report-pr-closed`)
+
+Cuando se fusiona o cierra un pull request en GitHub, actualice el estado del tablero mediante un flujo de GitHub Actions:
 
 ```yaml
 # .github/workflows/raigal-pr-closed.yml
@@ -97,5 +99,5 @@ jobs:
 ```
 
 {% hint style="success" %}
-**Tablero Kanban:** En Raigal Cloud, abrir un PR mediante `raigal agent --pr` crea una tarjeta en la columna **Agent Remediations**. Al fusionarse el PR, `report-pr-closed` transiciona la tarjeta a estado **Merged**, registrando la mejora de puntuación en la telemetría de su organización.
+Al abrir un pull request mediante `raigal agent --pr`, se crea una tarjeta en la columna **Agent Remediations**. Cuando se fusiona el PR, `report-pr-closed` mueve la tarjeta a **Merged** y registra la diferencia de puntuación.
 {% endhint %}

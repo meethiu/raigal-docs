@@ -1,19 +1,19 @@
 ---
-description: "Modelo de seguridad, almacenamiento de credenciales, resolución de RAIGAL_TOKEN y firmas offline Ed25519."
+description: "Modelo de seguridad, almacenamiento de credenciales, variables de entorno y licencias offline."
 icon: lock
 ---
 
-# Modelo de Seguridad y Credenciales
+# Modelo de seguridad y credenciales
 
-Raigal está diseñado con principios de Zero-Trust, verificación criptográfica fuera de línea y máxima higiene de secretos.
+Raigal almacena credenciales de forma aislada, limpia secretos antes de enviar métricas y admite autenticación sin claves fijas mediante OIDC de GitHub Actions.
 
-## Almacenamiento de Credenciales
+## Almacenamiento de credenciales
 
-En entornos locales de desarrollador, las credenciales y concesiones se guardan en el directorio del usuario:
+En equipos locales, las credenciales y licencias se guardan en el directorio del usuario:
 
-- **Ruta:** `~/.raigal/credentials.json`
-- **Permisos de Archivo:** `0600` (lectura/escritura exclusiva para el usuario del sistema; acceso bloqueado a grupos y otros).
-- **Estructura:**
+- Ruta: `~/.raigal/credentials.json`
+- Permisos: `0600` (lectura y escritura exclusivas para el usuario propietario)
+- Estructura:
   ```json
   {
     "token": "rgl_sess_...",
@@ -25,10 +25,10 @@ En entornos locales de desarrollador, las credenciales y concesiones se guardan 
 
 ## Configuración de `RAIGAL_TOKEN` y `RAIGAL_API_URL`
 
-En pipelines de integración continua, contenedores Docker o entornos automatizados, configure la autenticación y el punto de enlace mediante variables de entorno:
+En pipelines de CI, contenedores Docker o scripts de automatización, configure la autenticación con variables de entorno:
 
-- `RAIGAL_TOKEN`: API Token activo de su organización (`rgl_live_...`). Tiene prioridad inmediata sobre el archivo local `~/.raigal/credentials.json`.
-- `RAIGAL_API_URL`: (Opcional) Endpoint explícito de su backend (ej: `https://app.raigal.dev`).
+- `RAIGAL_TOKEN`: token de API de su organización (`rgl_live_...`). Tiene prioridad sobre `~/.raigal/credentials.json`.
+- `RAIGAL_API_URL`: dirección del backend (por defecto `https://app.raigal.dev`).
 
 {% tabs %}
 {% tab title="GitHub Actions" %}
@@ -58,27 +58,26 @@ npx @methiu/raigal whoami
 {% endtab %}
 {% endtabs %}
 
-## Depuración de Secretos en Telemetría e Higiene de Datos
+## Limpieza de secretos y gestión de datos
 
-Raigal aplica estrictos controles de seguridad antes de que la telemetría salga de su estación de trabajo o se almacene en la nube:
+Antes de enviar telemetría a la nube:
+1. El CLI elimina cabeceras de autorización, tokens Bearer, claves privadas y patrones de credenciales habituales.
+2. Solo se transmiten recuentos diagnósticos, identificadores de reglas, rutas relativas y diferencias de puntuación. El código fuente nunca se sube a Raigal Cloud.
+3. El servidor almacena los registros en tablas de PostgreSQL (`telemetry_runs`, `pull_requests`) mediante operaciones idempotentes.
 
-1. **Depuración en Origen:** El CLI sanitiza automáticamente las cargas de telemetría, eliminando cabeceras de autorización, tokens Bearer, credenciales de AWS y patrones comunes de contraseñas antes de encolarlas.
-2. **Ingestión Sin Código:** La telemetría solo transmite métricas agregadas de diagnósticos, nombres de reglas, rutas de archivo relativas y diferencias de puntuación. Su código fuente nunca se sube a Raigal Cloud.
-3. **Persistencia Real y Garantía Zero-Mock:** El backend en la nube persiste los eventos directamente en tablas relacionales de PostgreSQL (`telemetry_runs`, `pull_requests`) mediante operaciones idempotentes protegidas (`ON CONFLICT`). El uso de mocks en memoria está prohibido en producción.
+## Autenticación OIDC en GitHub Actions
 
-## Autorización OIDC de GitHub Actions Sin Secretos Estáticos
+Para ejecutar flujos en GitHub Actions sin almacenar secretos fijos:
 
-Para entornos empresariales que ejecutan GitHub Actions, Raigal elimina el riesgo de gestionar claves estáticas de larga duración:
+1. Añada `permissions: id-token: write` al trabajo del flujo.
+2. El runner de GitHub genera un token OIDC firmado.
+3. Raigal envía dicho token en la cabecera `X-GitHub-OIDC` a `/api/v1/telemetry/runs`.
+4. Raigal Cloud valida la firma criptográfica con `https://token.actions.githubusercontent.com` y comprueba que el propietario del repositorio pertenece a su organización.
 
-1. Configure `permissions: id-token: write` en el trabajo del flujo de GitHub Actions.
-2. El runner de GitHub emite un token JWT OIDC firmado criptográficamente que certifica la identidad del repositorio, propietario, rama y flujo.
-3. Raigal envía este token en la cabecera `X-GitHub-OIDC` hacia `/api/v1/telemetry/runs`.
-4. Raigal Cloud valida la firma criptográfica directamente con el proveedor OIDC de GitHub (`https://token.actions.githubusercontent.com`) y confirma que el propietario del repositorio pertenece a la suscripción autorizada de su organización antes de registrar los resultados.
+## Licencias fuera de línea (Ed25519)
 
-## Concesiones Criptográficas Fuera de Línea (Ed25519)
+Raigal no realiza consultas de red en cada archivo analizado:
 
-Raigal **no** envía peticiones a los servidores en cada archivo analizado:
-
-1. Al autenticarse mediante `raigal login` o con `RAIGAL_TOKEN`, el servidor firma un token JWT utilizando una clave privada Ed25519 (`RAIGAL_PRIVATE_KEY`).
-2. El CLI verifica localmente dicha firma mediante la clave pública integrada (`src/cloud/keys.ts`).
-3. La concesión válida se almacena en `~/.raigal/entitlement.json` por hasta 72 horas, permitiendo trabajar en aviones o entornos sin conexión.
+1. Al iniciar sesión con `raigal login` o definir `RAIGAL_TOKEN`, el servidor firma una licencia temporal mediante una clave privada Ed25519.
+2. El CLI valida la firma sin conexión utilizando la clave pública incluida en el binario (`src/cloud/keys.ts`).
+3. La licencia se guarda en `~/.raigal/entitlement.json` durante un máximo de 72 horas, lo que permite trabajar sin conexión a internet.

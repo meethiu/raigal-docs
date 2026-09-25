@@ -1,13 +1,13 @@
 ---
-description: "Configuring Raigal project rules, score thresholds, and engine parameters via .raigal/config.yml."
+description: "Configure project rules, score thresholds, and engines in .raigal/config.yml."
 icon: gear
 ---
 
 # Configuration
 
-Raigal uses a typed configuration file located at `.raigal/config.yml` in your repository root.
+Raigal reads its configuration from `.raigal/config.yml` in your repository root.
 
-## Minimal Configuration
+## Minimal configuration
 
 ```yaml
 version: 1
@@ -30,28 +30,30 @@ ignore:
   - "**/*.min.js"
 ```
 
-## Configuration Reference
+## Options reference
 
 ### `scoring`
 
-- `threshold` (number, default: 80): The target benchmark score for the repository.
-- `fail_under` (number, default: 80): Minimum passing score in CI pipelines (`raigal ci`). Any score below this triggers an exit code `1`.
+- `threshold` (number, default: 80): target benchmark score for the repository.
+- `fail_under` (number, default: 80): minimum passing score for `raigal ci`. Scores below this trigger exit code `1`.
 
 ### `engines`
 
 Enables or disables individual diagnostic modules:
-- `ai_slop`: Detects repetitive patterns, defensively redundant checks, and hallucinated comments.
-- `security`: Scans for exposed tokens, private keys, and insecure function calls.
-- `lint`: High-speed lint checks powered by Oxlint and Ruff.
-- `format`: Style checks powered by Biome, Gofmt, and Ruff.
-- `quality`: Dead code detection (Knip) and cyclomatic complexity limits.
-- `architecture`: Project boundary import constraints.
+- `ai_slop`: repetitive patterns, redundant defensive checks, and obvious comments.
+- `security`: exposed tokens, private keys, and insecure function calls.
+- `lint`: static analysis powered by Oxlint and Ruff.
+- `format`: code style checks powered by Biome, Gofmt, and Ruff.
+- `quality`: unused code detection (Knip) and cyclomatic complexity limits.
+- `architecture`: boundary and cross-module import rules.
 
 ### `telemetry`
 
-Raigal respects developer privacy:
+To disable cloud telemetry reporting:
+
 ```yaml
 telemetry:
   enabled: false
 ```
-*(Telemetry events are strictly anonymous metrics. No code content or file paths are ever transmitted).*
+
+Telemetry events contain numeric metrics and rule counts only. Code contents and file contents are never transmitted.

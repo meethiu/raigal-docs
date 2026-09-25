@@ -1,26 +1,24 @@
 ---
-description: "Puntos de conexión de la API de organización, autenticación, gestión de repositorios y rotación de tokens para clientes de Raigal Cloud."
+description: "Endpoints de la API de organización, autenticación, gestión de repositorios y rotación de tokens."
 icon: key
 ---
 
-# API de la Organización y Gestión de Tokens
+# API de la organización y gestión de tokens
 
-Raigal Cloud proporciona una API REST que permite a las organizaciones clientes gestionar tokens de API, consultar puntuaciones de calidad de repositorios, ingerir telemetría de CI personalizada y purgar datos de repositorios de manera programática.
-
----
+Raigal Cloud ofrece una API REST para consultar puntuaciones, gestionar tokens, registrar resultados de CI y eliminar repositorios.
 
 ## Autenticación
 
-Todas las solicitudes a la API desde scripts, pipelines automatizados o integraciones personalizadas deben autenticarse mediante una Clave de API de la Organización (`rgl_live_...`):
+Las solicitudes deben incluir una clave de API de la organización (`rgl_live_...`) en la cabecera de autorización:
 
 {% tabs %}
-{% tab title="Encabezado Bearer" %}
+{% tab title="Cabecera Bearer" %}
 ```http
 Authorization: Bearer rgl_live_su_clave_aqui
 ```
 {% endtab %}
 
-{% tab title="Encabezado x-api-key" %}
+{% tab title="Cabecera x-api-key" %}
 ```http
 x-api-key: rgl_live_su_clave_aqui
 ```
@@ -28,21 +26,19 @@ x-api-key: rgl_live_su_clave_aqui
 {% endtabs %}
 
 {% hint style="info" %}
-Puede generar claves de API desde su panel de control en [**https://app.raigal.dev/settings**](https://app.raigal.dev/settings) en la sección **Tokens de API**.
+Puede generar claves de API en [app.raigal.dev/settings](https://app.raigal.dev/settings), dentro de **Tokens de API**.
 {% endhint %}
 
----
+## Endpoints
 
-## Referencia de Endpoints para Clientes
-
-### 1. Introspección de Identidad y Organización
-Verifique el token activo y compruebe los datos de su organización.
+### 1. Comprobación de identidad
+Verifica el token activo y devuelve los datos de la organización.
 
 ```http
 GET /v1/whoami
 ```
 
-**Respuesta:**
+Respuesta:
 ```json
 {
   "orgId": "org_2tQ...",
@@ -52,16 +48,14 @@ GET /v1/whoami
 }
 ```
 
----
-
-### 2. Política de Calidad de la Organización
-Recupere la política de calidad activa y los umbrales configurados para su organización.
+### 2. Política de calidad
+Recupera los umbrales de calidad configurados para la organización.
 
 ```http
 GET /v1/policy
 ```
 
-**Respuesta:**
+Respuesta:
 ```json
 {
   "minScore": 80,
@@ -81,16 +75,14 @@ GET /v1/policy
 }
 ```
 
----
-
-### 3. Listar Repositorios Monitorizados
-Obtenga la lista de todos los repositorios activos vinculados a su organización.
+### 3. Listar repositorios
+Obtiene la lista de repositorios vinculados a la organización.
 
 ```http
 GET /v1/runs/repos
 ```
 
-**Respuesta:**
+Respuesta:
 ```json
 {
   "repositories": [
@@ -105,43 +97,39 @@ GET /v1/runs/repos
 }
 ```
 
----
-
-### 4. Eliminar un Repositorio
-Elimine de forma definitiva un repositorio y purgue en cascada todas sus ejecuciones históricas, tarjetas de PR y hallazgos diagnósticos.
+### 4. Eliminar un repositorio
+Elimina un repositorio y su historial de escaneos, registros de pull requests y hallazgos asociados.
 
 ```http
 DELETE /v1/runs/repos/:repoId
 ```
 
-* `:repoId` puede ser el UUID del repositorio o el nombre del repositorio codificado en la URL (p. ej., `acme%2Fpayment-service`).
+`:repoId` puede ser el UUID del repositorio o el nombre del repositorio codificado en la URL (ej: `acme%2Fpayment-service`).
 
-**Respuesta:**
+Respuesta:
 ```json
 {
   "ok": true,
-  "message": "Repositorio acme/payment-service y todas sus ejecuciones asociadas han sido eliminados correctamente."
+  "message": "Repository acme/payment-service and all associated runs removed successfully."
 }
 ```
 
 {% hint style="warning" %}
-Esta operación es irreversible. También puede realizar esta acción visualmente desde la sección **Configuración** de la interfaz web.
+Esta operación es definitiva. También puede eliminar repositorios desde la sección **Configuración** del panel web.
 {% endhint %}
 
----
-
-### 5. Obtener Datos del Tablero Kanban de Remediación
-Obtenga la información del tablero Kanban en 4 etapas en formato JSON. Ideal para alimentar paneles de métricas internos, resúmenes ejecutivos o bots corporativos de Slack.
+### 5. Obtener datos del tablero
+Descarga las columnas y tarjetas del tablero en formato JSON.
 
 ```http
 GET /v1/runs/board?repoId=acme/payment-service&branch=main
 ```
 
-**Parámetros de Consulta:**
-- `repoId`: (Opcional) Filtrar tarjetas por nombre de repositorio.
-- `branch`: (Opcional) Filtrar tarjetas por rama de Git (por defecto, rama principal).
+Parámetros de consulta:
+- `repoId`: (opcional) filtrar por nombre de repositorio.
+- `branch`: (opcional) filtrar por rama git (por defecto, rama principal).
 
-**Respuesta:**
+Respuesta:
 ```json
 {
   "mediumPriority": [],
@@ -161,17 +149,15 @@ GET /v1/runs/board?repoId=acme/payment-service&branch=main
 }
 ```
 
----
-
-### 6. Ingesta de Ejecuciones de CI Personalizadas
-Si ejecuta CI en un entorno distinto a GitHub Actions (p. ej., Jenkins, GitLab CI, CircleCI), puede enviar los resultados de sus escaneos directamente a través de la API:
+### 6. Registrar ejecución de CI personalizada
+Para sistemas de CI distintos a GitHub Actions (Jenkins, GitLab CI, CircleCI), envíe los resultados del escaneo directamente:
 
 ```http
 POST /v1/runs
 Content-Type: application/json
 ```
 
-**Cuerpo de la Solicitud:**
+Cuerpo de la solicitud:
 ```json
 {
   "repoId": "acme/backend-api",
@@ -193,39 +179,37 @@ Content-Type: application/json
 }
 ```
 
----
+## Gestión de tokens
 
-## Ciclo de Vida y Rotación de Tokens
+Los tokens pueden crearse y revocarse desde el panel web o mediante la API de tokens:
 
-Las claves de API pueden crearse y rotarse desde el panel web en `https://app.raigal.dev/settings` o de manera programática:
-
-### Crear Token de API
+### Crear token de API
 ```http
 POST /api/tokens
 Content-Type: application/json
 
 {
-  "name": "Runner Despliegue Producción"
+  "name": "Production Deploy Runner"
 }
 ```
 
-**Respuesta:**
+Respuesta:
 ```json
 {
   "token": "rgl_live_8f3a9b1c7e2d...",
   "prefix": "rgl_live_8f3a",
-  "name": "Runner Despliegue Producción",
+  "name": "Production Deploy Runner",
   "created_at": "2026-09-24T18:00:00Z"
 }
 ```
 
 {% hint style="danger" %}
-Guarde su token inmediatamente en un gestor seguro. El valor en texto claro **solo se devuelve una vez** en el momento de su creación. Raigal Cloud cifra y genera un hash SHA-256 de todas las claves y no puede recuperar tokens perdidos.
+Guarde su token al crearlo. El valor completo solo se muestra una vez. Raigal Cloud almacena un hash SHA-256 y no puede recuperar tokens perdidos.
 {% endhint %}
 
-### Revocar Token de API
+### Revocar token de API
 ```http
 DELETE /api/tokens/:tokenId
 ```
 
-Revoca de inmediato la clave indicada, rechazando cualquier solicitud posterior que utilice dicho token.
+Revoca de inmediato el token indicado, denegando solicitudes posteriores.

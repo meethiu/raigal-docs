@@ -3,33 +3,33 @@ description: "How Raigal computes the 0-100 quality score, weighted penalties, a
 icon: gauge
 ---
 
-# Scoring Engine
+# Scoring engine
 
-Raigal evaluates codebases on a continuous scale from **0 to 100**, where 100 represents immaculate code quality.
+Raigal scores codebases on a scale from 0 to 100, where 100 means no issues were detected.
 
-## Score Bands
+## Score bands
 
-| Score Range | Status | Interpretation | Exit Code in CI |
+| Score range | Status | Meaning | Exit code in CI |
 |---|---|---|---|
-| **90 – 100** | **Healthy** | Clean architecture, no critical defects, zero slop. | `0` (Pass) |
-| **75 – 89** | **Warning** | Minor formatting, trivial comments, or mild debt. | `0` (Pass unless threshold set) |
-| **0 – 74** | **Failing** | Structural issues, high slop density, security warnings. | `1` (Gate Blocked) |
+| 90-100 | Healthy | Clean architecture, no critical defects, no pattern violations | `0` (Pass) |
+| 75-89 | Warning | Minor formatting issues, trivial comments, or small debt | `0` (Pass unless threshold set) |
+| 0-74 | Failing | Structural problems, high violation density, or security warnings | `1` (Blocked) |
 
-## Calibrated Scoring Formula
+## Scoring formula
 
-Unlike naive linters that deduct 5 points for every error and quickly reach 0 on large codebases, Raigal implements **density-aware logarithmic scaling**:
+Instead of subtracting a fixed number of points for each finding, Raigal scales penalties by code density:
 
 $$D = \frac{\sum (\text{weight}_i \times \text{severity}_i)}{\text{KLOC}}$$
 
 Where:
-- $\text{KLOC}$ is the total physical lines of code divided by 1,000.
-- Rules carry configurable weight multipliers (e.g., Security findings carry heavy weights; trivial comment deductions taper smoothly).
-- Files smaller than 100 lines use smoothed baseline denominators to avoid skewing small commits.
+- $\text{KLOC}$ is total physical lines of code divided by 1,000.
+- Each rule carries a weight multiplier. Security findings carry heavier penalties, while trivial comment penalties taper off.
+- Files under 100 lines use a baseline denominator so small commits are not penalized disproportionately.
 
-## Category Weights
+## Category weights
 
-1. **Security & Vulnerabilities (Weight 1.5x)**: Secret leakage, SQL injections, insecure deserialization.
-2. **AI Slop Antipatterns (Weight 1.2x)**: Defensively redundant null checks, fake fallbacks, repetitive comments.
-3. **Architecture & Boundaries (Weight 1.0x)**: Circular imports, illegal cross-module references.
-4. **Code Quality & Complexity (Weight 0.9x)**: Excessive cyclomatic complexity, dead code branches.
-5. **Formatting & Style (Weight 0.6x)**: Indentation and whitespace inconsistencies.
+- Security and vulnerabilities (1.5x): exposed credentials, SQL injections, insecure deserialization.
+- Pattern violations and slop (1.2x): redundant null checks, unnecessary fallbacks, repetitive comments.
+- Architecture and boundaries (1.0x): circular dependencies, cross-module boundary violations.
+- Code quality and complexity (0.9x): high cyclomatic complexity, dead code branches.
+- Formatting and style (0.6x): indentation and whitespace inconsistencies.

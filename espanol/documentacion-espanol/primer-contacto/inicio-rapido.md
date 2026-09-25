@@ -1,37 +1,37 @@
 ---
-description: "Ejecute su primer escaneo, analice los hallazgos y aplique correcciones automáticas en 60 segundos."
+description: "Ejecute un primer análisis, revise los hallazgos y aplique correcciones automáticas."
 icon: bolt
 ---
 
-# Inicio Rápido
+# Inicio rápido
 
-Comience a analizar su repositorio inmediatamente siguiendo tres sencillos pasos.
+Analice un repositorio y revise los resultados en tres pasos.
 
 {% stepper %}
 {% step %}
-### Inicializar la configuración
+### 1. Inicializar la configuración
 
-Ejecute el asistente de inicio para generar un archivo de configuración calibrado:
+Genere los archivos de configuración iniciales:
 
 ```bash
 raigal init .
 ```
 
-Esto generará:
-- `.raigal/config.yml`: Umbrales de calidad, activación de motores y rutas ignoradas.
-- `.raigal/rules.yml`: Ajustes específicos de severidad para cada regla.
+Esto crea:
+- `.raigal/config.yml`: umbrales de puntuación, activación de motores y rutas ignoradas.
+- `.raigal/rules.yml`: ajustes de severidad para reglas concretas.
 {% endstep %}
 
 {% step %}
-### Ejecutar el escaneo
+### 2. Ejecutar el análisis
 
-Lance el comando de escaneo en la raíz de su proyecto:
+Ejecute el comando de escaneo en la raíz de su repositorio:
 
 ```bash
 raigal scan .
 ```
 
-Raigal ejecutará en paralelo los motores de formateo, linting, calidad y AI slop, generando un informe con su puntuación de 0 a 100:
+Raigal ejecuta en paralelo los motores de formateo, linting, calidad y patrones de IA, y muestra la puntuación obtenida (0-100):
 
 ```text
 ╭───────────────────────────────────────────────────╮
@@ -45,14 +45,14 @@ Desglose por categorías:
 {% endstep %}
 
 {% step %}
-### Corregir problemas automáticamente
+### 3. Aplicar correcciones
 
-Aplique correcciones deterministas para formato, comentarios triviales e imports huérfanos:
+Aplique correcciones automáticas para problemas de formato, comentarios innecesarios e importaciones sin uso:
 
 ```bash
 raigal fix .
 ```
 
-Para aquellos problemas que requieran razonamiento semántico avanzado, Raigal genera un plan de reparación aislado en un git worktree para Claude Code, Cursor u OpenCode mediante `raigal agent .`.
+Para cambios que requieran edición semántica, ejecute `raigal agent .` para iniciar una sesión de reparación en un worktree aislado con Claude Code, Cursor u OpenCode.
 {% endstep %}
 {% endstepper %}

@@ -1,37 +1,37 @@
 ---
-description: "Run your first scan, inspect findings, and apply deterministic fixes in 60 seconds."
+description: "Run an initial scan, review findings, and apply automated fixes."
 icon: bolt
 ---
 
 # Quickstart
 
-Start scanning your repository immediately with three simple steps.
+Scan a repository and review results in three steps.
 
 {% stepper %}
 {% step %}
-### Initialize configuration
+### 1. Initialize configuration
 
-Run the initialization wizard to create a calibrated configuration file:
+Create the default configuration files:
 
 ```bash
 raigal init .
 ```
 
-This creates:
-- `.raigal/config.yml`: Core scoring threshold, engine toggles, and ignore paths.
-- `.raigal/rules.yml`: Specific rule severity overrides.
+This generates:
+- `.raigal/config.yml`: score threshold, engine toggles, and ignore paths.
+- `.raigal/rules.yml`: rule severity overrides.
 {% endstep %}
 
 {% step %}
-### Run a scan
+### 2. Run a scan
 
-Execute the scan command in your repository root:
+Run the scan command from your repository root:
 
 ```bash
 raigal scan .
 ```
 
-Raigal runs formatting, linting, quality, and AI-slop engines in parallel and outputs an interactive report with your quality score (0–100):
+Raigal runs formatting, linting, quality, and pattern engines in parallel and prints the quality score (0-100):
 
 ```text
 ╭───────────────────────────────────────────────────╮
@@ -45,14 +45,14 @@ Category breakdown:
 {% endstep %}
 
 {% step %}
-### Automatically fix issues
+### 3. Fix issues
 
-Apply deterministic fixes for formatting, trivial comments, and dead imports:
+Apply safe automated fixes for formatting, trivial comments, and unused imports:
 
 ```bash
 raigal fix .
 ```
 
-For findings that require LLM reasoning, Raigal generates an isolated worktree repair plan for Claude Code, Cursor, or OpenCode via `raigal agent .`.
+For issues that need semantic edits, run `raigal agent .` to start a worktree repair session with Claude Code, Cursor, or OpenCode.
 {% endstep %}
 {% endstepper %}

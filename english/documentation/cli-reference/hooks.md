@@ -1,18 +1,18 @@
 ---
-description: "Real-time quality interception hooks for Claude Code, Cursor, and OpenCode."
+description: "Interception hooks for Claude Code, Cursor, and OpenCode."
 icon: link
 ---
 
-# Agent Real-Time Hooks
+# Agent interception hooks
 
-One of Raigal's most powerful capabilities is real-time interception: intercepting AI coding agent edits **before** they land on your disk.
+Raigal can inspect code edits proposed by AI coding agents before they are saved to disk.
 
-## How Hooks Work
+## How hooks work
 
-When an AI coding agent attempts to modify a source file:
-1. The hook triggers a sub-second localized scan on the staged/modified buffer.
-2. If the agent introduces slop (e.g. redundant null checks, fake helper methods, or stripped error handling), the hook rejects or warns the agent immediately.
-3. The agent receives the exact diagnostic feedback in its internal reasoning loop and automatically corrects the mistake.
+When a coding agent modifies a file:
+1. The hook runs a localized AST scan on the modified buffer.
+2. If the edit introduces pattern violations, such as redundant null checks or stripped error handling, the hook rejects the edit or emits a warning.
+3. The agent receives the diagnostic output in its context and adjusts its proposal.
 
 ```mermaid
 sequenceDiagram
@@ -29,7 +29,7 @@ sequenceDiagram
     Agent->>Code: Writes clean, validated code
 ```
 
-## Installing Hooks
+## Installing hooks
 
 Install hooks for all detected agents on your system:
 
@@ -43,7 +43,7 @@ Or target specific tools:
 raigal hook install claude cursor opencode
 ```
 
-## Status & Baselines
+## Status and baselines
 
 Check active hooks:
 
@@ -51,9 +51,10 @@ Check active hooks:
 raigal hook status
 ```
 
-Capture the current codebase score as your baseline:
+Record the current score as the project baseline:
 
 ```bash
 raigal hook baseline
 ```
-The hook will ensure that no future AI edits decrease your baseline score.
+
+Subsequent agent edits that drop the score below this baseline are rejected.

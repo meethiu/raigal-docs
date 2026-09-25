@@ -1,13 +1,13 @@
 ---
-description: "Referencia completa de comandos y banderas de la interfaz de línea de comandos de Raigal."
+description: "Referencia de comandos y opciones de la interfaz de línea de comandos de Raigal."
 icon: terminal
 ---
 
-# Comandos y Banderas CLI
+# Comandos y opciones del CLI
 
-Raigal proporciona una interfaz de línea de comandos intuitiva tanto para el trabajo diario del desarrollador como para pipelines de integración continua.
+Raigal incluye comandos para análisis locales, correcciones automáticas, sesiones de reparación con agentes y validación en CI.
 
-## Índice de Comandos
+## Índice de comandos
 
 | Comando | Acción |
 |---|---|
@@ -26,7 +26,7 @@ Raigal proporciona una interfaz de línea de comandos intuitiva tanto para el tr
 | `raigal rules` | Muestra el catálogo de reglas y pesos de puntuación |
 | `raigal init` | Crea el archivo de configuración y flujo opcional para CI |
 
-## Referencia de Comandos
+## Referencia de comandos
 
 ### `raigal scan`
 
@@ -36,98 +36,98 @@ Evalúa el directorio indicado y muestra el desglose de calidad.
 raigal scan [opciones] [ruta]
 ```
 
-**Opciones:**
-- `--changes`: Analiza únicamente los archivos modificados respecto a git `HEAD`.
-- `--staged`: Analiza únicamente los archivos en el stage de git (ideal para pre-commit).
-- `--base <ref>`: Compara el diff contra una referencia específica (ej: `origin/main`).
-- `-d, --verbose`: Muestra el desglose detallado de archivos por cada regla.
-- `--json`: Emite el árbol completo de diagnósticos en formato JSON.
-- `--sarif`: Genera diagnósticos en estándar OASIS SARIF 2.1.0.
-- `--format <formato>`: Define explícitamente el formato de salida (`json` o `sarif`).
-- `--fail-on <nivel>`: Finaliza con código de error 1 según el nivel: `none`, `error`, o `warning`.
+Opciones:
+- `--changes`: analiza únicamente los archivos modificados respecto a git `HEAD`.
+- `--staged`: analiza únicamente los archivos en el stage de git (ideal para pre-commit).
+- `--base <ref>`: compara el diff contra una referencia específica (ej: `origin/main`).
+- `-d, --verbose`: muestra el desglose detallado de archivos por cada regla.
+- `--json`: emite el árbol completo de diagnósticos en formato JSON.
+- `--sarif`: genera diagnósticos en estándar OASIS SARIF 2.1.0.
+- `--format <formato>`: define explícitamente el formato de salida (`json` o `sarif`).
+- `--fail-on <nivel>`: finaliza con código de error 1 según el nivel: `none`, `error` o `warning`.
 
 ### `raigal ci`
 
-Diseñado expresamente para la validación de Pull Requests en pipelines de CI/CD.
+Diseñado para la validación de pull requests en pipelines de CI/CD.
 
 ```bash
 raigal ci [opciones] [ruta]
 ```
 
-- Bloquea el PR si la puntuación global no alcanza el umbral establecido (por defecto: 80).
-- Admite `--human` para generar resúmenes visuales legibles en los registros de CI.
-- `--changes`: Valida únicamente los archivos modificados respecto a `--base` (o `HEAD`).
-- `--staged`: Valida únicamente archivos en stage.
-- `--base <ref>`: Referencia base para el diff de `--changes` (ej: `origin/main`).
-- `--sarif`: Exporta resultados en SARIF 2.1.0 para anotaciones automáticas en GitHub Code Scanning.
+- Bloquea el pull request si la puntuación no alcanza el umbral establecido (por defecto: 80).
+- Admite `--human` para generar resúmenes legibles en los registros de CI.
+- `--changes`: valida únicamente los archivos modificados respecto a `--base` (o `HEAD`).
+- `--staged`: valida únicamente archivos en stage.
+- `--base <ref>`: referencia base para el diff de `--changes` (ej: `origin/main`).
+- `--sarif`: exporta resultados en SARIF 2.1.0 para anotaciones en GitHub Code Scanning.
 
 ### `raigal fix`
 
-Aplica correcciones deterministas y seguras sin riesgo de introducir alucinaciones lógicas.
+Aplica correcciones automáticas y seguras para problemas de formato y patrones.
 
 ```bash
 raigal fix [opciones] [ruta]
 ```
 
-- `--safe`: Aplica únicamente cambios con garantía de preservación semántica (importaciones, eliminación de comentarios triviales, formateadores seguros).
-- `-f, --force`: Ejecuta correcciones intensivas (auditorías de dependencias y alineación de frameworks).
-- `--dry-run`: Previsualiza las modificaciones sin escribir en disco.
-- `-p, --prompt`: Convierte los problemas restantes en un prompt contextualizado para su agente de IA.
-- `--changes` / `--staged`: Limita las correcciones a archivos modificados o en stage.
-- `--base <ref>`: Referencia base para `--changes`.
+- `--safe`: aplica únicamente cambios que preservan la semántica (importaciones, eliminación de comentarios triviales, formateadores).
+- `-f, --force`: ejecuta correcciones más amplias, como auditorías de dependencias y alineación de frameworks.
+- `--dry-run`: previsualiza las modificaciones sin escribir en disco.
+- `-p, --prompt`: convierte los problemas restantes en un prompt para su agente de programación.
+- `--changes` / `--staged`: limita las correcciones a archivos modificados o en stage.
+- `--base <ref>`: referencia base para `--changes`.
 
 ### `raigal agent`
 
-Ejecuta sesiones de reparación autónomas mediante herramientas de IA locales en un git worktree aislado.
+Ejecuta sesiones de reparación con herramientas de IA locales en un git worktree aislado.
 
 ```bash
 raigal agent [opciones] [ruta]
 ```
 
-**Banderas Principales:**
-- `--provider <proveedor>`: Proveedor a invocar (`auto`, `codex`, `claude`, `opencode`).
-- `--target-score <n>`: Umbral de puntuación objetivo hacia el cual converger (por defecto: 90).
-- `--max-turns <n>`: Número máximo de turnos del agente por intento de reparación (por defecto: 4).
-- `--limit <n>`: Número máximo de hallazgos entregados al agente (por defecto: 8).
-- `--in-place`: Edita directamente en el árbol de trabajo actual en lugar de aislar en worktree.
-- `--apply`: Aplica el diff aceptado al árbol original al finalizar.
-- `-y, --yes`: Omite solicitudes interactivas de confirmación para `--apply`.
-- `--dry-run`: Imprime el proveedor seleccionado y el plan de ejecución sin realizar cambios.
-- `--background`: Inicia la ejecución del agente en segundo plano y retorna de inmediato.
-- `--no-fix`: Omite la fase de arreglos deterministas seguros antes de invocar al agente.
-- `--commit`: Realiza un commit con el diff verificado en una rama de reparación.
-- `--pr`: Publica la rama y abre automáticamente un Pull Request en GitHub.
-- `--branch <nombre>`: Nombre personalizado para la rama en `--commit` o `--pr`.
-- `--base <rama>`: Rama base de destino para `--pr`.
-- `--title <titulo>`: Título del Pull Request para `--pr`.
-- `--commit-message <mensaje>`: Mensaje de commit personalizado.
-- `--ready`: Abre un PR listo para revisión en lugar de un borrador (draft).
-- `--cleanup`: Elimina el worktree generado incluso si queda algún diff residual.
+Opciones principales:
+- `--provider <proveedor>`: proveedor a invocar (`auto`, `codex`, `claude`, `opencode`).
+- `--target-score <n>`: umbral de puntuación objetivo a alcanzar (por defecto: 90).
+- `--max-turns <n>`: número máximo de turnos del agente por intento de reparación (por defecto: 4).
+- `--limit <n>`: número máximo de hallazgos entregados al agente (por defecto: 8).
+- `--in-place`: edita directamente en el árbol de trabajo actual en lugar de aislar en worktree.
+- `--apply`: aplica los cambios aceptados a la rama original al finalizar.
+- `-y, --yes`: omite confirmaciones interactivas para `--apply`.
+- `--dry-run`: muestra el proveedor seleccionado y el plan de ejecución sin realizar cambios.
+- `--background`: inicia la ejecución del agente en segundo plano y retorna de inmediato.
+- `--no-fix`: omite los arreglos automáticos seguros antes de invocar al agente.
+- `--commit`: genera un commit con los cambios verificados en una rama de reparación.
+- `--pr`: publica la rama y abre un pull request en GitHub.
+- `--branch <nombre>`: nombre de la rama para `--commit` o `--pr`.
+- `--base <rama>`: rama base de destino para `--pr`.
+- `--title <titulo>`: título del pull request para `--pr`.
+- `--commit-message <mensaje>`: mensaje de commit.
+- `--ready`: abre un pull request listo para revisión en lugar de un borrador.
+- `--cleanup`: elimina el worktree generado aunque quede algún cambio pendiente.
 
-**Subcomandos de Agente:**
-- `raigal agent plan [dir]`: Previsualiza proveedor, worktree, hallazgos y acciones sin editar archivos.
-- `raigal agent connect [proveedor]`: Conecta con un proveedor local mediante su propia autenticación CLI.
-- `raigal agent providers`: Lista proveedores de agentes detectados localmente y su estado.
-- `raigal agent use [proveedor]`: Configura o muestra el proveedor por defecto para este repositorio.
-- `raigal agent sessions [dir]`: Lista sesiones de reparación activas y pasadas.
-- `raigal agent show <session-id>`: Inspecciona diff y metadatos de una sesión en particular.
-- `raigal agent apply <session-id>`: Fusiona las mejoras de una sesión a su rama de trabajo.
-- `raigal agent monitor [dir]`: Supervisa cambios en git y repara automáticamente cuando baja la puntuación.
+Subcomandos:
+- `raigal agent plan [dir]`: previsualiza proveedor, worktree, hallazgos y acciones sin editar archivos.
+- `raigal agent connect [proveedor]`: conecta con un proveedor local mediante su propia autenticación CLI.
+- `raigal agent providers`: lista proveedores detectados localmente y su estado.
+- `raigal agent use [proveedor]`: define o muestra el proveedor por defecto para este repositorio.
+- `raigal agent sessions [dir]`: lista sesiones de reparación activas y anteriores.
+- `raigal agent show <session-id>`: inspecciona diff y metadatos de una sesión en particular.
+- `raigal agent apply <session-id>`: fusiona los cambios de una sesión en su rama de trabajo.
+- `raigal agent monitor [dir]`: supervisa cambios en git y ejecuta reparaciones cuando la puntuación baja del objetivo.
 
 ### `raigal report-pr-closed`
 
-Reporta el cierre o fusión de un Pull Request a Raigal Cloud para mantener sincronizado el Tablero Kanban.
+Notifica el cierre o fusión de un pull request a Raigal Cloud para actualizar el tablero de remediación.
 
 ```bash
 raigal report-pr-closed --pr <numero> [--merged]
 ```
 
-- `--pr <numero>`: Número del Pull Request (obtenido automáticamente de `GITHUB_EVENT_PATH` en GitHub Actions).
-- `--merged`: Indicador de si el Pull Request fue fusionado en la rama principal.
+- `--pr <numero>`: número del pull request (obtenido automáticamente de `GITHUB_EVENT_PATH` en GitHub Actions).
+- `--merged`: indica si el pull request se fusionó en la rama base.
 
 ### `raigal login` y `raigal logout`
 
-Gestiona las credenciales de Raigal Cloud y la autenticación mediante concesiones offline.
+Gestionan las credenciales de Raigal Cloud y la autenticación mediante licencias fuera de línea.
 
 ```bash
 # Inicio de sesión interactivo vía navegador OAuth
@@ -142,7 +142,7 @@ raigal logout
 
 ### `raigal whoami`
 
-Muestra el usuario autenticado, organización, plan contratado y repositorios de GitHub con acceso autorizado.
+Muestra el usuario autenticado, organización, plan y repositorios de GitHub con acceso autorizado.
 
 ```bash
 raigal whoami

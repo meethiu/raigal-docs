@@ -1,28 +1,28 @@
 ---
-description: "Recipes for integrating Raigal into GitHub Actions, GitLab CI, and automated deployment pipelines."
+description: "Integrate Raigal into GitHub Actions, GitLab CI, and automated pipelines."
 icon: route
 ---
 
-# CI/CD Pipelines & GitHub Actions
+# CI/CD pipelines and GitHub Actions
 
-Enforce clean code, block AI slop at the Pull Request gate, and stream run telemetry directly into the Raigal Cloud Remediation Kanban.
+Configure Raigal to check pull requests in CI and report scores to your dashboard.
 
-## Environment Variables
+## Environment variables
 
-When running in CI pipelines, provide the following variables:
+Provide these variables in your CI environment:
 
 | Variable | Required | Description | Example |
 |---|---|---|---|
-| `RAIGAL_TOKEN` | Yes* | Organization API Key (`rgl_live_...`) | `rgl_live_8f3a9b...` |
-| `RAIGAL_API_URL` | Optional | Custom Raigal Cloud endpoint (defaults to standard cloud) | `https://app.raigal.dev` |
+| `RAIGAL_TOKEN` | Yes* | Organization API key (`rgl_live_...`) | `rgl_live_8f3a9b...` |
+| `RAIGAL_API_URL` | Optional | Custom backend URL (defaults to `https://app.raigal.dev`) | `https://app.raigal.dev` |
 
-*\* Note: When using GitHub Actions with `id-token: write` on enterprise plans, static tokens are optional because Raigal supports Zero-Token GitHub OIDC.*
+*Note: In GitHub Actions jobs configured with `permissions: id-token: write`, you do not need `RAIGAL_TOKEN` because Raigal can authenticate using GitHub OIDC tokens directly.*
 
 ## GitHub Actions
 
-### 1. Pull Request Quality Gate
+### 1. Pull request check
 
-Create `.github/workflows/raigal.yml` to gate PRs and report status to the Kanban board:
+Create `.github/workflows/raigal.yml` to check pull requests and send scores to the dashboard:
 
 ```yaml
 name: Raigal Quality Gate
@@ -39,12 +39,12 @@ jobs:
     runs-on: ubuntu-latest
     permissions:
       contents: read
-      id-token: write  # Enables zero-secret GitHub OIDC authentication!
+      id-token: write
 
     steps:
       - uses: actions/checkout@v4
         with:
-          fetch-depth: 0 # Needed to diff PR changes
+          fetch-depth: 0
 
       - uses: actions/setup-node@v4
         with:
@@ -59,16 +59,16 @@ jobs:
 ```
 
 {% hint style="tip" %}
-**GitHub OIDC Authentication:** Setting `permissions: id-token: write` allows the runner to mint a short-lived OIDC token. Raigal exchanges this token securely via `X-GitHub-OIDC`, eliminating the need to store or rotate static API tokens in repository secrets.
+Setting `permissions: id-token: write` allows the runner to generate a short-lived OIDC token. Raigal passes this token in `X-GitHub-OIDC`, so you do not need to store static tokens in repository secrets.
 {% endhint %}
 
-### 2. Pull Request Closed & Merged Synchronization
+### 2. Pull request close and merge sync
 
 {% hint style="info" %}
-**Using the GitHub App?** If you have installed the **Raigal GitHub App**, this step is **not needed**! The App directly receives `pull_request.closed` webhooks from GitHub and updates your Kanban board automatically. See [Pull Request Quality Gate](pull-requests.md) for GitHub App setup.
+If you use the **Raigal GitHub App**, this step is unnecessary. The app receives `pull_request.closed` webhook events directly from GitHub and updates your board automatically.
 {% endhint %}
 
-For standalone GitHub Actions environments without the GitHub App, you can synchronize card state when PRs are merged or closed:
+For standalone CI environments without the GitHub App, sync card status when PRs merge or close:
 
 ```yaml
 name: Raigal PR Lifecycle
@@ -109,12 +109,12 @@ raigal_gate:
     - npx @methiu/raigal ci --human
 ```
 
-## Pull Request Annotations & SARIF
+## Pull request annotations and SARIF
 
-To display findings directly in GitHub's **Security** tab and inline code annotations:
+To generate annotations in GitHub's code scanning view:
 
 ```bash
 npx @methiu/raigal scan --sarif > results.sarif
 ```
 
-Upload using the standard GitHub SARIF upload action (`github/codeql-action/upload-sarif@v3`).
+Upload the output with the standard GitHub SARIF action (`github/codeql-action/upload-sarif@v3`).

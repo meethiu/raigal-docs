@@ -1,71 +1,60 @@
 ---
-description: "Guía paso a paso de incorporación para equipos de ingeniería, directores de tecnología y administradores que utilizan Raigal Cloud."
+description: "Guía de configuración para equipos y administradores de Raigal Cloud."
 icon: building
 ---
 
-# Configuración y Onboarding de la Organización
+# Configuración inicial de la organización
 
-Esta guía detalla la configuración de Raigal para su organización de ingeniería utilizando la plataforma alojada en **[app.raigal.dev](https://app.raigal.dev)** y la **[GitHub App Oficial de Raigal](https://github.com/apps/raigal-cloud)**.
+Esta guía explica cómo configurar Raigal para su equipo utilizando el panel web en [app.raigal.dev](https://app.raigal.dev) y la [GitHub App de Raigal](https://github.com/apps/raigal-cloud).
 
----
-
-## Lista de Comprobación de Onboarding
+## Pasos de configuración
 
 | Paso | Acción | Dónde | Tiempo |
 |---|---|---|---|
-| **1. Crear Organización** | Iniciar sesión con GitHub, Google o correo corporativo | [app.raigal.dev](https://app.raigal.dev) | 1 min |
-| **2. Instalar GitHub App** | Instalar la App oficial en sus repositorios | [github.com/apps/raigal-cloud](https://github.com/apps/raigal-cloud) | 1 min |
-| **3. Obtener Token de Org** | Copiar su token de API `rgl_live_...` | Configuración &rarr; Tokens de API | 30 seg |
-| **4. Configurar CI/CD** | Añadir `.github/workflows/raigal.yml` | Sus repositorios | 2 min |
-| **5. Invitar Ingenieros** | Enviar invitaciones al equipo o configurar SSO | Configuración &rarr; Miembros de la Organización | 1 min |
+| 1. Crear organización | Iniciar sesión con GitHub, Google o correo corporativo | [app.raigal.dev](https://app.raigal.dev) | 1 min |
+| 2. Instalar GitHub App | Añadir la app a los repositorios seleccionados | [github.com/apps/raigal-cloud](https://github.com/apps/raigal-cloud) | 1 min |
+| 3. Copiar token de API | Copiar su clave `rgl_live_...` | Configuración > Tokens de API | 30 seg |
+| 4. Añadir flujo de CI | Crear `.github/workflows/raigal.yml` | Sus repositorios | 2 min |
+| 5. Invitar al equipo | Enviar invitaciones o configurar SSO | Configuración > Miembros | 1 min |
 
----
+## 1. Crear su organización
 
-## Paso 1: Registro y Creación de su Organización
-
-1. Acceda a **[app.raigal.dev](https://app.raigal.dev)**.
-2. Inicie sesión con GitHub, Google o su correo corporativo.
-3. En el selector de organizaciones situado en la esquina superior izquierda, seleccione **Crear Organización** (o elija el espacio de trabajo existente de su equipo).
-4. Introduzca el nombre de su organización (p. ej., *Acme Engineering*).
+1. Entre en [app.raigal.dev](https://app.raigal.dev).
+2. Inicie sesión con GitHub, Google o su correo de trabajo.
+3. Abra el selector de organizaciones en la esquina superior izquierda y elija **Crear Organización** (o seleccione un espacio existente).
+4. Indique el nombre de su organización.
 
 {% hint style="info" %}
-Raigal admite el cambio de organización multi-inquilino. Si pertenece a varios equipos o gestiona cuentas de clientes independientes, puede alternar entre ellos cómodamente desde el selector superior izquierdo.
+Si gestiona varias cuentas o clientes, puede alternar entre organizaciones desde el menú superior izquierdo.
 {% endhint %}
 
----
+## 2. Instalar la GitHub App de Raigal
 
-## Paso 2: Instalar la GitHub App Oficial de Raigal
+La GitHub App gestiona las comprobaciones de pull requests: añade estados pendientes al abrir PRs, actualiza los resultados cuando finaliza el CI y refleja fusiones y cierres de ramas.
 
-La GitHub App de Raigal gestiona el ciclo de vida de la puerta de calidad en Pull Requests: publica comprobaciones pendientes inmediatas al abrir PRs, actualiza el estado de la comprobación al finalizar el CI y sincroniza los estados de fusión y cierre de forma automática.
+1. En el panel de Raigal Cloud, vaya a **Configuración** y elija **Sincronizar Cuentas de GitHub** (o abra [github.com/apps/raigal-cloud](https://github.com/apps/raigal-cloud)).
+2. Seleccione **Install App**.
+3. Elija su organización o cuenta de GitHub.
+4. Seleccione todos los repositorios o marque los que desee proteger.
+5. Confirme con **Install & Authorize**.
 
-1. En el panel de Raigal Cloud, vaya a **Configuración** &rarr; haga clic en **Sincronizar Cuentas de GitHub** (o visite **[github.com/apps/raigal-cloud](https://github.com/apps/raigal-cloud)** directamente).
-2. Haga clic en **Install App** (Instalar App).
-3. Seleccione su organización o cuenta personal de GitHub.
-4. Elija **All repositories** (Todos los repositorios) o seleccione los repositorios específicos que desea proteger con Raigal.
-5. Haga clic en **Install & Authorize** (Instalar y autorizar).
+GitHub conectará esos repositorios con su organización en Raigal Cloud.
 
-Una vez instalada, GitHub vincula automáticamente sus repositorios con su organización en Raigal Cloud.
+## 3. Obtener credenciales de la organización
 
----
+Para que GitHub Actions o las sesiones de terminal envíen métricas a su panel, copie su clave de API:
 
-## Paso 3: Obtener las Credenciales de la Organización
-
-Para que GitHub Actions o las sesiones locales de los desarrolladores puedan enviar métricas de calidad a su panel en la nube, obtenga la clave de API de su organización:
-
-1. Abra **[app.raigal.dev/settings](https://app.raigal.dev)**.
-2. En la tarjeta **Token Activo de la Organización**, se muestra su clave en vivo (`rgl_live_...`).
-3. Haga clic en **Copiar** para copiar el token.
-4. Si necesita generar una nueva clave o rotar credenciales, haga clic en **Generar Nuevo Token** en la sección **Claves de API**.
+1. Abra [app.raigal.dev/settings](https://app.raigal.dev).
+2. En la tarjeta **Token Activo de la Organización**, copie el valor `rgl_live_...`.
+3. Si necesita rotar la clave, pulse **Generar Nuevo Token** en **Claves de API**.
 
 {% hint style="tip" %}
-**GitHub Actions sin Secretos (OIDC):** Si prefiere no gestionar tokens estáticos en GitHub Secrets, active `permissions: id-token: write` en su flujo de trabajo. Raigal Cloud autentica de forma nativa los tokens OIDC del runner de GitHub sin requerir secretos estáticos.
+Si prefiere evitar claves estáticas en GitHub, incluya `permissions: id-token: write` en su flujo de trabajo. Raigal Cloud valida la identidad del runner mediante OIDC de GitHub.
 {% endhint %}
 
----
+## 4. Añadir el flujo de GitHub Actions
 
-## Paso 4: Añadir la Puerta de Calidad en GitHub Actions
-
-Añada el archivo `.github/workflows/raigal.yml` a cada repositorio que desee proteger:
+Añada el archivo `.github/workflows/raigal.yml` a cada repositorio:
 
 ```yaml
 name: Puerta de Calidad Raigal
@@ -82,13 +71,13 @@ jobs:
     runs-on: ubuntu-latest
     permissions:
       contents: read
-      id-token: write  # Habilita OIDC de GitHub sin secretos estáticos
+      id-token: write
 
     steps:
       - name: Descargar Código
         uses: actions/checkout@v4
         with:
-          fetch-depth: 0 # Necesario para calcular diferencias precisas respecto a la rama base
+          fetch-depth: 0
 
       - name: Configurar Node.js
         uses: actions/setup-node@v4
@@ -104,45 +93,37 @@ jobs:
 ```
 
 En su repositorio de GitHub:
-- Vaya a **Settings** &rarr; **Secrets and variables** &rarr; **Actions**.
-- Añada un nuevo secreto de repositorio:
-  - Nombre: `RAIGAL_TOKEN`
-  - Valor: Su token `rgl_live_...` obtenido en el Paso 3.
+1. Vaya a **Settings** > **Secrets and variables** > **Actions**.
+2. Añada un secreto llamado `RAIGAL_TOKEN` con el valor `rgl_live_...`.
 
----
+## 5. Invitar al equipo
 
-## Paso 5: Invitar a su Equipo de Ingeniería
+1. En **Configuración**, abra la pestaña **Miembros**.
+2. Pulse **Invitar Miembros** e introduzca las direcciones de correo.
+3. Asigne los roles: **Admin** para responsables de plataforma o **Member** para desarrolladores.
+4. Cada usuario recibirá un correo con el enlace para unirse a la organización en [app.raigal.dev](https://app.raigal.dev).
 
-1. En **Configuración**, haga clic en el nombre de su organización o en la pestaña **Miembros**.
-2. Haga clic en **Invitar Miembros** para enviar invitaciones por correo electrónico.
-3. Asigne los roles correspondientes (**Admin** para responsables de plataforma, **Member** para ingenieros).
-4. Los ingenieros invitados recibirán un correo para unirse al espacio de trabajo de su organización en **[app.raigal.dev](https://app.raigal.dev)**.
+## Configuración en el equipo local
 
----
-
-## Configuración en las Máquinas de los Desarrolladores
-
-Los desarrolladores pueden autenticar sus entornos locales para transmitir métricas de escaneo, acceder a las políticas de la organización y ejecutar reparaciones autónomas:
+Los desarrolladores pueden autenticar sus terminales para enviar métricas y usar herramientas de reparación:
 
 ```bash
-# Autenticarse mediante el navegador
+# Iniciar sesión en el navegador
 npx @methiu/raigal login
 
-# Verificar la organización activa
+# Comprobar la organización activa
 npx @methiu/raigal whoami
 ```
 
-Para instalar hooks de intercepción en tiempo real en Claude Code o Cursor:
+Para instalar hooks en Claude Code o Cursor:
 
 ```bash
 npx @methiu/raigal hook install
 ```
 
----
+## Gestión de repositorios conectados
 
-## Gestión de Repositorios Conectados
-
-En **Configuración &rarr; Repositorios Conectados**, los administradores pueden:
-- **Supervisar la Actividad en Directo:** Expandir cualquier repositorio para revisar escaneos recientes, principales hallazgos y puntuaciones de calidad por rama.
-- **Acceder al Tablero Kanban:** Hacer clic en **Tablero** para ir directamente al panel de remediación en 4 etapas de ese repositorio.
-- **Eliminar Repositorios en Desuso:** Hacer clic en **Eliminar** (icono de papelera) para borrar permanentemente un repositorio inactivo, eliminando en cascada sus ejecuciones históricas y registros de PR asociados.
+En **Configuración** > **Repositorios Conectados**, los administradores pueden:
+- Desplegar un repositorio para revisar ejecuciones recientes, hallazgos frecuentes y puntuaciones por rama.
+- Pulsar **Tablero** para abrir el panel de remediación en 4 etapas.
+- Pulsar **Eliminar** para desvincular un repositorio inactivo y borrar sus registros históricos de escaneos y pull requests.

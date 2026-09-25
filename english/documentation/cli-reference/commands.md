@@ -1,13 +1,13 @@
 ---
-description: "Comprehensive command-line interface reference and flags for Raigal."
+description: "Command-line interface reference and flags for Raigal."
 icon: terminal
 ---
 
-# CLI Commands & Flags
+# CLI commands and flags
 
-Raigal provides an intuitive CLI surface designed for local developer iteration and automated CI workflows.
+Raigal provides commands for local code checks, automatic fixes, agent repair sessions, and CI quality gates.
 
-## Command Index
+## Command index
 
 | Command | Action |
 |---|---|
@@ -26,7 +26,7 @@ Raigal provides an intuitive CLI surface designed for local developer iteration 
 | `raigal rules` | Display rule explanations and impact weights |
 | `raigal init` | Create configuration file and optional CI workflow |
 
-## Command Reference
+## Command reference
 
 ### `raigal scan`
 
@@ -36,96 +36,96 @@ Evaluates the target directory and outputs the score breakdown.
 raigal scan [options] [path]
 ```
 
-**Options:**
-- `--changes`: Only scan files changed relative to git `HEAD`.
-- `--staged`: Scan git staged files only (ideal for pre-commit hooks).
-- `--base <ref>`: Compare diff against a specific git reference (e.g., `origin/main`).
-- `-d, --verbose`: Show file-level details per rule.
-- `--json`: Output full raw diagnostic tree as JSON.
-- `--sarif`: Output diagnostics in OASIS SARIF 2.1.0 format.
-- `--format <format>`: Explicitly set output format (`json` or `sarif`).
-- `--fail-on <level>`: Exit with code 1 on findings matching `none`, `error`, or `warning`.
+Options:
+- `--changes`: scan files changed relative to git `HEAD` only.
+- `--staged`: scan staged git files only (useful in pre-commit hooks).
+- `--base <ref>`: compare diff against a specific git reference (such as `origin/main`).
+- `-d, --verbose`: show file-level details for each rule.
+- `--json`: output full diagnostic tree as JSON.
+- `--sarif`: output diagnostics in OASIS SARIF 2.1.0 format.
+- `--format <format>`: set output format (`json` or `sarif`).
+- `--fail-on <level>`: exit with code 1 on findings matching `none`, `error`, or `warning`.
 
 ### `raigal ci`
 
-Designed specifically for automated pull request quality gates in CI runners.
+Runs quality evaluations in CI runners and exits with non-zero codes on failure.
 
 ```bash
 raigal ci [options] [path]
 ```
 
-- Blocks PRs if the overall score falls below the configured threshold (default: 80).
-- Accepts `--human` to output clean colored summaries in CI build logs.
-- `--changes`: Only gate files changed vs `--base` (or `HEAD`).
-- `--staged`: Only gate staged files.
-- `--base <ref>`: Diff base for `--changes` (e.g., `origin/main`).
-- `--sarif`: Output SARIF 2.1.0 for GitHub code scanning annotations.
+- Blocks pull requests if the overall score falls below the configured threshold (default: 80).
+- Accepts `--human` to output formatted summaries in CI logs.
+- `--changes`: gate files changed relative to `--base` (or `HEAD`) only.
+- `--staged`: gate staged files only.
+- `--base <ref>`: diff base for `--changes` (such as `origin/main`).
+- `--sarif`: output SARIF 2.1.0 for GitHub code scanning annotations.
 
 ### `raigal fix`
 
-Applies deterministic, reversible fixes without risking logical hallucinations.
+Applies automated fixes for safe formatting and pattern violations.
 
 ```bash
 raigal fix [options] [path]
 ```
 
-- `--safe`: Only applies guaranteed-safe changes (imports, comment removal, safe formatters).
-- `-f, --force`: Run aggressive fixes (dependency audits and framework alignments).
-- `--dry-run`: Previews proposed fixes without writing to disk.
-- `-p, --prompt`: Formats remaining unfixed issues into a targeted prompt for your coding agent.
-- `--changes` / `--staged`: Restrict fixes to changed or staged files.
-- `--base <ref>`: Diff base for `--changes`.
+- `--safe`: applies changes with preserved semantics only (imports, comment removal, standard formatting).
+- `-f, --force`: runs broader fixes including dependency audits and framework alignment.
+- `--dry-run`: previews proposed fixes without modifying files.
+- `-p, --prompt`: formats remaining unfixed issues into a prompt for your coding agent.
+- `--changes` / `--staged`: restrict fixes to changed or staged files.
+- `--base <ref>`: diff base for `--changes`.
 
 ### `raigal agent`
 
-Runs autonomous repair sessions using local AI coding tools inside an isolated git worktree.
+Runs automated repair sessions using local coding tools inside an isolated git worktree.
 
 ```bash
 raigal agent [options] [path]
 ```
 
-**Key Flags:**
-- `--provider <provider>`: Agent provider to invoke (`auto`, `codex`, `claude`, `opencode`).
-- `--target-score <n>`: Score threshold to converge toward (default: 90).
-- `--max-turns <n>`: Maximum provider turns for one repair attempt (default: 4).
-- `--limit <n>`: Maximum number of findings to hand to the provider (default: 8).
-- `--in-place`: Edit current worktree instead of creating an isolated git worktree.
-- `--apply`: Apply accepted diff back to the original worktree upon completion.
-- `-y, --yes`: Skip interactive confirmation prompts for `--apply`.
-- `--dry-run`: Print the selected provider and execution plan without running.
-- `--background`: Start the agent process in the background and return immediately.
-- `--no-fix`: Skip deterministic safe fixes before handing off to the provider.
-- `--commit`: Commit the verified diff onto an agent repair branch.
-- `--pr`: Push the agent branch and open a GitHub Pull Request automatically.
-- `--branch <name>`: Custom branch name for `--commit` or `--pr`.
-- `--base <branch>`: Target base branch for `--pr`.
-- `--title <title>`: Pull request title for `--pr`.
-- `--commit-message <msg>`: Custom commit message.
-- `--ready`: Open a ready-for-review PR instead of a draft.
-- `--cleanup`: Remove generated worktree even if a diff remains.
+Flags:
+- `--provider <provider>`: agent provider to invoke (`auto`, `codex`, `claude`, `opencode`).
+- `--target-score <n>`: score threshold to reach (default: 90).
+- `--max-turns <n>`: maximum provider turns for one repair attempt (default: 4).
+- `--limit <n>`: maximum number of findings to pass to the provider (default: 8).
+- `--in-place`: edit current working tree directly instead of creating an isolated worktree.
+- `--apply`: apply accepted diff back to the original worktree upon completion.
+- `-y, --yes`: skip confirmation prompts for `--apply`.
+- `--dry-run`: print the selected provider and execution plan without running.
+- `--background`: start the agent process in the background and return immediately.
+- `--no-fix`: skip safe automated fixes before handing off to the provider.
+- `--commit`: commit the verified diff onto a repair branch.
+- `--pr`: push the branch and open a pull request on GitHub.
+- `--branch <name>`: branch name for `--commit` or `--pr`.
+- `--base <branch>`: target base branch for `--pr`.
+- `--title <title>`: pull request title for `--pr`.
+- `--commit-message <msg>`: commit message.
+- `--ready`: open a ready-for-review pull request instead of a draft.
+- `--cleanup`: remove the generated worktree even if changes remain.
 
-**Agent Subcommands:**
-- `raigal agent plan [dir]`: Preview provider, worktree, findings, and publish actions without editing.
-- `raigal agent connect [provider]`: Authenticate with a local coding-agent provider using its CLI auth.
-- `raigal agent providers`: List detected local coding-agent providers and status.
-- `raigal agent use [provider]`: Set or display the default agent provider preference for this repo.
-- `raigal agent sessions [dir]`: List active and past worktree repair sessions.
-- `raigal agent show <session-id>`: Inspect diff and metadata from an agent session.
-- `raigal agent apply <session-id>`: Merge changes from a session into your working branch.
-- `raigal agent monitor [dir]`: Watch git changes and trigger repairs when scores drop below target.
+Subcommands:
+- `raigal agent plan [dir]`: preview provider, worktree, findings, and publish actions without editing.
+- `raigal agent connect [provider]`: authenticate with a local coding-agent provider using its CLI credentials.
+- `raigal agent providers`: list detected local coding-agent providers and status.
+- `raigal agent use [provider]`: set or display the default provider for this repository.
+- `raigal agent sessions [dir]`: list active and past repair sessions.
+- `raigal agent show <session-id>`: inspect diff and metadata from an agent session.
+- `raigal agent apply <session-id>`: merge changes from a session into your working branch.
+- `raigal agent monitor [dir]`: watch git changes and run repairs when scores drop below target.
 
 ### `raigal report-pr-closed`
 
-Reports a pull request closed or merged event to Raigal Cloud to synchronize the Remediation Kanban board.
+Reports a pull request closed or merged event to Raigal Cloud to update the remediation board.
 
 ```bash
 raigal report-pr-closed --pr <number> [--merged]
 ```
 
-- `--pr <number>`: Pull request number (automatically read from `GITHUB_EVENT_PATH` in GitHub Actions).
-- `--merged`: Flag indicating whether the pull request was merged into the base branch.
+- `--pr <number>`: pull request number (read automatically from `GITHUB_EVENT_PATH` in GitHub Actions).
+- `--merged`: indicates whether the pull request was merged into the base branch.
 
-### `raigal login` & `raigal logout`
+### `raigal login` and `raigal logout`
 
 Manage Raigal Cloud credentials and offline lease authentication.
 
@@ -142,7 +142,7 @@ raigal logout
 
 ### `raigal whoami`
 
-Displays active user, organization, subscription tier, and authorized GitHub repositories.
+Displays active user, organization, plan tier, and authorized GitHub repositories.
 
 ```bash
 raigal whoami

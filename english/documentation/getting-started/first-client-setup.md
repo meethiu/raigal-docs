@@ -1,71 +1,60 @@
 ---
-description: "Step-by-step onboarding guide for engineering teams, CTOs, and organization administrators using Raigal Cloud."
+description: "Setup guide for teams and organization administrators using Raigal Cloud."
 icon: building
 ---
 
-# Organization Setup & Onboarding
+# Organization setup and onboarding
 
-This guide walks through setting up Raigal for your engineering organization using the hosted platform at **[app.raigal.dev](https://app.raigal.dev)** and the official **[Raigal GitHub App](https://github.com/apps/raigal-cloud)**.
+This guide covers setting up Raigal for your team using the web dashboard at [app.raigal.dev](https://app.raigal.dev) and the [Raigal GitHub App](https://github.com/apps/raigal-cloud).
 
----
+## Setup steps
 
-## Onboarding Checklist
-
-| Step | Action | Where | Time |
+| Step | Action | Location | Time |
 |---|---|---|---|
-| **1. Create Organization** | Sign up with GitHub, Google, or corporate email | [app.raigal.dev](https://app.raigal.dev) | 1 min |
-| **2. Install GitHub App** | Install the official Raigal App on your repos | [github.com/apps/raigal-cloud](https://github.com/apps/raigal-cloud) | 1 min |
-| **3. Get Organization Token** | Copy your `rgl_live_...` API token | Settings &rarr; API Tokens | 30 sec |
-| **4. Configure CI/CD** | Add `.github/workflows/raigal.yml` | Your repositories | 2 min |
-| **5. Invite Engineers** | Send team invites or configure SSO | Settings &rarr; Organization Members | 1 min |
+| 1. Create organization | Sign up with GitHub, Google, or work email | [app.raigal.dev](https://app.raigal.dev) | 1 min |
+| 2. Install GitHub App | Add the app to target repositories | [github.com/apps/raigal-cloud](https://github.com/apps/raigal-cloud) | 1 min |
+| 3. Copy API token | Copy your `rgl_live_...` token | Settings > API Tokens | 30 sec |
+| 4. Add CI workflow | Add `.github/workflows/raigal.yml` | Your repositories | 2 min |
+| 5. Invite team | Send invites or configure SSO | Settings > Organization Members | 1 min |
 
----
+## 1. Create your organization
 
-## Step 1: Sign Up & Create Your Organization
-
-1. Navigate to **[app.raigal.dev](https://app.raigal.dev)**.
+1. Go to [app.raigal.dev](https://app.raigal.dev).
 2. Sign in with GitHub, Google, or your corporate email.
-3. In the top-left organization switcher, select **Create Organization** (or choose your existing team workspace).
-4. Enter your organization name (e.g. *Acme Engineering*).
+3. Open the organization menu in the top-left corner and select **Create Organization** (or pick an existing workspace).
+4. Enter your organization name.
 
 {% hint style="info" %}
-Raigal supports multi-tenant organization switching. If you belong to multiple teams or manage separate client accounts, you can seamlessly toggle between them using the top-left switcher.
+If you manage multiple teams or client accounts, you can switch between organizations from the top-left menu.
 {% endhint %}
 
----
+## 2. Install the Raigal GitHub App
 
-## Step 2: Install the Official Raigal GitHub App
+The GitHub App creates pending checks when pull requests open, updates check runs when CI completes, and records merged or closed states.
 
-The Raigal GitHub App manages the Pull Request quality gate lifecycle: it posts immediate pending checks when PRs open, updates the check run when CI completes, and tracks merged/closed states automatically.
+1. In the Raigal Cloud dashboard, open **Settings** and select **Sync GitHub Accounts** (or open [github.com/apps/raigal-cloud](https://github.com/apps/raigal-cloud)).
+2. Select **Install App**.
+3. Choose your GitHub organization or personal account.
+4. Choose **All repositories** or select specific repositories.
+5. Select **Install & Authorize**.
 
-1. In the Raigal Cloud dashboard, navigate to **Settings** &rarr; click **Sync GitHub Accounts** (or visit **[github.com/apps/raigal-cloud](https://github.com/apps/raigal-cloud)** directly).
-2. Click **Install App**.
-3. Select your GitHub organization or personal account.
-4. Choose **All repositories** or select specific target repositories you wish to gate with Raigal.
-5. Click **Install & Authorize**.
+GitHub then links those repositories to your Raigal organization.
 
-Once installed, GitHub automatically links your repositories to your Raigal Cloud organization.
+## 3. Get organization credentials
 
----
+To allow GitHub Actions or local CLI sessions to send scan results to your dashboard, copy your API key:
 
-## Step 3: Access Organization Credentials
-
-To allow GitHub Actions or developer CLI sessions to submit quality metrics to your cloud dashboard, retrieve your organization API key:
-
-1. Open **[app.raigal.dev/settings](https://app.raigal.dev)**.
-2. In the **Active Organization Token** card, your live key (`rgl_live_...`) is displayed.
-3. Click **Copy** to copy the token.
-4. If you need to generate a new key or rotate credentials, click **Generate New Token** under **API Keys**.
+1. Open [app.raigal.dev/settings](https://app.raigal.dev).
+2. In the **Active Organization Token** card, copy your live key (`rgl_live_...`).
+3. To generate a replacement key, select **Generate New Token** under **API Keys**.
 
 {% hint style="tip" %}
-**Zero-Secret GitHub Actions (Enterprise):** If you prefer not to manage static API tokens in GitHub Secrets, enable `permissions: id-token: write` in your workflow. Raigal Cloud natively authenticates GitHub runner OIDC tokens without requiring static secrets.
+If you do not want to manage static secrets in GitHub, add `permissions: id-token: write` to your workflow. Raigal Cloud can verify the runner using GitHub OIDC directly.
 {% endhint %}
 
----
+## 4. Add the GitHub Actions workflow
 
-## Step 4: Add the GitHub Actions Quality Gate
-
-Add `.github/workflows/raigal.yml` to each repository you want to protect:
+Add `.github/workflows/raigal.yml` to each repository:
 
 ```yaml
 name: Raigal Quality Gate
@@ -82,13 +71,13 @@ jobs:
     runs-on: ubuntu-latest
     permissions:
       contents: read
-      id-token: write  # Enables Zero-Secret GitHub OIDC
+      id-token: write
 
     steps:
       - name: Checkout Code
         uses: actions/checkout@v4
         with:
-          fetch-depth: 0 # Required to accurately diff PR changes against the base branch
+          fetch-depth: 0
 
       - name: Setup Node.js
         uses: actions/setup-node@v4
@@ -103,46 +92,38 @@ jobs:
           npx @methiu/raigal ci --changes --base origin/${{ github.base_ref || 'main' }} --human
 ```
 
-In your repository on GitHub:
-- Navigate to **Settings** &rarr; **Secrets and variables** &rarr; **Actions**.
-- Add a new repository secret:
-  - Name: `RAIGAL_TOKEN`
-  - Value: Your `rgl_live_...` token from Step 3.
+In GitHub:
+1. Open **Settings** > **Secrets and variables** > **Actions**.
+2. Add a repository secret named `RAIGAL_TOKEN` with your `rgl_live_...` value.
 
----
+## 5. Invite your team
 
-## Step 5: Invite Your Engineering Team
+1. In **Settings**, open the **Members** tab.
+2. Select **Invite Members** and enter team email addresses.
+3. Choose roles: **Admin** for platform leads, **Member** for engineers.
+4. Team members receive an email invite to join your organization on [app.raigal.dev](https://app.raigal.dev).
 
-1. In **Settings**, click your organization name or the **Members** tab.
-2. Click **Invite Members** to send invitations via email.
-3. Assign roles (**Admin** for platform leads, **Member** for engineers).
-4. Invited engineers receive an email invite to join your organization workspace on **[app.raigal.dev](https://app.raigal.dev)**.
+## Developer machine setup
 
----
-
-## Developer Machine Setup
-
-Developers can authenticate their local machines to stream scan metrics, access organization policies, and run autonomous repairs:
+Developers can authenticate local machines to send scan metrics and run agent repairs:
 
 ```bash
 # Authenticate via browser
 npx @methiu/raigal login
 
-# Verify your active organization
+# Verify active organization
 npx @methiu/raigal whoami
 ```
 
-To install real-time interception hooks for Claude Code or Cursor:
+To install hooks for Claude Code or Cursor:
 
 ```bash
 npx @methiu/raigal hook install
 ```
 
----
+## Managing connected repositories
 
-## Managing Connected Repositories
-
-In **Settings &rarr; Connected Repositories**, administrators can:
-- **Inspect Live Activity:** Expand any repository to see recent scans, top findings, and branch quality scores.
-- **Access the Kanban Board:** Click **Board** to jump directly to that repository's 4-stage remediation board.
-- **Remove Retired Repositories:** Click **Remove** (trash icon) to permanently delete an inactive repository, cascading cleanly to remove historical runs and PR records.
+In **Settings** > **Connected Repositories**, administrators can:
+- Expand a repository to inspect recent scans, common findings, and branch scores.
+- Select **Board** to open the repository's 4-stage remediation board.
+- Select **Remove** to delete an inactive repository along with its historical runs and pull request records.

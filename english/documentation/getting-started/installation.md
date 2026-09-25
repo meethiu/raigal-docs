@@ -1,29 +1,29 @@
 ---
-description: "How to install the Raigal CLI via npm, npx, or standalone binary across macOS, Linux, and Windows."
+description: "How to install the Raigal CLI via npm, npx, or local dependencies on macOS, Linux, and Windows."
 icon: download
 ---
 
 # Installation
 
-Raigal can be executed instantaneously without a permanent installation, or installed globally or per-repository.
+You can run Raigal directly with `npx` or install it globally or as a project dependency.
 
 ## Requirements
 
-- **Node.js**: Version 20.12 or higher (Node 22 LTS recommended).
-- **Package Managers**: Compatible with `npm`, `pnpm`, `yarn`, and `bun`.
-- **Operating Systems**: macOS, Linux, and Windows (PowerShell & cmd.exe).
+- Node.js 20.12 or higher (Node 22 LTS recommended)
+- `npm`, `pnpm`, `yarn`, or `bun`
+- macOS, Linux, or Windows (PowerShell and cmd.exe)
 
-## Quick Execution (`npx`)
+## Run with `npx`
 
-The fastest way to run Raigal without polluting your global environment:
+To run a scan without installing the package globally:
 
 ```bash
 npx @methiu/raigal scan .
 ```
 
-## Global Installation
+## Global installation
 
-For instant terminal access with the `raigal` binary:
+To keep the `raigal` command available in your terminal:
 
 {% tabs %}
 {% tab title="npm" %}
@@ -45,22 +45,22 @@ yarn global add @methiu/raigal
 {% endtab %}
 {% endtabs %}
 
-Verify your installation:
+Verify that the CLI is installed:
 
 ```bash
 raigal version
 # Output: @methiu/raigal v1.0.0 (or current release)
 ```
 
-## Project Dependency
+## Project dependency
 
-To lock Raigal within your project team's dependencies:
+To pin Raigal as a development dependency for your project:
 
 ```bash
 pnpm add -D @methiu/raigal
 ```
 
-Add an npm script to your `package.json`:
+Add scripts to `package.json`:
 
 ```json
 {

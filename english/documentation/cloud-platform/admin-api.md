@@ -1,26 +1,24 @@
 ---
-description: "Organization API endpoints, authentication, repository management, and token rotation for Raigal Cloud clients."
+description: "API endpoints for token management, repository metrics, and telemetry ingestion."
 icon: key
 ---
 
-# Organization API & Token Management
+# Organization API and token management
 
-Raigal Cloud provides a REST API that enables customer organizations to manage API tokens, query repository quality scores, ingest custom CI telemetry, and programmatically purge repository data.
-
----
+Raigal Cloud provides a REST API to query scores, manage tokens, ingest custom CI run data, and delete repositories.
 
 ## Authentication
 
-All API requests from scripts, automated pipelines, or custom integrations must authenticate using an Organization API Key (`rgl_live_...`):
+Requests must include an organization API key (`rgl_live_...`) in the authorization header:
 
 {% tabs %}
-{% tab title="Bearer Header" %}
+{% tab title="Bearer header" %}
 ```http
 Authorization: Bearer rgl_live_your_api_key_here
 ```
 {% endtab %}
 
-{% tab title="API Key Header" %}
+{% tab title="API key header" %}
 ```http
 x-api-key: rgl_live_your_api_key_here
 ```
@@ -28,21 +26,19 @@ x-api-key: rgl_live_your_api_key_here
 {% endtabs %}
 
 {% hint style="info" %}
-Generate API keys from your dashboard at [**https://app.raigal.dev/settings**](https://app.raigal.dev/settings) under the **API Tokens** section.
+Generate API keys at [app.raigal.dev/settings](https://app.raigal.dev/settings) under **API Tokens**.
 {% endhint %}
 
----
+## Endpoints
 
-## Client Endpoints Reference
-
-### 1. Identity & Organization Introspection
-Verify your active token and inspect your organization identity.
+### 1. Identity check
+Verify the active token and return organization details.
 
 ```http
 GET /v1/whoami
 ```
 
-**Response:**
+Response:
 ```json
 {
   "orgId": "org_2tQ...",
@@ -52,16 +48,14 @@ GET /v1/whoami
 }
 ```
 
----
-
-### 2. Organization Quality Policy
-Retrieve the active quality policy and enforcement thresholds configured for your organization.
+### 2. Organization quality policy
+Retrieve active quality thresholds configured for the organization.
 
 ```http
 GET /v1/policy
 ```
 
-**Response:**
+Response:
 ```json
 {
   "minScore": 80,
@@ -81,16 +75,14 @@ GET /v1/policy
 }
 ```
 
----
-
-### 3. List Tracked Repositories
-Retrieve a list of all active repositories reporting to your organization.
+### 3. List tracked repositories
+List all active repositories reporting to the organization.
 
 ```http
 GET /v1/runs/repos
 ```
 
-**Response:**
+Response:
 ```json
 {
   "repositories": [
@@ -105,18 +97,16 @@ GET /v1/runs/repos
 }
 ```
 
----
-
-### 4. Remove a Repository
-Permanently delete a repository and cascade purge all of its historical runs, PR cards, and diagnostic findings from your organization.
+### 4. Remove a repository
+Delete a repository and its associated run history, pull request records, and findings.
 
 ```http
 DELETE /v1/runs/repos/:repoId
 ```
 
-* `:repoId` can be the repository UUID or URL-encoded repository name (e.g. `acme%2Fpayment-service`).
+`:repoId` can be the repository UUID or the URL-encoded repository name (such as `acme%2Fpayment-service`).
 
-**Response:**
+Response:
 ```json
 {
   "ok": true,
@@ -125,23 +115,21 @@ DELETE /v1/runs/repos/:repoId
 ```
 
 {% hint style="warning" %}
-This operation is irreversible. You can also perform this action visually from the **Settings** view in the Web UI.
+This operation is permanent. You can also delete repositories from the **Settings** page in the web dashboard.
 {% endhint %}
 
----
-
-### 5. Fetch Remediation Kanban Board Data
-Retrieve the active four-stage Kanban board data formatted as JSON. Useful for feeding internal metrics dashboards, executive summaries, or custom Slack bots.
+### 5. Fetch board data
+Retrieve board columns and cards formatted as JSON.
 
 ```http
 GET /v1/runs/board?repoId=acme/payment-service&branch=main
 ```
 
-**Query Parameters:**
-- `repoId`: (Optional) Filter cards by repository name.
-- `branch`: (Optional) Filter cards by Git branch (defaults to primary branch).
+Query parameters:
+- `repoId`: (optional) filter by repository name.
+- `branch`: (optional) filter by git branch (defaults to primary branch).
 
-**Response:**
+Response:
 ```json
 {
   "mediumPriority": [],
@@ -161,17 +149,15 @@ GET /v1/runs/board?repoId=acme/payment-service&branch=main
 }
 ```
 
----
-
-### 6. Ingest Telemetry Run (Custom CI)
-If you run CI in an environment other than GitHub Actions (e.g., Jenkins, GitLab CI, CircleCI), ingest your run results directly via the API:
+### 6. Ingest custom CI run
+For CI systems other than GitHub Actions (Jenkins, GitLab CI, CircleCI), submit run results directly:
 
 ```http
 POST /v1/runs
 Content-Type: application/json
 ```
 
-**Request Body:**
+Request body:
 ```json
 {
   "repoId": "acme/backend-api",
@@ -193,13 +179,11 @@ Content-Type: application/json
 }
 ```
 
----
+## Token management
 
-## Token Lifecycle Management
+Tokens can be created and revoked in the web dashboard or via the tokens API:
 
-Tokens can be created and rotated via the Web Dashboard at `https://app.raigal.dev/settings` or programmatically via the tokens endpoint:
-
-### Create API Token
+### Create API token
 ```http
 POST /api/tokens
 Content-Type: application/json
@@ -209,7 +193,7 @@ Content-Type: application/json
 }
 ```
 
-**Response:**
+Response:
 ```json
 {
   "token": "rgl_live_8f3a9b1c7e2d...",
@@ -220,12 +204,12 @@ Content-Type: application/json
 ```
 
 {% hint style="danger" %}
-Store your token immediately. The raw token value is returned **only once** at creation. Raigal Cloud encrypts and hashes tokens using SHA-256 and cannot recover lost keys.
+Store your token when created. The full token string is shown once. Raigal Cloud stores a SHA-256 hash and cannot recover lost tokens.
 {% endhint %}
 
-### Revoke API Token
+### Revoke API token
 ```http
 DELETE /api/tokens/:tokenId
 ```
 
-Revokes the specified key immediately, rejecting all subsequent requests presenting that token.
+Revoking a token disables it immediately for future requests.

@@ -1,28 +1,28 @@
 ---
-description: "Guía de integración de Raigal en GitHub Actions, GitLab CI y pipelines automatizados de despliegue."
+description: "Integración de Raigal en GitHub Actions, GitLab CI y pipelines de despliegue."
 icon: route
 ---
 
 # Pipelines de CI/CD y GitHub Actions
 
-Asegure la calidad del código, bloquee el AI slop directamente en la puerta del Pull Request y transmita la telemetría en tiempo real al Tablero Kanban de Raigal Cloud.
+Configure Raigal para evaluar pull requests en CI y enviar las puntuaciones a su panel de control.
 
-## Variables de Entorno
+## Variables de entorno
 
-Al ejecutar en pipelines de CI, configure las siguientes variables:
+Configure estas variables en su entorno de CI:
 
 | Variable | Requerida | Descripción | Ejemplo |
 |---|---|---|---|
-| `RAIGAL_TOKEN` | Sí* | API Key de la organización (`rgl_live_...`) | `rgl_live_8f3a9b...` |
-| `RAIGAL_API_URL` | Opcional | Endpoint personalizado de Raigal Cloud (por defecto apunta a cloud estándar) | `https://app.raigal.dev` |
+| `RAIGAL_TOKEN` | Sí* | Clave de API de la organización (`rgl_live_...`) | `rgl_live_8f3a9b...` |
+| `RAIGAL_API_URL` | Opcional | Dirección del backend (por defecto `https://app.raigal.dev`) | `https://app.raigal.dev` |
 
-*\* Nota: Al usar GitHub Actions con `id-token: write` en planes corporativos, los tokens estáticos son opcionales ya que Raigal admite OIDC directo sin secretos.*
+*Nota: En flujos de GitHub Actions con `permissions: id-token: write`, no es necesario definir `RAIGAL_TOKEN` porque Raigal autentica al runner mediante OIDC.*
 
 ## GitHub Actions
 
-### 1. Puerta de Calidad en Pull Requests
+### 1. Validación de pull requests
 
-Cree el archivo `.github/workflows/raigal.yml` para validar PRs y reportar estado al Tablero Kanban:
+Cree `.github/workflows/raigal.yml` para analizar pull requests y reportar el resultado:
 
 ```yaml
 name: Puerta de Calidad Raigal
@@ -39,12 +39,12 @@ jobs:
     runs-on: ubuntu-latest
     permissions:
       contents: read
-      id-token: write  # ¡Permite autenticación OIDC directa sin secretos estáticos!
+      id-token: write
 
     steps:
       - uses: actions/checkout@v4
         with:
-          fetch-depth: 0 # Requerido para comparar el diff del PR
+          fetch-depth: 0
       - uses: actions/setup-node@v4
         with:
           node-version: 22
@@ -52,22 +52,22 @@ jobs:
       - name: Ejecutar Puerta de Calidad Raigal
         env:
           RAIGAL_TOKEN: ${{ secrets.RAIGAL_TOKEN }}
-          RAIGAL_API_URL: ${{ secrets.RAIGAL_API_URL || 'https://app.raigal.dev' }}
+          RAIGAL_API_URL: ${{ secrets.RAIGAL_API_URL }}
         run: |
           npx @methiu/raigal ci --changes --base origin/${{ github.base_ref || 'main' }} --human
 ```
 
 {% hint style="tip" %}
-**Autenticación OIDC de GitHub:** Al configurar `permissions: id-token: write`, el runner genera un token OIDC de corta duración. Raigal intercambia este token de forma segura vía `X-GitHub-OIDC`, eliminando la necesidad de almacenar o rotar secretos estáticos en el repositorio.
+Al configurar `permissions: id-token: write`, el runner genera un token OIDC temporal. Raigal lo envía mediante `X-GitHub-OIDC`, evitando la necesidad de guardar claves estáticas en los secretos del repositorio.
 {% endhint %}
 
-### 2. Sincronización de Cierre y Fusión de PRs
+### 2. Sincronización de cierre y fusión
 
 {% hint style="info" %}
-**¿Utiliza la GitHub App?** Si ha instalado la **GitHub App de Raigal**, este paso **no es necesario**. La App recibe directamente los webhooks de cierre y fusión de GitHub y actualiza su tablero de forma automática. Consulte la guía de [Puerta de Enlace de Pull Requests](pull-requests.md) para más detalles.
+Si utiliza la **GitHub App de Raigal**, este paso es innecesario. La app recibe los webhooks de cierre y fusión directamente de GitHub y actualiza el tablero de forma automática.
 {% endhint %}
 
-Para entornos de GitHub Actions autónomos sin la GitHub App, puede sincronizar el estado al cerrar o fusionar PRs:
+Para entornos de CI sin la GitHub App, sincronice el estado cuando un PR se fusione o se cierre:
 
 ```yaml
 name: Ciclo de Vida de PRs Raigal
@@ -108,12 +108,12 @@ raigal_gate:
     - npx @methiu/raigal ci --human
 ```
 
-## Anotaciones en Pull Requests y SARIF
+## Anotaciones en pull requests y SARIF
 
-Para reflejar los hallazgos directamente en la pestaña **Security** de GitHub y anotaciones en las líneas de código:
+Para ver los hallazgos directamente en la pestaña de seguridad de GitHub:
 
 ```bash
 npx @methiu/raigal scan --sarif > results.sarif
 ```
 
-Cargue los resultados mediante la acción estándar de GitHub (`github/codeql-action/upload-sarif@v3`).
+Suba el archivo generado utilizando la acción oficial de GitHub (`github/codeql-action/upload-sarif@v3`).

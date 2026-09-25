@@ -1,45 +1,45 @@
 ---
-description: "Run automated worktree repair sessions with local coding agents without risk to your main branch."
+description: "Run automated worktree repair sessions with local coding agents."
 icon: robot
 ---
 
-# Automated Agent Repairs
+# Automated agent repairs
 
-When static analysis finds issues that require architectural refactoring or semantic code edits, `raigal agent` hands the task to your local AI coding tool inside an **isolated git worktree**.
+For findings that require semantic edits or refactoring, `raigal agent` runs a repair session with a local coding tool inside a git worktree.
 
-## The Worktree Guarantee
+## How worktree repairs work
 
-Raigal never allows an autonomous agent to execute risky mass edits directly on your active working branch.
+To protect your active working branch from unverified edits, `raigal agent` isolates all changes:
 
-1. **Isolation:** `raigal agent` spawns a temporary Git worktree (`.git/raigal-worktrees/<session-id>`).
-2. **Context Delivery:** The agent provider (Claude Code, OpenCode, or Codex) is invoked with targeted diagnostic context and the exact rule expectations.
-3. **Execution & Verification:** The agent edits code and runs test suites inside the worktree.
-4. **Publish or Merge:** Once verified, you can review the diff and run `raigal agent apply <session-id>` to merge locally, or let Raigal push a branch and open a Pull Request automatically with `--pr`.
+1. Raigal creates a temporary git worktree at `.git/raigal-worktrees/<session-id>`.
+2. The agent provider (Claude Code, OpenCode, or Codex) receives the diagnostic output and rule expectations.
+3. The agent edits code and runs tests inside the worktree.
+4. After reviewing the diff, you can run `raigal agent apply <session-id>` to merge changes locally, or pass `--pr` to open a pull request on GitHub.
 
-## Supported Providers
+## Supported providers
 
-Raigal integrates seamlessly with top local AI coding tools:
+Raigal supports three local coding tools:
 
-| Provider | Invocation | Setup Command |
+| Provider | Invocation | Setup command |
 |---|---|---|
-| **Claude Code** | `claude` | `raigal agent connect claude` |
-| **OpenCode** | `opencode` | `raigal agent connect opencode` |
-| **Codex** | `codex` | `raigal agent connect codex` |
-| **Auto-Detect** | Automatic selection | `raigal agent use auto` |
+| Claude Code | `claude` | `raigal agent connect claude` |
+| OpenCode | `opencode` | `raigal agent connect opencode` |
+| Codex | `codex` | `raigal agent connect codex` |
+| Auto-detect | Automatic selection | `raigal agent use auto` |
 
-Inspect provider availability on your machine anytime:
+Check which providers are installed on your machine:
 ```bash
 raigal agent providers
 ```
 
 ## Workflows
 
-### 1. Interactive Local Repair Session
+### 1. Interactive local repair session
 
-Test and verify changes locally before making any git commits:
+Preview and test changes locally before committing:
 
 ```bash
-# Preview what the agent repair session will target
+# Preview what the repair session will target
 raigal agent plan .
 
 # Start the interactive repair session
@@ -55,22 +55,24 @@ raigal agent show <session-id>
 raigal agent apply <session-id>
 ```
 
-### 2. Autonomous Pull Request Creation (`--pr`)
+### 2. Automated pull request creation (`--pr`)
 
-For completely autonomous remediations, pass `--pr`. Raigal will:
-1. Run deterministic fixes and hand remaining issues to the agent provider.
-2. Verify that tests pass and the quality score meets `--target-score` (default: 90).
-3. Commit the changes to an isolated branch (`raigal/repair-...`).
-4. Push the branch to your git remote and open a GitHub Pull Request.
-5. Transmit telemetry to Raigal Cloud, registering a card under the **Agent Remediations** column on the Remediation Kanban board.
+To create a branch and open a pull request automatically, run:
 
 ```bash
 raigal agent --provider claude --pr --target-score 95
 ```
 
-### 3. Lifecycle Synchronization (`report-pr-closed`)
+With `--pr`, Raigal:
+1. Runs safe autofixes and passes remaining issues to the agent provider.
+2. Checks that tests pass and the quality score meets `--target-score` (default: 90).
+3. Commits the changes to an isolated branch (`raigal/repair-...`).
+4. Pushes the branch and opens a GitHub pull request.
+5. Sends telemetry to Raigal Cloud to create a card in the **Agent Remediations** column.
 
-When a remediation PR is reviewed and merged (or closed) on GitHub, the Raigal Cloud Kanban board can be updated automatically using a GitHub Actions trigger:
+### 3. Lifecycle synchronization (`report-pr-closed`)
+
+When an agent pull request is merged or closed on GitHub, update your board status with a GitHub Actions workflow:
 
 ```yaml
 # .github/workflows/raigal-pr-closed.yml
@@ -97,5 +99,5 @@ jobs:
 ```
 
 {% hint style="success" %}
-**Remediation Kanban:** In Raigal Cloud, opening a PR via `raigal agent --pr` creates a card in the **Agent Remediations** column. When the PR is merged, `report-pr-closed` transitions the card to **Merged**, recording score deltas in your organization's telemetry!
+Opening a pull request with `raigal agent --pr` creates a card in the **Agent Remediations** column. When the PR merges, `report-pr-closed` moves the card to **Merged** and records the score change.
 {% endhint %}
