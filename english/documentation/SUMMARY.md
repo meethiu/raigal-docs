@@ -22,9 +22,9 @@
 
 ## Automation & CI/CD
 
-* [CI/CD Pipelines and GitHub Actions](automation/ci-cd.md)
-* [Pull Request Quality Gate and Board](automation/pull-requests.md)
-* [Automated Agent Repairs](automation/agent-repairs.md)
+* [CI/CD Pipelines and GitHub Actions](automation-and-ci-cd/ci-cd.md)
+* [Pull Request Quality Gate and Board](automation-and-ci-cd/pull-requests.md)
+* [Automated Agent Repairs](automation-and-ci-cd/agent-repairs.md)
 
 ## Cloud Platform
 
