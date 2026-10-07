@@ -25,6 +25,7 @@
 * [CI/CD Pipelines and GitHub Actions](automation-and-ci-cd/ci-cd.md)
 * [Pull Request Quality Gate and Board](automation-and-ci-cd/pull-requests.md)
 * [Automated Agent Repairs](automation-and-ci-cd/agent-repairs.md)
+* [Raigal MCP Server](automation-and-ci-cd/mcp-server.md)
 
 ## Cloud Platform
 

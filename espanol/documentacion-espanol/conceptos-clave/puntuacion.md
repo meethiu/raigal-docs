@@ -22,7 +22,7 @@ En lugar de restar puntos fijos por cada aviso, Raigal pondera las penalizacione
 $$D = \frac{\sum (\text{peso}_i \times \text{severidad}_i)}{\text{KLOC}}$$
 
 Donde:
-- $\text{KLOC}$ representa el total de líneas de código físico dividido entre 1.000.
+- KLOC representa el total de líneas de código físico dividido entre 1.000.
 - Cada regla tiene un multiplicador de peso. Las alertas de seguridad restan más puntos, mientras que las deducciones por comentarios triviales se reducen de forma progresiva.
 - Los archivos con menos de 100 líneas aplican un denominador base para no penalizar en exceso commits pequeños.
 

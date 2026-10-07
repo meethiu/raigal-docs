@@ -1,6 +1,6 @@
 # Table of contents
 
-* [Visión general de Raigal](README.md)
+* [Bienvenido a Raigal](README.md)
 
 ## Primer Contacto
 
@@ -25,9 +25,10 @@
 * [Pipelines de CI/CD y GitHub Actions](automatizacion-y-ci-cd/ci-cd.md)
 * [Puerta de Calidad en Pull Requests y Tablero](automatizacion-y-ci-cd/pull-requests.md)
 * [Reparación Automatizada con Agentes](automatizacion-y-ci-cd/reparacion-agentes.md)
+* [Servidor MCP de Raigal](automatizacion-y-ci-cd/servidor-mcp.md)
 
 ## Plataforma Cloud
 
-* [Arquitectura y Seguridad de la Plataforma](plataforma-cloud/arquitectura.md)
+* [Arquitectura de la Plataforma](plataforma-cloud/arquitectura.md)
 * [Tablero de Remediación y Telemetría](plataforma-cloud/tablero.md)
-* [API de la Organización y Gestión de Tokens](plataforma-cloud/api-admin.md)
+* [API de la Organización y gestión de tokens](plataforma-cloud/api-admin.md)

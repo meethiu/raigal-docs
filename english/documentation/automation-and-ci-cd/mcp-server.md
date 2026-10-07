@@ -1,0 +1,145 @@
+---
+description: "Connect Raigal MCP to Claude Code, Cursor, Claude Desktop, Windsurf, Cline, and Antigravity."
+icon: plugs
+---
+
+# Raigal MCP server
+
+The Raigal Model Context Protocol (MCP) server connects Raigal's quality and pattern detection engines directly to coding agents and IDEs via `npx @methiu/raigal-mcp`.
+
+## Prerequisites and authentication
+
+Raigal MCP authenticates in one of two ways:
+
+- Local session: if you have already run `raigal login` on your machine, the MCP server detects your local credentials automatically without extra token configuration.
+- Environment variable: in headless environments or CI, provide your API token by setting `RAIGAL_TOKEN=rgl_live_...`.
+
+## Client configuration
+
+{% tabs %}
+{% tab title="Claude Code" %}
+Run the setup command in your terminal:
+
+```bash
+claude mcp add raigal -- npx -y @methiu/raigal-mcp
+```
+
+With an explicit API token:
+
+```bash
+claude mcp add raigal -e RAIGAL_TOKEN=rgl_live_... -- npx -y @methiu/raigal-mcp
+```
+{% endtab %}
+
+{% tab title="Cursor" %}
+1. Open **Cursor Settings** (`Cmd + ,` or `Ctrl + ,`).
+2. Go to **Features** > **MCP**.
+3. Select **Add New MCP Server**.
+4. Configure the server:
+   - Name: `raigal`
+   - Type: `command`
+   - Command: `npx -y @methiu/raigal-mcp`
+
+To configure via `.cursor/mcp.json` instead:
+
+```json
+{
+  "mcpServers": {
+    "raigal": {
+      "command": "npx",
+      "args": ["-y", "@methiu/raigal-mcp"],
+      "env": {
+        "RAIGAL_TOKEN": "rgl_live_YOUR_TOKEN_HERE"
+      }
+    }
+  }
+}
+```
+{% endtab %}
+
+{% tab title="Claude Desktop" %}
+Add the server to your Claude Desktop configuration file:
+- macOS: `~/Library/Application Support/Claude/claude_desktop_config.json`
+- Windows: `%APPDATA%\Claude\claude_desktop_config.json`
+
+```json
+{
+  "mcpServers": {
+    "raigal": {
+      "command": "npx",
+      "args": ["-y", "@methiu/raigal-mcp"],
+      "env": {
+        "RAIGAL_TOKEN": "rgl_live_YOUR_TOKEN_HERE"
+      }
+    }
+  }
+}
+```
+{% endtab %}
+
+{% tab title="Windsurf" %}
+Add the server to `~/.codeium/windsurf/mcp_config.json`:
+
+```json
+{
+  "mcpServers": {
+    "raigal": {
+      "command": "npx",
+      "args": ["-y", "@methiu/raigal-mcp"]
+    }
+  }
+}
+```
+{% endtab %}
+
+{% tab title="Cline / Roo Code" %}
+1. Open the **Cline / Roo Code** sidebar in VS Code.
+2. Select the **MCP Servers** icon.
+3. Select **Edit Global MCP Settings** and add:
+
+```json
+{
+  "mcpServers": {
+    "raigal": {
+      "command": "npx",
+      "args": ["-y", "@methiu/raigal-mcp"]
+    }
+  }
+}
+```
+{% endtab %}
+
+{% tab title="Antigravity" %}
+Add the server to `~/.gemini/config/mcp_config.json` or to your repository's `.agents/mcp_config.json`:
+
+```json
+{
+  "mcpServers": {
+    "raigal": {
+      "command": "npx",
+      "args": ["-y", "@methiu/raigal-mcp"]
+    }
+  }
+}
+```
+{% endtab %}
+{% endtabs %}
+
+## Available tools
+
+Once connected, agents can call four tools:
+
+| Tool | Description |
+|---|---|
+| `raigal_scan` | Checks the repository for pattern violations (unnecessary comments, swallowed exceptions, `as any` casts), security risks, lint issues, and formatting discrepancies, returning a score from 0 to 100. |
+| `raigal_fix` | Runs automated, safe fixes for detected issues. |
+| `raigal_why` | Explains why a specific rule triggered and suggests fixes. |
+| `raigal_baseline` | Creates or updates a baseline so the agent focuses on newly introduced issues. |
+
+## Agent prompt instructions
+
+To instruct coding agents to verify their work before finishing, add this snippet to `AGENTS.md`, `CLAUDE.md`, or your agent prompt:
+
+```markdown
+Before submitting code changes, run the `raigal_scan` MCP tool to check for AI anti-patterns, swallowed errors, and type regressions. If issues are found, use `raigal_fix` or resolve them before finishing.
+```

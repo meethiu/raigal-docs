@@ -22,7 +22,7 @@ Instead of subtracting a fixed number of points for each finding, Raigal scales 
 $$D = \frac{\sum (\text{weight}_i \times \text{severity}_i)}{\text{KLOC}}$$
 
 Where:
-- $\text{KLOC}$ is total physical lines of code divided by 1,000.
+- KLOC is total physical lines of code divided by 1,000.
 - Each rule carries a weight multiplier. Security findings carry heavier penalties, while trivial comment penalties taper off.
 - Files under 100 lines use a baseline denominator so small commits are not penalized disproportionately.
 

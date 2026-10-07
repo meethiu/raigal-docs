@@ -58,3 +58,7 @@ raigal hook baseline
 ```
 
 Las ediciones posteriores del agente que reduzcan la puntuación por debajo de esta base serán rechazadas.
+
+{% hint style="info" %}
+Para conectar las herramientas de Raigal directamente al flujo de llamadas de herramientas del agente en lugar de usar hooks de archivos, consulte el [Servidor MCP de Raigal](../automatizacion-y-ci-cd/servidor-mcp.md).
+{% endhint %}

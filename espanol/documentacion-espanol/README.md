@@ -49,7 +49,52 @@ Raigal evalúa el código en local mediante hooks de agente, en CI con cada comm
 
 ## Componentes
 
-<table data-view="cards"><thead><tr><th>Componente</th><th>Descripción</th><th>Enlace</th></tr></thead><tbody><tr><td><strong>Raigal Cloud</strong></td><td>Panel web en <code>app.raigal.dev</code> con tablero de remediación en 4 etapas e historial de escaneos.</td><td><a href="plataforma-cloud/tablero.md">Tablero Cloud</a></td></tr><tr><td><strong>GitHub App</strong></td><td>Comprobaciones en pull requests y cumplimiento de protección de ramas.</td><td><a href="automatizacion-y-ci-cd/pull-requests.md">Configurar GitHub App</a></td></tr><tr><td><strong>Motor de puntuación (0-100)</strong></td><td>Puntuación ponderada que normaliza los hallazgos según las líneas de código.</td><td><a href="conceptos-clave/puntuacion.md">Motor de Puntuación</a></td></tr><tr><td><strong>CLI y hooks de agente</strong></td><td>Verificación pre-commit, correcciones automáticas seguras (<code>raigal fix</code>) e intercepción en tiempo real para agentes.</td><td><a href="referencia-cli/comandos.md">Referencia del CLI</a></td></tr><tr><td><strong>Reparación con agentes</strong></td><td>Entornos git aislados donde agentes locales corrigen problemas y generan pull requests.</td><td><a href="automatizacion-y-ci-cd/reparacion-agentes.md">Reparación con Agentes</a></td></tr><tr><td><strong>OIDC en GitHub Actions</strong></td><td>Autenticación sin contraseñas fijas para runners de CI mediante tokens OIDC de GitHub.</td><td><a href="conceptos-clave/seguridad.md">Modelo de Seguridad</a></td></tr></tbody></table>
+<table data-view="cards">
+  <thead>
+    <tr>
+      <th>Componente</th>
+      <th>Descripción</th>
+      <th>Enlace</th>
+    </tr>
+  </thead>
+  <tbody>
+    <tr>
+      <td><strong>Raigal Cloud</strong></td>
+      <td>Panel web en <code>app.raigal.dev</code> con tablero de remediación en 4 etapas e historial de escaneos.</td>
+      <td><a href="plataforma-cloud/tablero.md">Tablero Cloud</a></td>
+    </tr>
+    <tr>
+      <td><strong>GitHub App</strong></td>
+      <td>Comprobaciones en pull requests y cumplimiento de protección de ramas.</td>
+      <td><a href="automatizacion-y-ci-cd/pull-requests.md">Configurar GitHub App</a></td>
+    </tr>
+    <tr>
+      <td><strong>Motor de puntuación (0-100)</strong></td>
+      <td>Puntuación ponderada que normaliza los hallazgos según las líneas de código.</td>
+      <td><a href="conceptos-clave/puntuacion.md">Motor de Puntuación</a></td>
+    </tr>
+    <tr>
+      <td><strong>CLI y hooks de agente</strong></td>
+      <td>Verificación pre-commit, correcciones automáticas seguras (<code>raigal fix</code>) e intercepción en tiempo real para agentes.</td>
+      <td><a href="referencia-cli/comandos.md">Referencia del CLI</a></td>
+    </tr>
+    <tr>
+      <td><strong>Reparación con agentes</strong></td>
+      <td>Entornos git aislados donde agentes locales corrigen problemas y generan pull requests.</td>
+      <td><a href="automatizacion-y-ci-cd/reparacion-agentes.md">Reparación con Agentes</a></td>
+    </tr>
+    <tr>
+      <td><strong>OIDC en GitHub Actions</strong></td>
+      <td>Autenticación sin contraseñas fijas para runners de CI mediante tokens OIDC de GitHub.</td>
+      <td><a href="conceptos-clave/seguridad.md">Modelo de Seguridad</a></td>
+    </tr>
+    <tr>
+      <td><strong>Raigal MCP</strong></td>
+      <td>Servidor Model Context Protocol que conecta las herramientas de Raigal con Claude Code, Cursor, Windsurf, Cline y Antigravity.</td>
+      <td><a href="automatizacion-y-ci-cd/servidor-mcp.md">Servidor MCP</a></td>
+    </tr>
+  </tbody>
+</table>
 
 ## Primeros pasos
 

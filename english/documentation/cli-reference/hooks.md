@@ -58,3 +58,7 @@ raigal hook baseline
 ```
 
 Subsequent agent edits that drop the score below this baseline are rejected.
+
+{% hint style="info" %}
+To connect Raigal tools directly to your agent's tool-calling loop instead of relying on file system hooks, see the [Raigal MCP Server](../automation-and-ci-cd/mcp-server.md).
+{% endhint %}

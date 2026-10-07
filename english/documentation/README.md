@@ -47,7 +47,52 @@ Raigal runs locally through agent hooks, in CI on each commit, and on pull reque
 
 ## Components
 
-<table data-view="cards"><thead><tr><th>Component</th><th>Description</th><th>Link</th></tr></thead><tbody><tr><td><strong>Raigal Cloud</strong></td><td>Web dashboard at <code>app.raigal.dev</code> with a 4-stage remediation board and team scan history.</td><td><a href="cloud-platform/dashboard.md">Cloud Dashboard</a></td></tr><tr><td><strong>GitHub App</strong></td><td>PR checks, commit status reporting, and branch protection enforcement.</td><td><a href="automation-and-ci-cd/pull-requests.md">GitHub App Setup</a></td></tr><tr><td><strong>Scoring engine (0-100)</strong></td><td>Density-weighted score that normalizes findings by lines of code.</td><td><a href="core-concepts/scoring.md">Scoring Engine</a></td></tr><tr><td><strong>CLI and agent hooks</strong></td><td>Pre-commit checks, safe autofixes (<code>raigal fix</code>), and real-time interception for coding agents.</td><td><a href="cli-reference/commands.md">CLI Reference</a></td></tr><tr><td><strong>Agent repairs</strong></td><td>Isolated git worktrees where local coding agents fix issues and generate pull requests.</td><td><a href="automation-and-ci-cd/agent-repairs.md">Agent Repairs</a></td></tr><tr><td><strong>GitHub Actions OIDC</strong></td><td>Tokenless authentication for CI runners using GitHub OIDC tokens instead of static secrets.</td><td><a href="core-concepts/security.md">Security Model</a></td></tr></tbody></table>
+<table data-view="cards">
+  <thead>
+    <tr>
+      <th>Component</th>
+      <th>Description</th>
+      <th>Link</th>
+    </tr>
+  </thead>
+  <tbody>
+    <tr>
+      <td><strong>Raigal Cloud</strong></td>
+      <td>Web dashboard at <code>app.raigal.dev</code> with a 4-stage remediation board and team scan history.</td>
+      <td><a href="cloud-platform/dashboard.md">Cloud Dashboard</a></td>
+    </tr>
+    <tr>
+      <td><strong>GitHub App</strong></td>
+      <td>PR checks, commit status reporting, and branch protection enforcement.</td>
+      <td><a href="automation-and-ci-cd/pull-requests.md">GitHub App Setup</a></td>
+    </tr>
+    <tr>
+      <td><strong>Scoring engine (0-100)</strong></td>
+      <td>Density-weighted score that normalizes findings by lines of code.</td>
+      <td><a href="core-concepts/scoring.md">Scoring Engine</a></td>
+    </tr>
+    <tr>
+      <td><strong>CLI and agent hooks</strong></td>
+      <td>Pre-commit checks, safe autofixes (<code>raigal fix</code>), and real-time interception for coding agents.</td>
+      <td><a href="cli-reference/commands.md">CLI Reference</a></td>
+    </tr>
+    <tr>
+      <td><strong>Agent repairs</strong></td>
+      <td>Isolated git worktrees where local coding agents fix issues and generate pull requests.</td>
+      <td><a href="automation-and-ci-cd/agent-repairs.md">Agent Repairs</a></td>
+    </tr>
+    <tr>
+      <td><strong>GitHub Actions OIDC</strong></td>
+      <td>Tokenless authentication for CI runners using GitHub OIDC tokens instead of static secrets.</td>
+      <td><a href="core-concepts/security.md">Security Model</a></td>
+    </tr>
+    <tr>
+      <td><strong>Raigal MCP</strong></td>
+      <td>Model Context Protocol server connecting Raigal tools to Claude Code, Cursor, Windsurf, Cline, and Antigravity.</td>
+      <td><a href="automation-and-ci-cd/mcp-server.md">MCP Server</a></td>
+    </tr>
+  </tbody>
+</table>
 
 ## Getting started
 

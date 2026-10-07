@@ -11,7 +11,7 @@ This guide covers setting up Raigal for your team using the web dashboard at [ap
 
 | Step | Action | Location | Time |
 |---|---|---|---|
-| 1. Create organization | Sign up with GitHub, Google, or work email | [app.raigal.dev](https://app.raigal.dev) | 1 min |
+| 1. Create organization | Sign up with GitHub, GitLab, or work email | [app.raigal.dev](https://app.raigal.dev) | 1 min |
 | 2. Install GitHub App | Add the app to target repositories | [github.com/apps/raigal-cloud](https://github.com/apps/raigal-cloud) | 1 min |
 | 3. Copy API token | Copy your `rgl_live_...` token | Settings > API Tokens | 30 sec |
 | 4. Add CI workflow | Add `.github/workflows/raigal.yml` | Your repositories | 2 min |
@@ -20,12 +20,12 @@ This guide covers setting up Raigal for your team using the web dashboard at [ap
 ## 1. Create your organization
 
 1. Go to [app.raigal.dev](https://app.raigal.dev).
-2. Sign in with GitHub, Google, or your corporate email.
-3. Open the organization menu in the top-left corner and select **Create Organization** (or pick an existing workspace).
+2. Sign in with GitHub, GitLab, or your corporate email.
+3. Open the organization menu in the top-right corner and select **Create Organization** (or pick an existing workspace).
 4. Enter your organization name.
 
 {% hint style="info" %}
-If you manage multiple teams or client accounts, you can switch between organizations from the top-left menu.
+If you manage multiple teams or client accounts, you can switch between organizations from the top-right menu.
 {% endhint %}
 
 ## 2. Install the Raigal GitHub App

@@ -11,7 +11,7 @@ Esta guía explica cómo configurar Raigal para su equipo utilizando el panel we
 
 | Paso | Acción | Dónde | Tiempo |
 |---|---|---|---|
-| 1. Crear organización | Iniciar sesión con GitHub, Google o correo corporativo | [app.raigal.dev](https://app.raigal.dev) | 1 min |
+| 1. Crear organización | Iniciar sesión con GitHub, GitLab o correo corporativo | [app.raigal.dev](https://app.raigal.dev) | 1 min |
 | 2. Instalar GitHub App | Añadir la app a los repositorios seleccionados | [github.com/apps/raigal-cloud](https://github.com/apps/raigal-cloud) | 1 min |
 | 3. Copiar token de API | Copiar su clave `rgl_live_...` | Configuración > Tokens de API | 30 seg |
 | 4. Añadir flujo de CI | Crear `.github/workflows/raigal.yml` | Sus repositorios | 2 min |
@@ -20,12 +20,12 @@ Esta guía explica cómo configurar Raigal para su equipo utilizando el panel we
 ## 1. Crear su organización
 
 1. Entre en [app.raigal.dev](https://app.raigal.dev).
-2. Inicie sesión con GitHub, Google o su correo de trabajo.
-3. Abra el selector de organizaciones en la esquina superior izquierda y elija **Crear Organización** (o seleccione un espacio existente).
+2. Inicie sesión con GitHub, GitLab o su correo de trabajo.
+3. Abra el selector de organizaciones en la esquina superior derecha y elija **Crear Organización** (o seleccione un espacio existente).
 4. Indique el nombre de su organización.
 
 {% hint style="info" %}
-Si gestiona varias cuentas o clientes, puede alternar entre organizaciones desde el menú superior izquierdo.
+Si gestiona varias cuentas o clientes, puede alternar entre organizaciones desde el menú superior derecho.
 {% endhint %}
 
 ## 2. Instalar la GitHub App de Raigal
