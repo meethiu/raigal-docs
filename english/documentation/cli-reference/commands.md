@@ -43,23 +43,26 @@ Options:
 - `-d, --verbose`: show file-level details for each rule.
 - `--json`: output full diagnostic tree as JSON.
 - `--sarif`: output diagnostics in OASIS SARIF 2.1.0 format.
-- `--format <format>`: set output format (`json` or `sarif`).
+- `--format <format>`: choose output format (`json` or `sarif`).
+- `--exclude <patterns>`: comma-separated or repeatable list of paths to exclude.
+- `--include <patterns>`: comma-separated or repeatable list of paths to include.
 - `--fail-on <level>`: exit with code 1 on findings matching `none`, `error`, or `warning`.
 
 ### `raigal ci`
 
-Runs quality evaluations in CI runners and exits with non-zero codes on failure.
+Runs quality evaluations in CI runners and exits with code 1 on failure.
 
 ```bash
 raigal ci [options] [path]
 ```
 
-- Blocks pull requests if the overall score falls below the configured threshold (default: 80).
-- Accepts `--human` to output formatted summaries in CI logs.
+- Exits with code 1 if any `error`-level finding is detected or if the overall score falls below `ci.failBelow` (default: 70).
 - `--changes`: gate files changed relative to `--base` (or `HEAD`) only.
 - `--staged`: gate staged files only.
 - `--base <ref>`: diff base for `--changes` (such as `origin/main`).
+- `--human`: render formatted terminal summaries instead of JSON in CI logs.
 - `--sarif`: output SARIF 2.1.0 for GitHub code scanning annotations.
+- `--format <format>`: choose output format (`json` or `sarif`).
 
 ### `raigal fix`
 

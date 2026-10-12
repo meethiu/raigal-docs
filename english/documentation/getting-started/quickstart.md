@@ -18,7 +18,7 @@ raigal init .
 ```
 
 This generates:
-- `.raigal/config.yml`: score threshold, engine toggles, and ignore paths.
+- `.raigal/config.yml`: score threshold, engine toggles, and exclude paths.
 - `.raigal/rules.yml`: rule severity overrides.
 {% endstep %}
 

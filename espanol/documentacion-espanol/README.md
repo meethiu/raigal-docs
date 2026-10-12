@@ -70,7 +70,7 @@ Raigal evalúa el código en local mediante hooks de agente, en CI con cada comm
     </tr>
     <tr>
       <td><strong>Motor de puntuación (0-100)</strong></td>
-      <td>Puntuación ponderada que normaliza los hallazgos según las líneas de código.</td>
+      <td>Puntuación ponderada normalizada por recuento de archivos fuente, topes dinámicos por regla y compresión logarítmica.</td>
       <td><a href="conceptos-clave/puntuacion.md">Motor de Puntuación</a></td>
     </tr>
     <tr>

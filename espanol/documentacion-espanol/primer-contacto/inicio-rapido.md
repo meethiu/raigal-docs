@@ -18,7 +18,7 @@ raigal init .
 ```
 
 Esto crea:
-- `.raigal/config.yml`: umbrales de puntuación, activación de motores y rutas ignoradas.
+- `.raigal/config.yml`: umbrales de puntuación, activación de motores y rutas excluidas (`exclude`).
 - `.raigal/rules.yml`: ajustes de severidad para reglas concretas.
 {% endstep %}
 

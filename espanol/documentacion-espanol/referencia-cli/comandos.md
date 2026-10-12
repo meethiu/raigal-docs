@@ -44,22 +44,25 @@ Opciones:
 - `--json`: emite el árbol completo de diagnósticos en formato JSON.
 - `--sarif`: genera diagnósticos en estándar OASIS SARIF 2.1.0.
 - `--format <formato>`: define explícitamente el formato de salida (`json` o `sarif`).
-- `--fail-on <nivel>`: finaliza con código de error 1 según el nivel: `none`, `error` o `warning`.
+- `--exclude <patrones>`: lista de rutas separadas por comas o repetidas a excluir.
+- `--include <patrones>`: lista de rutas separadas por comas o repetidas a incluir.
+- `--fail-on <nivel>`: finaliza con código de salida 1 según el nivel: `none`, `error` o `warning`.
 
 ### `raigal ci`
 
-Diseñado para la validación de pull requests en pipelines de CI/CD.
+Ejecuta el control de calidad en entornos de CI y devuelve código de salida 1 si no se superan los requisitos.
 
 ```bash
 raigal ci [opciones] [ruta]
 ```
 
-- Bloquea el pull request si la puntuación no alcanza el umbral establecido (por defecto: 80).
-- Admite `--human` para generar resúmenes legibles en los registros de CI.
+- Devuelve código de salida 1 si se detecta cualquier aviso de nivel `error` o si la puntuación global es inferior a `ci.failBelow` (por defecto: 70).
 - `--changes`: valida únicamente los archivos modificados respecto a `--base` (o `HEAD`).
 - `--staged`: valida únicamente archivos en stage.
 - `--base <ref>`: referencia base para el diff de `--changes` (ej: `origin/main`).
+- `--human`: genera resúmenes legibles en la salida de consola en lugar de JSON.
 - `--sarif`: exporta resultados en SARIF 2.1.0 para anotaciones en GitHub Code Scanning.
+- `--format <formato>`: formato de salida (`json` o `sarif`).
 
 ### `raigal fix`
 

@@ -1,59 +1,173 @@
 ---
-description: "Configure project rules, score thresholds, and engines in .raigal/config.yml."
+description: "Configure project engines, score thresholds, and file scopes in .raigal/config.yml."
 icon: gear
 ---
 
 # Configuration
 
-Raigal reads its configuration from `.raigal/config.yml` in your repository root.
+Raigal reads its project settings from `.raigal/config.yml` in your repository root. Configuration files use strict schema validation validated with Zod; unexpected or misspelled keys trigger validation errors.
 
-## Minimal configuration
+## Complete configuration example
+
+Here is a full `.raigal/config.yml` file matching the schema:
 
 ```yaml
 version: 1
 
-scoring:
-  threshold: 85
-  fail_under: 80
-
+# Supported engines
 engines:
-  format: true
-  lint: true
-  quality: true
-  ai_slop: true
-  security: true
-  architecture: true
+  format: true          # Biome, Ruff, Gofmt, Cargo fmt, etc.
+  lint: true            # Oxlint, Ruff, Clippy, Golangci-lint, Roslynator, etc.
+  code-quality: true    # Knip unused exports, dead code, complexity (NOT "quality")
+  ai-slop: true         # 50+ AI anti-pattern detection rules (NOT "ai_slop")
+  architecture: false   # Dependency & boundary rules
+  security: true        # Secrets, injections, unsafe deserialization
 
-ignore:
-  - "dist/**"
-  - "node_modules/**"
-  - "**/*.min.js"
+# Quality and complexity limits
+quality:
+  maxFunctionLoc: 80
+  maxFileLoc: 400
+  maxNesting: 5
+  maxParams: 6
+
+# Engine-specific lint settings
+lint:
+  typecheck: false      # Bundled tsc compiler diagnostics
+  expoDoctor: false     # Expo React Native project hygiene checks
+  csharp:
+    projectEvaluation: false
+    jb: true            # JetBrains InspectCode
+    roslynator: true
+    jbSeverityFloor: "WARNING"
+  cpp:
+    cppcheck: true
+    clangTidy: true
+    cppcheckEnable: "warning,performance,portability"
+
+# CI gate configuration
+ci:
+  failBelow: 70         # Default score threshold (NOT scoring.fail_under)
+  format: "json"
+
+# Score calculation tuning
+scoring:
+  thresholds:
+    good: 75
+    ok: 50
+  smoothing: 5
+  maxPerRule: 40
+
+# Rule severity overrides
+rules:
+  ai-slop/trivial-comment: "off"
+  ai-slop/unsafe-type-assertion: "error"
+
+# Path exclusions (NOT "ignore")
+exclude:
+  - "node_modules"
+  - ".git"
+  - "dist"
+  - "build"
+  - "coverage"
+include: []
 ```
+
+## File locations and precedence
+
+Raigal resolves its configuration by searching upward from the target directory until reaching repository root:
+1. `.raigal/config.yml` or `.raigal/config.yaml`
+2. `.raigal/config.json`
+3. Root files: `.raigal.yml`, `.raigal.yaml`, or `.raigal.json`
+4. Backward-compatible directory paths (`.aislop/config.yml`, `.aislop.yml`)
 
 ## Options reference
 
-### `scoring`
-
-- `threshold` (number, default: 80): target benchmark score for the repository.
-- `fail_under` (number, default: 80): minimum passing score for `raigal ci`. Scores below this trigger exit code `1`.
-
 ### `engines`
 
-Enables or disables individual diagnostic modules:
-- `ai_slop`: repetitive patterns, redundant defensive checks, and obvious comments.
-- `security`: exposed tokens, private keys, and insecure function calls.
-- `lint`: static analysis powered by Oxlint and Ruff.
-- `format`: code style checks powered by Biome, Gofmt, and Ruff.
-- `quality`: unused code detection (Knip) and cyclomatic complexity limits.
-- `architecture`: boundary and cross-module import rules.
+Enables or disables individual analysis engines:
+
+- `format` (boolean, default: `true`): whitespace, indentation, line wrapping, and import ordering.
+- `lint` (boolean, default: `true`): static analysis rules via Oxlint, Ruff, Clippy, and language tools.
+- `code-quality` (boolean, default: `true`): unused exports (Knip), dead code detection, and complexity limits. Notice the key is `code-quality`, not `quality`.
+- `ai-slop` (boolean, default: `true`): 50+ rules detecting AI-generated anti-patterns, trivial comments, and redundant wrappers. Notice the key is `ai-slop`, not `ai_slop`.
+- `architecture` (boolean, default: `false`): layer boundary enforcement and dependency validation.
+- `security` (boolean, default: `true`): hardcoded secrets, injection vulnerabilities, and risky APIs.
+
+### `quality`
+
+Defines structural thresholds enforced by the `code-quality` engine:
+
+- `maxFunctionLoc` (number, default: `80`): maximum physical lines of code per function.
+- `maxFileLoc` (number, default: `400`): maximum physical lines of code per file.
+- `maxNesting` (number, default: `5`): maximum depth of nested control flow blocks.
+- `maxParams` (number, default: `6`): maximum parameter count per function signature.
+
+### `lint`
+
+Configures language-specific compiler and diagnostic tools:
+
+- `typecheck` (boolean, default: `false`): runs TypeScript compiler diagnostics (`tsc`).
+- `expoDoctor` (boolean, default: `false`): runs Expo React Native health checks.
+- `csharp`: settings for C# tooling, including `roslynator` and JetBrains InspectCode (`jb`).
+- `cpp`: settings for C/C++ tooling (`cppcheck`, `clangTidy`).
+
+### `ci`
+
+Configures automated continuous integration behavior:
+
+- `failBelow` (number, default: `70`): minimum passing quality score. If a scan score falls below this value or encounters an `error`-level finding, `raigal ci` exits with code 1. Notice the key is `ci.failBelow`, not `scoring.fail_under`.
+- `format` (`"json"`, default: `"json"`): output serialization format for CI runs.
+
+### `scoring`
+
+Tunes the scoring engine parameters:
+
+- `thresholds`: object defining CLI status boundaries.
+  - `good` (number, default: `75`): score at or above which status is labeled `Healthy`.
+  - `ok` (number, default: `50`): score at or above which status is labeled `Needs Work`. Below this, status is `Critical`.
+- `smoothing` (number, default: `5`): smoothing constant added to file count to avoid disproportionate penalties in small repositories.
+- `maxPerRule` (number, default: `40`): maximum deduction baseline allowed for any single rule before repository scale multipliers apply.
+- `weights`: custom category weights (defaults: `security: 1.5`, `ai-slop: 1.0`, `architecture: 1.0`, `code-quality: 0.8`, `lint: 0.6`, `format: 0.3`).
+
+### `rules`
+
+A map of rule identifiers to severity overrides:
+
+```yaml
+rules:
+  ai-slop/trivial-comment: "off"
+  ai-slop/unsafe-type-assertion: "error"
+```
+
+Valid severity values are `"error"`, `"warning"`, and `"off"`.
+
+### `exclude` and `include`
+
+Defines filesystem scope for all engines:
+
+- `exclude` (array of strings): paths and directories to ignore. Default: `["node_modules", ".git", "dist", "build", "coverage"]`. Notice the key is `exclude`, not `ignore`.
+- `include` (array of strings): explicit paths to scan. When empty (`[]`), all non-excluded supported files are scanned.
+
+### `overrides`
+
+Applies custom quality limits or rule severities to matching file patterns:
+
+```yaml
+overrides:
+  - files: ["legacy/**/*.ts"]
+    quality:
+      maxFileLoc: 800
+    rules:
+      ai-slop/trivial-comment: "off"
+```
 
 ### `telemetry`
 
-To disable cloud telemetry reporting:
+Controls telemetry delivery to Raigal Cloud:
 
 ```yaml
 telemetry:
-  enabled: false
+  enabled: true
 ```
 
-Telemetry events contain numeric metrics and rule counts only. Code contents and file contents are never transmitted.
+Telemetry events transmit numeric metric counts, rule hit totals, and execution timings only. Source code and file contents are never transmitted.

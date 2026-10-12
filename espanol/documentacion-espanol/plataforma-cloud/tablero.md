@@ -1,123 +1,135 @@
 ---
-description: "Tablero de remediación, seguimiento de pull requests, agentes y paneles de detalle en Raigal Cloud."
+description: "Etapas de hallazgos, filtros facetados, seguimiento de PRs y paneles deslizantes en Raigal Cloud."
 icon: kanban
 ---
 
-# Tablero de remediación y telemetría
+# Panel de remediación y telemetría
 
-Raigal Cloud (`https://app.raigal.dev`) organiza los resultados de los análisis y las incidencias pendientes en un tablero de cuatro columnas.
+Raigal Cloud (`app.raigal.dev`) unifica los datos de escaneo procedentes de ejecuciones locales, pipelines de CI y webhooks de la GitHub App en una interfaz centralizada de remediación.
 
 ```mermaid
 graph LR
-    subgraph Telemetría Entrante
+    subgraph Telemetría entrante
         Scan[raigal scan]
-        CI[raigal ci - Puerta de PR]
+        CI[raigal ci - PR Gate]
         Agent[raigal agent --pr]
     end
 
-    subgraph Tablero Raigal Cloud
-        Col1[1. Prioridad Media]
-        Col2[2. Alto Riesgo]
-        Col3[3. Pull Requests]
-        Col4[4. Remediaciones de Agentes]
+    subgraph Panel de Raigal Cloud
+        Stage1[1. Pestaña Errors]
+        Stage2[2. Pestaña Warnings]
+        Stage3[3. Pestaña Pull Requests]
+        Stage4[4. Pestaña Agent Actions]
     end
 
-    Scan --> Col1
-    Scan --> Col2
-    CI --> Col3
-    Agent --> Col4
+    Scan --> Stage1
+    Scan --> Stage2
+    CI --> Stage3
+    Agent --> Stage4
 ```
 
-## Las cuatro columnas del tablero
+## Estructura del panel
 
-El tablero agrupa los hallazgos en cuatro columnas:
+La interfaz organiza el estado del repositorio en cinco áreas principales:
 
-### 1. Prioridad media
-- Contenido: avisos no bloqueantes, estilo, código muerto secundario y patrones leves de IA (comentarios triviales, comprobaciones nulas redundantes).
-- Acciones: copia del comando de corrección automática (`npx @methiu/raigal fix --rule <rule-id>`).
-- Detalles: al pulsar una tarjeta se abre el panel lateral con fragmentos de código y números de línea.
+### 1. Cabecera del repositorio
 
-### 2. Alto riesgo
-- Contenido: bloqueadores que detienen CI, credenciales expuestas, inyecciones SQL o de comandos, casts inseguros (`as any`) y bloques catch vacíos (`silent-catch`).
-- Acciones: consulta de la documentación de la regla y recomendaciones de solución.
+La barra superior muestra el contexto en tiempo real del proyecto seleccionado:
+- **Selector de repositorio**: permite alternar entre repositorios autorizados o filtrar por nombre.
+- **Selector de ramas**: cambia entre ramas (`main`, `develop`, ramas de funcionalidad) para inspeccionar incidencias específicas.
+- **Insignia de puntuación de salud**: muestra la puntuación numérica actual de 0 a 100 con un indicador de color según la banda. Raigal emplea estrictamente valores numéricos; no se utilizan letras (A–E).
+- **Marca temporal relativa**: indica cuándo finalizó el último análisis.
+- **Recuento de hallazgos**: número total de incidencias activas en la rama seleccionada.
+- **Botón de actualización**: solicita los datos más recientes de escaneo.
 
-### 3. Pull requests (puertas de CI)
-- Contenido: pull requests abiertos evaluados por Raigal en CI o mediante webhooks de la GitHub App.
-- Estados:
-  - `APROBADO [puntuación]`: cumple o supera el umbral configurado.
-  - `BLOQUEADO [puntuación]`: contiene infracciones bloqueantes o no alcanza la puntuación mínima.
-  - `EN REVISIÓN / PENDIENTE`: a la espera de evaluación en CI.
-  - `FUSIONADO`: integrado en la rama base.
-  - `CERRADO`: cerrado sin fusionar.
-- Actualización: los commits sucesivos en un mismo PR actualizan la tarjeta correspondiente.
+### 2. Barra lateral y acciones rápidas
 
-### 4. Remediaciones de agentes (`--pr`)
-- Contenido: pull requests generados por agentes de programación (`raigal agent --provider <opencode|claude|codex> --pr`).
-- Información:
-  - Proveedor: indica la herramienta utilizada (`opencode`, `claude`, `codex`).
-  - Variación de puntuación: muestra la puntuación antes y después (ej: `72 -> 88 (+16 pts)`).
-  - Diff del parche: muestra las modificaciones generadas en el worktree.
+La barra lateral izquierda gestiona la navegación del espacio de trabajo:
+- **Navegación principal**: accesos directos a **Overview**, **Activity**, **Settings** y **Docs**.
+- **Acciones rápidas (`⌘ K`)**: abre la paleta de comandos para buscar repositorios, cambiar de rama o copiar comandos del CLI.
+- **Faceta de infracciones frecuentes**: enumera las seis reglas con mayor número de avisos activos junto con su severidad y recuento. Al pulsar sobre una regla, la vista filtra las tarjetas inmediatamente.
 
-## Paneles laterales de inspección
+### 3. Etapas de hallazgos
 
-Al pulsar cualquier tarjeta se despliega un panel lateral con información detallada:
+El panel central divide las incidencias en cuatro pestañas especializadas:
+
+#### Errors
+- **Elementos**: avisos bloqueantes, vulnerabilidades de seguridad, credenciales filtradas, aserciones inseguras (`as any`), bloques `catch` vacíos (`silent-catch`) y fallos estrictos de compilador.
+- **Detalles**: número de línea, descripción de la regla e insignias de severidad.
+- **Acciones**: selección de tarjeta para abrir el panel de vulnerabilidad o copiar comandos de corrección.
+
+#### Warnings
+- **Elementos**: advertencias no bloqueantes, discrepancias de formato, deuda de mantenibilidad y patrones de severidad media (comentarios triviales, comprobaciones nulas redundantes).
+- **Acciones**: copia directa del comando de corrección por regla (`npx @methiu/raigal fix --rule <rule-id>`).
+
+#### Pull Requests
+- **Elementos**: solicitudes de cambios evaluadas por `raigal ci` o por la GitHub App.
+- **Insignias de estado**:
+  - `Passed [puntuación]`: la puntuación cumple `ci.failBelow` y no contiene errores bloqueantes.
+  - `Failed [puntuación]`: la puntuación queda por debajo del umbral o contiene errores bloqueantes.
+  - `Pending`: análisis en curso o a la espera del runner de CI.
+- **Filtros**: filtrado inmediato por resultado del control de calidad (`Passed` o `Failed`).
+
+#### Agent Actions
+- **Elementos**: pull requests generados por agentes de código (`raigal agent --pr`).
+- **Detalles**:
+  - **Insignia del proveedor**: identifica el agente utilizado (`claude`, `codex`, `opencode`).
+  - **Diferencia de puntuación**: muestra la mejora conseguida (por ejemplo, `71 -> 89 (+18 pts)`).
+  - **Diff del parche**: muestra el diff unificado verificado en el worktree aislado.
+
+### 4. Filtros facetados
+
+Situada junto al listado de tarjetas, la barra de filtros permite acotar grandes volúmenes de incidencias:
+- **Faceta de motor**: filtra incidencias según el motor de diagnóstico (`security`, `ai-slop`, `lint`, `code-quality`, `format`, `architecture`).
+- **Faceta de carpeta**: aísla las incidencias a subdirectorios concretos (como `src/api` o `packages/core`).
+- **Faceta de control de calidad**: filtra registros de pull requests según su resultado (`Passed` o `Failed`).
+
+### 5. Paneles deslizantes de inspección
+
+Al pulsar sobre una tarjeta se despliega un panel lateral con información detallada:
 
 <table data-view="cards">
   <thead>
     <tr>
       <th>Panel</th>
       <th>Contenido</th>
-      <th>Acción</th>
+      <th>Acción principal</th>
     </tr>
   </thead>
   <tbody>
     <tr>
-      <td><strong>Panel de vulnerabilidades</strong></td>
-      <td>ID de regla, motor, línea, ruta de archivo y explicación.</td>
-      <td><code>Copiar Fix CLI</code>: copia el comando de corrección.</td>
+      <td><strong>Panel de vulnerabilidad</strong></td>
+      <td>Identificador de regla, motor, ruta de archivo, línea, fragmento de código y guía de remediación.</td>
+      <td><code>Copy CLI Fix</code>: copia el comando de corrección determinista al portapapeles.</td>
     </tr>
     <tr>
-      <td><strong>Panel de pull requests</strong></td>
-      <td>Rama, autor, puntuación, registros de CI y hallazgos bloqueantes.</td>
-      <td><code>Copiar git checkout</code>: copia el comando para cambiar de rama.</td>
+      <td><strong>Panel de pull request</strong></td>
+      <td>Nombre de rama, autor, variación de puntuación, registros de CI e incidencias bloqueantes.</td>
+      <td><code>Copy git checkout</code>: copia el comando para clonar o cambiar a la rama.</td>
     </tr>
     <tr>
-      <td><strong>Panel de agentes</strong></td>
-      <td>Proveedor, comparativa de puntuación y diff del parche.</td>
-      <td><code>Copiar gh merge</code>: copia el comando de fusión de GitHub CLI.</td>
+      <td><strong>Panel de agente</strong></td>
+      <td>Proveedor del agente, turnos empleados, progresión de puntuación y parche unificado completo.</td>
+      <td><code>Copy gh merge</code>: copia el comando de GitHub CLI para fusionar la PR del agente.</td>
     </tr>
   </tbody>
 </table>
 
-## Gestión de repositorios
+## Rangos de salud de la puntuación
 
-En **Configuración** (`https://app.raigal.dev/settings`), los administradores gestionan repositorios y credenciales:
+El panel clasifica las puntuaciones en cinco bandas de salud:
 
-### Selector de repositorios y filtro de ramas
-- Utilice el selector superior para cambiar de repositorio.
-- Seleccione la rama en el menú desplegable (`main`, `develop`, ramas de trabajo).
-- El estado seleccionado se mantiene en los enlaces directos: `/repos/:repoId?branch=feat/auth&drawer=vuln&id=...`.
+| Rango de puntuación | Banda en panel web | Color identificativo |
+|---|---|---|
+| $90 - 100$ | `Excellent` | Verde lima |
+| $80 - 89$ | `Good` | Verde esmeralda |
+| $70 - 79$ | `Fair` | Ámbar / amarillo |
+| $60 - 69$ | `Poor` | Naranja |
+| $< 60$ | `Critical` | Rojo |
 
-### Eliminar repositorios
-Para desvincular un repositorio que ya no se utiliza:
-1. Abra **Configuración** > **Repositorios**.
-2. Localice el repositorio en la lista.
-3. Pulse **Eliminar**.
-4. Confirme la acción.
+## Configuración de la organización
 
-{% hint style="warning" %}
-Al eliminar un repositorio se borran de forma permanente sus escaneos históricos, puntuaciones, evaluaciones de pull requests y tarjetas asociadas.
-{% endhint %}
-
-### Tokens de API
-- Cree claves para diferentes entornos de CI o equipos.
-- Revoque tokens que hayan quedado obsoletos.
-
-## Paleta de comandos (`⌘ K`)
-
-Raigal Cloud incluye una paleta de búsqueda rápida:
-- Pulse `⌘ K` (o `Ctrl K` en Windows/Linux).
-- Busque repositorios y ramas.
-- Acceda a las páginas de documentación.
-- Copie comandos de escaneo y corrección del CLI.
-- Solicite la sincronización manual con GitHub.
+En **Settings** (`app.raigal.dev/settings`), los administradores gestionan el acceso:
+- **Repositorios**: consulta repositorios sincronizados, configura permisos de la GitHub App o elimina proyectos que ya no se monitorizan.
+- **Tokens de API**: genera o revoca claves de organización (`rgl_live_...`).
+- **Miembros y funciones**: administra accesos de equipo y autenticación corporativa (SSO).

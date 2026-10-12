@@ -68,7 +68,7 @@ Raigal runs locally through agent hooks, in CI on each commit, and on pull reque
     </tr>
     <tr>
       <td><strong>Scoring engine (0-100)</strong></td>
-      <td>Density-weighted score that normalizes findings by lines of code.</td>
+      <td>Density-weighted score normalized by source file count, dynamic rule caps, and logarithmic compression.</td>
       <td><a href="core-concepts/scoring.md">Scoring Engine</a></td>
     </tr>
     <tr>
