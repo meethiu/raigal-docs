@@ -23,27 +23,27 @@ layout:
     visible: true
 ---
 
-# Raigal Overview
+# Raigal overview
 
-Raigal checks code for patterns introduced by AI coding tools, including verbose comments, unnecessary null checks, swallowed errors, and insecure calls. It combines formatting, linting, complexity checks, security rules, and pattern detection into one CLI command that returns a score from 0 to 100.
+Raigal checks code for patterns introduced by AI coding tools, including verbose comments, unnecessary type assertions, swallowed errors, and insecure calls. It combines formatting, linting, complexity checks, security rules, and pattern detection into one CLI command that returns a calibrated score from 0 to 100.
 
-Used with the [Raigal Cloud Platform](https://app.raigal.dev) and the [Raigal GitHub App](https://github.com/apps/raigal-cloud), it runs checks on pull requests, updates status checks for branch protection, tracks issues on a remediation board, and can run automated repair sessions with coding agents.
+Used with the [Raigal Cloud Platform](https://app.raigal.dev) and the [Raigal GitHub App](https://github.com/apps/raigal-cloud), it evaluates pull requests, updates status checks for branch protection, tracks issues on a remediation board, and coordinates repair sessions with local coding agents.
 
 {% hint style="success" %}
-Raigal runs AST parsing, security audits, and pattern checks inside your local machine or CI runner. Source code is never sent to Raigal servers.
+Raigal runs AST parsing, linting, and pattern checks locally inside your runner. Full source code is never uploaded to Raigal servers. When using `--report-pr`, an in-memory secret-masked git patch diff preview (up to 20 KB) is sent to render the PR dashboard. Autonomous repair sessions (`raigal agent`) communicate with your configured local LLM provider.
 {% endhint %}
 
 ## What Raigal catches
 
-Coding assistants such as Claude Code, Cursor, Copilot, and OpenCode speed up writing code, but they often leave behind specific defects:
+Coding assistants such as Claude Code, Cursor, Copilot, and OpenCode speed up feature delivery, but frequently leave behind structural defects:
 
-* Comments that repeat obvious function signatures or variable names.
-* Defensive checks on values already guaranteed by the type system.
-* Empty `catch` blocks and unlogged errors that hide failures.
-* Unescaped SQL queries, raw command injection, and `eval()` calls.
-* Circular dependencies and references that bypass project layer rules.
+* Narrative comments that repeat function signatures or obvious statements.
+* Swallowed exceptions in `catch` blocks that hide runtime failures.
+* Unsafe type assertions (`as any`, `as unknown as T`) introduced to bypass compiler checks.
+* Leftover debugging statements, console calls, and unreachable branches.
+* Unsanitized SQL interpolations, dynamic `eval()` calls, and unsandboxed agent tools.
 
-Raigal runs locally through agent hooks, in CI on each commit, and on pull requests before merge.
+Raigal runs through local agent hooks, in CI pipelines on every pull request, and during manual terminal audits.
 
 ## Components
 
@@ -58,7 +58,7 @@ Raigal runs locally through agent hooks, in CI on each commit, and on pull reque
   <tbody>
     <tr>
       <td><strong>Raigal Cloud</strong></td>
-      <td>Web dashboard at <code>app.raigal.dev</code> with a 4-stage remediation board and team scan history.</td>
+      <td>Web dashboard at <code>app.raigal.dev</code> with a remediation board, score tracking, and team audit history.</td>
       <td><a href="cloud-platform/dashboard.md">Cloud Dashboard</a></td>
     </tr>
     <tr>
@@ -68,7 +68,7 @@ Raigal runs locally through agent hooks, in CI on each commit, and on pull reque
     </tr>
     <tr>
       <td><strong>Scoring engine (0-100)</strong></td>
-      <td>Density-weighted score normalized by source file count, dynamic rule caps, and logarithmic compression.</td>
+      <td>Density-weighted score normalized by source file count, dynamic rule caps, and logarithmic scaling.</td>
       <td><a href="core-concepts/scoring.md">Scoring Engine</a></td>
     </tr>
     <tr>
@@ -83,7 +83,7 @@ Raigal runs locally through agent hooks, in CI on each commit, and on pull reque
     </tr>
     <tr>
       <td><strong>GitHub Actions OIDC</strong></td>
-      <td>Tokenless authentication for CI runners using GitHub OIDC tokens instead of static secrets.</td>
+      <td>Tokenless authentication for CI runners using cryptographic GitHub OIDC tokens instead of static secrets.</td>
       <td><a href="core-concepts/security.md">Security Model</a></td>
     </tr>
     <tr>
@@ -112,7 +112,7 @@ Connect your repositories through the [Raigal GitHub App](https://github.com/app
 {% step %}
 ### 3. Add the CI workflow
 
-Add a GitHub Actions workflow to check pull requests and send scores to your dashboard. [CI/CD Pipelines & GitHub Actions](automation-and-ci-cd/ci-cd.md)
+Add a pinned GitHub Actions workflow to check pull requests and send scores to your dashboard. [CI/CD Pipelines & GitHub Actions](automation-and-ci-cd/ci-cd.md)
 {% endstep %}
 
 {% step %}

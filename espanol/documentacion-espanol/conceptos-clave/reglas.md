@@ -9,12 +9,12 @@ Raigal ejecuta seis motores de diagnóstico especializados en paralelo durante c
 
 ```mermaid
 graph TD
-    A[raigal scan] --> B[Motor AI Slop - ai-slop]
-    A --> C[Motor de Seguridad - security]
-    A --> D[Motor de Lint - lint]
-    A --> E[Motor de Calidad - code-quality]
-    A --> F[Motor de Arquitectura - architecture]
-    A --> G[Motor de Formato - format]
+    A[raigal scan] --> B["Motor AI Slop (ai-slop)"]
+    A --> C["Motor de Seguridad (security)"]
+    A --> D["Motor de Lint (lint)"]
+    A --> E["Motor de Calidad (code-quality)"]
+    A --> F["Motor de Arquitectura (architecture)"]
+    A --> G["Motor de Formato (format)"]
     B --> H[Orquestador de Puntuación]
     C --> H
     D --> H
@@ -26,11 +26,11 @@ graph TD
 
 ## Motores de diagnóstico integrados
 
-1. **`security`** (Peso: 1.5): detecta credenciales expuestas en código, fugas de secretos, inyecciones SQL o de shell y dependencias vulnerables.
-2. **`ai-slop`** (Peso: 1.0): analiza más de 50 antipatrones habituales en código generado por IA sin revisar, como comentarios narrativos repetitivos, comprobaciones nulas superfluas y funciones auxiliares redundantes.
-3. **`architecture`** (Peso: 1.0): valida límites entre módulos y detecta grafos de dependencias circulares.
+1. **`security`** (Peso: 1.5): detecta credenciales expuestas en código, fugas de secretos, superficies de inyección en prompts de LLMs, herramientas de agentes sin aislamiento en sandbox, inyecciones SQL o de shell y dependencias vulnerables.
+2. **`ai-slop`** (Peso: 1.0): analiza más de 26 antipatrones habituales en código generado por asistentes de IA, como excepciones silenciadas, comentarios narrativos repetitivos, aserciones de tipo laxas y stubs incompletos.
+3. **`architecture`** (Peso: 1.0): valida límites entre módulos y detecta dependencias circulares.
 4. **`code-quality`** (Peso: 0.8): localiza código y exportaciones sin uso (mediante Knip), complejidad ciclomática excesiva, anidamiento profundo y límites de parámetros.
-5. **`lint`** (Peso: 0.6): ejecuta análisis estático multilingüe en TypeScript, Python, Rust, Go, C#, C++ y Ruby.
+5. **`lint`** (Peso: 0.6): ejecuta análisis estático multilingüe en TypeScript/JavaScript (Oxlint), Python (Ruff), Rust (Clippy), Go, C# (Roslynator, InspectCode), C++ (Clang-Tidy, Cppcheck) y Ruby.
 6. **`format`** (Peso: 0.3): revisa formato, sangrado, espacios en blanco y orden de importaciones.
 
 ## Niveles de impacto de las reglas
@@ -39,25 +39,30 @@ Cada regla se clasifica en un nivel de impacto que define su multiplicador de de
 
 | Nivel | Multiplicador | Tope por defecto | Tipos de hallazgos habituales |
 |---|---|---|---|
-| `strict` | $1.0\times$ | Sin tope | Errores de sintaxis, fallos de compilador, secretos filtrados |
-| `standard` | $1.0\times$ | Sin tope | Diagnósticos estándar de linters y detección fiable de defectos |
-| `maintainability` | $0.75\times$ | 24 | Complejidad ciclomática alta y funciones excesivamente largas |
-| `mechanical` | $0.5\times$ | 16 | Código muerto y variables locales no referenciadas |
-| `style` | $0.5\times$ | 8 | Variaciones de formato y discrepancias de nombres |
-| `advisory` | $0.25\times$ | 8 | Comentarios redundantes y avisos informativos |
+| `strict` | $1.0\times$ | Sin tope (`maxPerRule`) | Secretos filtrados, inyección en prompts, excepciones silenciadas |
+| `standard` | $1.0\times$ | Sin tope (`maxPerRule`) | Diagnósticos estándar de linters y comprobaciones fiables de defectos |
+| `maintainability` | $0.75\times$ | 24 | Complejidad ciclomática alta, funciones excesivamente largas |
+| `mechanical` | $0.5\times$ | 16 | Importaciones no utilizadas, variables locales sin referencia |
+| `style` | $0.5\times$ | 8 | Variaciones de formato, comentarios triviales |
+| `advisory` | $0.25\times$ | 8 | Auditorías omitidas y avisos informativos |
 
-## Reglas de patrones habituales
+## Catálogo de reglas habituales
 
-| Identificador | Severidad | Qué detecta | Corrección automática |
-|---|---|---|---|
-| `ai-slop/trivial-comment` | Warning | Comentarios que solo repiten nombres de funciones o variables | Sí (`raigal fix`) |
-| `ai-slop/defensive-null` | Warning | Comprobaciones de nulos en tipos garantizados por el compilador | Sí (`raigal fix`) |
-| `ai-slop/fake-polyfill` | Error | Métodos auxiliares que reimplementan funciones de la librería estándar | No (Agente) |
-| `ai-slop/silent-catch` | Error | Bloques `catch` vacíos que descartan excepciones sin registrar | No (Agente) |
-| `ai-slop/any-cast` | Warning | Aserciones de tipo `as any` utilizadas para saltarse comprobaciones | No (Agente) |
-| `ai-slop/over-engineered-regex` | Warning | Expresiones regulares complejas donde bastan métodos de cadena | No (Agente) |
-| `ai-slop/duplicate-logic` | Warning | Funciones auxiliares duplicadas entre módulos contiguos | Sí (`raigal fix`) |
-| `ai-slop/unhandled-todo` | Info | Comentarios TODO pendientes o stubs vacíos | No |
+| Identificador de regla | Motor | Severidad | Qué detecta | Corrección automática |
+|---|---|---|---|---|
+| `ai-slop/swallowed-exception` | `ai-slop` | Warning | Bloque catch que oculta un error sin gestionarlo ni relanzarlo | No (Agente) |
+| `ai-slop/trivial-comment` | `ai-slop` | Warning | Comentarios que solo repiten declaraciones obvias de funciones | Sí (`raigal fix`) |
+| `ai-slop/narrative-comment` | `ai-slop` | Warning | Bloques extensos de comentarios que describen el razonamiento del modelo | Sí (`raigal fix`) |
+| `ai-slop/unsafe-type-assertion` | `ai-slop` | Warning | Aserciones de tipo (`as any`, `as unknown as T`) que eluden la comprobación de tipos | No (Agente) |
+| `ai-slop/constant-condition` | `ai-slop` | Warning | Expresiones condicionales que siempre evalúan a true o false | No (Agente) |
+| `ai-slop/todo-stub` | `ai-slop` | Warning | Comentarios TODO, FIXME o stubs que dejan comportamiento sin implementar | No (Agente) |
+| `ai-slop/thin-wrapper` | `ai-slop` | Warning | Funciones que solo pasan argumentos sin aportar lógica ni contrato claro | No (Agente) |
+| `ai-slop/unused-import` | `ai-slop` | Warning | Módulos o símbolos importados que nunca se utilizan en el archivo | Sí (`raigal fix`) |
+| `security/prompt-injection` | `security` | Error | Interpolación dinámica de variables no sanitizadas en prompts de sistema | No (Agente) |
+| `security/unsandboxed-agent-tool` | `security` | Error | Herramienta de agente que ejecuta comandos en el host sin contenedor ni confirmación | No (Agente) |
+| `security/hardcoded-secret` | `security` | Error | Claves privadas, tokens o contraseñas incrustadas directamente en código | No |
+| `security/eval` | `security` | Error | Ejecución dinámica de código (`eval`, `new Function`) a partir de entradas de usuario | No |
+| `code-quality/duplicate-block` | `code-quality` | Warning | Bloques de código repetidos que duplican lógica entre módulos | No (Agente) |
 
 ## Ajustes de severidad de reglas
 
@@ -67,7 +72,7 @@ En `.raigal/config.yml` puede configurar severidades personalizadas o desactivar
 rules:
   ai-slop/trivial-comment: "off"
   ai-slop/unsafe-type-assertion: "error"
-  ai-slop/defensive-null: "warning"
+  ai-slop/constant-condition: "warning"
 ```
 
 Los valores admitidos son `"error"`, `"warning"` y `"off"`. Desactivar una regla (`"off"`) suprime su análisis y elimina cualquier deducción asociada de la puntuación.

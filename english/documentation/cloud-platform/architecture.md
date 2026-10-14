@@ -57,22 +57,22 @@ graph TD
 
 ## Source code handling
 
-Customer source code is never sent to, processed by, or stored on Raigal Cloud servers.
+Full customer source code is never sent to, processed by, or stored on Raigal Cloud servers.
 
 Separation between client compute and cloud control plane:
-1. Local and runner execution: AST parsing, linters (oxlint, ruff, biome), complexity checks, and pattern rules run entirely inside your workstation or CI runner.
-2. Metadata-only reporting: when a scan finishes, only diagnostic summaries are sent to the cloud:
+1. Local and runner execution: AST parsing, linters (oxlint, ruff, biome), complexity checks, and pattern rules execute entirely inside your local workstation or CI runner.
+2. Diagnostic reporting: when a scan completes, only summary diagnostics are transmitted:
    - Quality score (0-100) and category breakdowns
-   - Rule IDs (such as `ai-slop/trivial-comment` and `security/no-eval`)
-   - Relative file paths and line numbers
-   - Diff metrics (files changed, lines added, lines deleted)
-3. Secret scrubbing: the CLI strips authorization headers, access tokens, private keys, and common credential patterns before sending payloads.
+   - Rule IDs (such as `ai-slop/trivial-comment` and `security/eval`)
+   - Relative file paths and line coordinates
+   - Summary diff metrics (files changed, additions, deletions)
+3. Pull request diff previews: when running with `--report-pr`, a git patch diff preview (capped at 20 KB) is transmitted to display modified lines in the pull request dashboard. Before transmission, this preview passes through `maskSecrets`, which strips authorization headers, access tokens, private keys, and common credential patterns.
 
 ## GitHub App integration
 
 Raigal connects with GitHub through the official `raigal-cloud` app:
 
-- Webhook status checks: when a pull request opens or updates, GitHub notifies Raigal Cloud, which registers a pending `"Raigal Quality Gate"` check on the commit SHA.
+- Webhook status checks: when a pull request opens or updates, GitHub notifies Raigal Cloud, which registers a pending "Raigal Quality Gate" check on the commit SHA.
 - Check resolution: after the CI runner finishes the scan, it reports the score back to Raigal Cloud. Raigal then marks the check as passed or failed, resolving required branch protection rules.
 - Lifecycle events: PR merges and closures are delivered via GitHub webhooks, keeping board status current without custom cleanup scripts.
 - Orphan cleanup: if a CI job is cancelled or interrupted, Raigal Cloud clears pending checks after 20 minutes to prevent PRs from being blocked indefinitely.
@@ -92,11 +92,10 @@ For CI workflows, runners authenticate using ephemeral GitHub tokens:
 ### Developer CLI login (RFC 8628)
 Developers log in from the terminal with `raigal login`. This uses the OAuth 2.0 Device Authorization flow (RFC 8628), opening a browser window to approve the session.
 
-### Offline leases (Ed25519)
-To allow scanning without continuous network access:
-- When you authenticate, Raigal Cloud issues a signed Ed25519 lease token.
-- The CLI verifies the signature locally with a public key embedded in the binary.
-- Leases remain valid for 72 hours, enabling offline scans in air-gapped environments or while travelling.
+### Offline tolerance and air-gapped environments
+Raigal supports disconnected operation across two tiers:
+- 72-hour offline leases: for local development and travel, authenticated workstations cache a signed Ed25519 lease token valid for 72 hours. The CLI verifies this signature offline using a public key embedded in the binary.
+- True air-gap static licenses: for isolated networks, sovereign VPCs, or CI runners with no outbound internet access, Raigal supports offline license tokens (valid for 1 to 3 years) with no phone-home requirement, as well as self-hosted control plane deployments.
 
 ## Repository management
 

@@ -18,10 +18,10 @@ version: 1
 engines:
   format: true          # Biome, Ruff, Gofmt, Cargo fmt, etc.
   lint: true            # Oxlint, Ruff, Clippy, Golangci-lint, Roslynator, etc.
-  code-quality: true    # Knip unused exports, dead code, complexity (NOT "quality")
-  ai-slop: true         # 50+ AI anti-pattern detection rules (NOT "ai_slop")
+  code-quality: true    # Knip unused exports, dead code, complexity
+  ai-slop: true         # 26+ AI anti-pattern detection rules
   architecture: false   # Dependency & boundary rules
-  security: true        # Secrets, injections, unsafe deserialization
+  security: true        # Secrets, prompt injections, unsafe deserialization
 
 # Quality and complexity limits
 quality:
@@ -32,7 +32,7 @@ quality:
 
 # Engine-specific lint settings
 lint:
-  typecheck: false      # Bundled tsc compiler diagnostics
+  typecheck: false      # Bundled tsc compiler diagnostics (slow in CI)
   expoDoctor: false     # Expo React Native project hygiene checks
   csharp:
     projectEvaluation: false
@@ -46,7 +46,7 @@ lint:
 
 # CI gate configuration
 ci:
-  failBelow: 70         # Default score threshold (NOT scoring.fail_under)
+  failBelow: 75         # Minimum passing score (defaults to 70 in standard config)
   format: "json"
 
 # Score calculation tuning
@@ -56,6 +56,22 @@ scoring:
     ok: 50
   smoothing: 5
   maxPerRule: 40
+
+# Baseline regression protection
+baseline:
+  mode: strict          # "strict" (disables Stage 3 absorption) or "relaxed"
+
+# Enterprise licensing lapse behavior
+licensing:
+  onLapse: "fail-closed" # "fail-closed" (exits 2 in CI) or "fail-open"
+
+# Monorepo policy governance
+workspace:
+  minimumFloor: 75      # Prevents child package configs from setting failBelow < 75
+
+# Outbound telemetry controls
+telemetry:
+  enabled: true         # Set to false to disable all outbound telemetry queueing
 
 # Rule severity overrides
 rules:
@@ -78,7 +94,7 @@ Raigal busca el archivo de configuración recorriendo directorios hacia arriba h
 1. `.raigal/config.yml` o `.raigal/config.yaml`
 2. `.raigal/config.json`
 3. Archivos en raíz: `.raigal.yml`, `.raigal.yaml` o `.raigal.json`
-4. Directorios heredados de compatibilidad (`.aislop/config.yml`, `.aislop.yml`)
+4. Directorios heredados de compatibilidad (`.aislop/config.yml`)
 
 ## Referencia de opciones
 
@@ -88,8 +104,8 @@ Habilita o deshabilita motores de análisis individuales:
 
 - `format` (booleano, por defecto: `true`): espacios en blanco, sangrado, ajuste de líneas y orden de importaciones.
 - `lint` (booleano, por defecto: `true`): reglas de análisis estático con Oxlint, Ruff, Clippy y herramientas del lenguaje.
-- `code-quality` (booleano, por defecto: `true`): exportaciones sin uso (Knip), código muerto y límites de complejidad. Tenga en cuenta que la clave es `code-quality`, no `quality`.
-- `ai-slop` (booleano, por defecto: `true`): más de 50 reglas que detectan patrones defectuosos de IA, comentarios triviales y wrappers redundantes. La clave es `ai-slop`, no `ai_slop`.
+- `code-quality` (booleano, por defecto: `true`): exportaciones sin uso (Knip), código muerto y límites de complejidad. La clave es `code-quality`.
+- `ai-slop` (booleano, por defecto: `true`): reglas que detectan patrones defectuosos de IA, comentarios triviales y wrappers redundantes. La clave es `ai-slop`.
 - `architecture` (booleano, por defecto: `false`): límites arquitectónicos e importaciones cruzadas entre capas.
 - `security` (booleano, por defecto: `true`): secretos expuestos, inyecciones de código y llamadas a funciones peligrosas.
 
@@ -115,8 +131,26 @@ Configura herramientas de compilación y diagnóstico específicas del lenguaje:
 
 Configura el comportamiento del control de calidad en integración continua:
 
-- `failBelow` (numérico, por defecto: `70`): puntuación mínima para aprobar la comprobación. Si la puntuación es inferior a este valor o se detecta algún aviso de nivel `error`, `raigal ci` devuelve código de salida 1. La clave es `ci.failBelow`, no `scoring.fail_under`.
+- `failBelow` (numérico, por defecto: `70`): puntuación mínima para aprobar la comprobación. Si la puntuación es inferior a este valor o se detecta algún aviso de nivel `error`, `raigal ci` devuelve código de salida 1.
 - `format` (`"json"`, por defecto: `"json"`): formato de salida en ejecuciones de CI.
+
+### `baseline`
+
+Configura la comparación de regresiones contra `.raigal/baseline.json`:
+
+- `mode` (`"strict"` | `"relaxed"`, por defecto: `"relaxed"`): en modo `"strict"`, se desactiva la absorción de Stage 3 a nivel de archivo. Cualquier incidencia fuera de la ventana de 11 líneas se considera una regresión bloqueante.
+
+### `licensing`
+
+Define el comportamiento en CI si vence la concesión de licencia:
+
+- `onLapse` (`"fail-open"` | `"fail-closed"`, por defecto: `"fail-open"`): en modo `"fail-closed"`, el CI finaliza con código de salida 2 si no se puede validar la concesión tras expirar el periodo de gracia.
+
+### `workspace`
+
+Aplica estándares mínimos organizacionales en monorrepositorios:
+
+- `minimumFloor` (numérico, por defecto: `50`): establece un suelo estricto para `ci.failBelow` que las configuraciones de subpaquetes no pueden reducir.
 
 ### `scoring`
 
@@ -145,7 +179,7 @@ Los valores válidos de severidad son `"error"`, `"warning"` y `"off"`.
 
 Define el ámbito de archivos analizados en el sistema:
 
-- `exclude` (lista de cadenas): rutas y directorios que se omiten. Por defecto: `["node_modules", ".git", "dist", "build", "coverage"]`. La clave es `exclude`, no `ignore`.
+- `exclude` (lista de cadenas): rutas y directorios que se omiten. Por defecto: `["node_modules", ".git", "dist", "build", "coverage"]`.
 - `include` (lista de cadenas): rutas explícitas a analizar. Cuando está vacía (`[]`), se analizan todos los archivos compatibles no excluidos.
 
 ### `overrides`
@@ -170,4 +204,4 @@ telemetry:
   enabled: true
 ```
 
-Los eventos de telemetría solo contienen recuentos de métricas numéricas, reglas activadas y tiempos de ejecución. El contenido del código fuente y de los archivos nunca se transmite.
+Establezca en `false` para desactivar el envío de telemetría saliente.

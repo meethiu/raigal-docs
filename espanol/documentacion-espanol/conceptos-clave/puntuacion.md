@@ -1,111 +1,101 @@
 ---
-description: "Cómo calcula Raigal la puntuación de calidad 0-100, deducciones ponderadas y compresión logarítmica."
+description: "Puntuación de calidad calibrada de 0 a 100, normalización por densidad y bandas de estado."
 icon: gauge
 ---
 
 # Motor de puntuación
 
-Raigal evalúa el código en una escala de 0 a 100, donde 100 indica ausencia total de incidencias. En lugar de restar puntos fijos arbitrarios o utilizar métricas de líneas de código, el motor normaliza las incidencias según el número de archivos fuente, aplica topes de saturación por regla y comprime las deducciones de forma logarítmica.
+Raigal asigna a cada repositorio una puntuación de calidad calibrada entre 0 y 100. La métrica evalúa la densidad de incidencias en lugar del recuento bruto de avisos, evitando que proyectos con bases de código grandes suspendan únicamente por su volumen de archivos.
 
-## Cálculo de deducciones
+## Fórmula de puntuación
 
-Cada aviso genera una deducción base calculada a partir de su severidad, la categoría de motor y el nivel de impacto de la regla:
+Raigal evalúa las incidencias detectadas por sus seis motores de diagnóstico mediante un escalado logarítmico normalizado por densidad:
 
-$$\text{deducción} = \text{penalizaciónPorSeveridad} \times \text{pesoDelMotor} \times \text{multiplicadorDeImpacto}$$
+$$\text{Densidad de Deducción} = \frac{\sum \text{Deducciones Acotadas}}{\text{Archivos Fuente Efectivos} + S}$$
 
-### Penalizaciones por severidad
+$$\text{Puntuación} = \max\left(0, \operatorname{redondear}\left(100 - \frac{100 \cdot \ln(1 + 5 \cdot \text{Densidad de Deducción})}{\ln(101 + 5 \cdot \text{Densidad de Deducción})}\right)\right)$$
 
-| Severidad | Penalización | Descripción |
-|---|---|---|
-| `error` | 3.0 | Fallos de compilación, vulnerabilidades de seguridad, errores de tipo o violaciones graves |
-| `warning` | 1.0 | Conversiones inseguras, complejidad excesiva o advertencias de mantenimiento |
-| `info` / `advisory` | 0.25 | Sugerencias de estilo y notas informativas |
+Donde:
+* **Constante de suavizado ($S$)**: Por defecto es `5` en la configuración (con reserva interna de `10`). Evita que un aviso aislado en un proyecto pequeño de dos archivos hunda la puntuación.
+* **Escala de densidad**: Multiplicador de `5.0` aplicado sobre la densidad de deducción.
+* **Archivos fuente efectivos**: Recuento de archivos de código y pruebas no excluidos en el espacio de trabajo (o archivos modificados durante escaneos incrementales de pull requests).
+
+## Multiplicadores de severidad y ponderación de motores
+
+Cada aviso de diagnóstico genera una penalización base según su severidad y el motor que lo detectó:
+
+$$\text{Deducción Base} = \text{Multiplicador de Severidad} \times \text{Peso del Motor} \times \text{Multiplicador de Nivel}$$
+
+### Multiplicadores de severidad
+* `error`: $3.0$ (además activa código de salida 1 de inmediato en CI)
+* `warning`: $1.0$
+* `info`: $0.25$
 
 ### Ponderación de motores
+* `security`: $1.5$ (secretos en código, inyecciones, APIs inseguras, dependencias vulnerables)
+* `architecture`: $1.0$ (cruce indebido de capas, importaciones circulares)
+* `ai-slop`: $1.0$ (excepciones silenciadas, comentarios triviales, aserciones de tipo laxas)
+* `code-quality`: $0.8$ (código muerto, complejidad ciclomática excesiva, exceso de parámetros)
+* `lint`: $0.6$ (Oxlint, Ruff, Clippy, Roslynator)
+* `format`: $0.3$ (espacios en blanco, indentación, orden de importaciones)
 
-Cada motor de diagnóstico aplica un multiplicador de categoría acorde a su nivel de riesgo:
+## Topes dinámicos por regla
 
-| Motor | Peso | Alcance |
-|---|---|---|
-| `security` | 1.5 | Secretos expuestos, vulnerabilidades de inyección y llamadas peligrosas |
-| `ai-slop` | 1.0 | Comprobaciones nulas redundantes, polyfills inventados, comentarios obvios y patrones de IA |
-| `architecture` | 1.0 | Límites entre capas y dependencias circulares entre módulos |
-| `code-quality` | 0.8 | Exportaciones sin uso (Knip), código muerto y límites de complejidad |
-| `lint` | 0.6 | Análisis estático con Oxlint, Ruff y diagnósticos de compilador |
-| `format` | 0.3 | Discrepancias de formato, espacios e importaciones desordenadas |
+Para evitar que problemas de estilo muy repetidos (como 500 comas finales omitidas) oculten vulnerabilidades de seguridad o hundan proyectos grandes, las reglas pertenecen a niveles de impacto con topes base dinámicos:
 
-### Niveles de impacto y límites por regla
-
-Cada regla pertenece a un nivel de impacto que define su multiplicador y su tope de deducción por defecto:
-
-| Nivel | Multiplicador | Tope por defecto | Tipos de hallazgos habituales |
+| Nivel de impacto | Multiplicador | Tope base | Hallazgos habituales |
 |---|---|---|---|
-| `strict` | $1.0\times$ | Sin tope | Errores de tipado, fallos sintácticos y credenciales filtradas |
-| `standard` | $1.0\times$ | Sin tope | Diagnósticos estándar de linter y comprobaciones de defectos fiables |
-| `maintainability` | $0.75\times$ | 24 | Complejidad ciclomática alta y funciones excesivamente largas |
-| `mechanical` | $0.5\times$ | 16 | Código muerto menor y variables locales no referenciadas |
-| `style` | $0.5\times$ | 8 | Variaciones de formato y discrepancias de nombres |
-| `advisory` | $0.25\times$ | 8 | Comentarios redundantes y avisos informativos |
+| `strict` | $1.0\times$ | Sin tope (`maxPerRule`) | Errores de sintaxis, secretos filtrados, promesas no controladas |
+| `standard` | $1.0\times$ | Sin tope (`maxPerRule`) | Diagnósticos estándar de linter, advertencias de compilador |
+| `maintainability` | $0.75\times$ | 24 | Complejidad ciclomática alta, funciones excesivamente largas |
+| `mechanical` | $0.5\times$ | 16 | Importaciones no utilizadas, variables locales sin referencia |
+| `style` | $0.5\times$ | 8 | Variaciones de formato, discrepancias de espaciado |
+| `advisory` | $0.25\times$ | 8 | Avisos informativos, documentación faltante |
 
-### Límite dinámico por regla
+### Escalado según el tamaño del repositorio
+El tope efectivo de cada regla escala proporcionalmente con el número de archivos:
+$$\text{Escala de Tope} = \max\left(1, \frac{\text{Archivos Fuente Efectivos}}{10}\right)$$
+$$\text{Tope Efectivo} = \min(\text{maxPerRule}, \text{Tope del Nivel}) \times \text{Escala de Tope}$$
 
-Para evitar que una única regla repetitiva hunda la puntuación de todo el proyecto, las deducciones máximas de cada regla escalan de forma proporcional al tamaño del repositorio:
+## Ejemplos prácticos
 
-$$\text{escalaDeTope} = \max\left(1, \frac{\text{recuentoArchivos}}{10}\right)$$
+### Ejemplo 1: Microservicio (10 archivos, 1 advertencia)
+* **Hallazgo**: 1 `ai-slop/swallowed-exception` (`warning`, severidad $1.0$, motor $1.0$, nivel *strict* $1.0$).
+* **Cálculo**:
+  $$\text{Deducción} = 1.0, \quad \text{Densidad} = \frac{1.0}{10 + 5} = \frac{1.0}{15} \approx 0.0667$$
+  $$\text{Densidad Escalada} = 0.0667 \times 5.0 = 0.3333$$
+  $$\text{Puntuación} = 100 - \frac{100 \cdot \ln(1.3333)}{\ln(101.3333)} \approx 100 - 6.23 = \mathbf{94} \quad (\text{Healthy})$$
 
-La deducción acumulada de una regla individual queda acotada por:
+### Ejemplo 2: Monolito (200 archivos, 500 avisos de formato)
+* **Hallazgos**: 500 comas finales omitidas (`format/trailing-comma`, `info` $0.25$, motor $0.3$, nivel *style* $0.5$, tope $8$).
+* **Cálculo**:
+  $$\text{Deducciones Brutas} = 500 \times 0.25 \times 0.3 \times 0.5 = 18.75$$
+  $$\text{Escala de Tope} = \frac{200}{10} = 20, \quad \text{Tope Efectivo} = 8 \times 20 = 160$$
+  $$\text{Deducciones Acotadas} = \min(18.75, 160) = 18.75$$
+  $$\text{Densidad} = \frac{18.75}{200 + 5} = \frac{18.75}{205} \approx 0.0915, \quad \text{Densidad Escalada} = 0.4573$$
+  $$\text{Puntuación} = 100 - \frac{100 \cdot \ln(1.4573)}{\ln(101.4573)} \approx 100 - 8.15 = \mathbf{92} \quad (\text{Healthy})$$
 
-$$\text{topeEfectivo} = \min(\text{maxPerRule}, \text{topeRegla}) \times \text{escalaDeTope}$$
+## Umbrales de puntuación y bandas de estado
 
-Por defecto, `maxPerRule` es 40. En un proyecto con 50 archivos fuente, `escalaDeTope` es 5.0, por lo que una regla consultiva con tope base de 8 no podrá restar más de 40 puntos en todo el repositorio.
-
-## Densidad de deducción y escalado
-
-Las deducciones se suman entre todas las reglas y se normalizan frente al volumen del proyecto:
-
-$$\text{densidadDeDeducción} = \frac{\sum \text{deduccionesAcotadas}}{\text{recuentoArchivos} + \text{constanteDeSuavizado}}$$
-
-- `recuentoArchivos`: Total de archivos fuente analizados. Si el análisis se ejecuta sobre diagnósticos prefiltrados sin lista de archivos, Raigal toma como referencia los archivos con avisos observados.
-- `constanteDeSuavizado`: Por defecto es 5 (con reserva interna de 10 en cálculos directos). Este factor evita penalizaciones desproporcionadas en repositorios pequeños o cambios de un solo archivo.
-- Factor de escala: La densidad se multiplica por un factor de calibración de 5 para obtener las deducciones escaladas finales:
-
-$$\text{deduccionesEscaladas} = \text{densidadDeDeducción} \times 5$$
-
-## Compresión logarítmica de la puntuación
-
-La puntuación final comprime las deducciones escaladas en un rango estable de 0 a 100:
-
-$$\text{puntuación} = \max\left(0, \text{redondear}\left(100 - \frac{100 \times \ln(1 + \text{deduccionesEscaladas})}{\ln(1 + 100 + \text{deduccionesEscaladas})}\right)\right)$$
-
-Esta curva matemática proporciona ventajas concretas:
-- Un repositorio con 0 incidencias obtiene exactamente 100 puntos.
-- La penalización marginal es mayor en las primeras incidencias, premiando a los proyectos limpios por mantener su estándar.
-- Los repositorios heredados con cientos de incidencias se aproximan de forma asintótica a 0, garantizando que la puntuación nunca sea negativa sin recurrir a recortes artificiales.
-
-## Umbrales de puntuación y rangos de estado
-
-Raigal utiliza exclusivamente puntuaciones numéricas de 0 a 100. No se emplean calificaciones por letras (A–E).
+Raigal utiliza exclusivamente puntuaciones numéricas de 0 a 100. No se emplean calificaciones por letras (A - F).
 
 ### Etiquetas de estado en el CLI
-
-Al ejecutar `raigal scan` o `raigal ci`, la interfaz de línea de comandos asigna etiquetas según los umbrales configurados (`good: 75`, `ok: 50`):
+Al ejecutar `raigal scan` o `raigal ci`, las etiquetas de la terminal corresponden a los límites de puntuación configurados:
 
 | Rango de puntuación | Etiqueta en CLI | Código de salida en CI |
 |---|---|---|
 | $75 - 100$ | `Healthy` | `0` (Aprobado) |
-| $50 - 74$ | `Needs Work` | `0` (o `1` si se activa `--fail-on` o `failBelow`) |
-| $< 50$ | `Critical` | `1` (Falla el control de calidad por defecto) |
+| $50 - 74$ | `Needs Work` | `0` (o `1` si se incumple `ci.failBelow`) |
+| $< 50$ | `Critical` | `1` (Falla el control de calidad) |
 
 En entornos de integración continua, `raigal ci` devuelve código de salida 1 si la puntuación es inferior a `ci.failBelow` (por defecto: 70) o si se detecta algún aviso con severidad `error`.
 
-### Rangos de salud en el panel web
-
-La interfaz web de Raigal Cloud (`app.raigal.dev`) agrupa los repositorios en cinco bandas de salud:
+### Bandas de salud en el panel web
+La interfaz de Raigal Cloud (`app.raigal.dev`) agrupa los repositorios en cuatro bandas de salud calibradas:
 
 | Rango de puntuación | Banda en panel web | Color identificativo |
 |---|---|---|
 | $90 - 100$ | `Excellent` | Verde lima |
-| $80 - 89$ | `Good` | Verde esmeralda |
-| $70 - 79$ | `Fair` | Ámbar / amarillo |
-| $60 - 69$ | `Poor` | Naranja |
-| $< 60$ | `Critical` | Rojo |
+| $75 - 89$ | `Good / Healthy` | Verde esmeralda |
+| $50 - 74$ | `Needs Work` | Ámbar / amarillo |
+| $< 50$ | `Critical` | Rojo |

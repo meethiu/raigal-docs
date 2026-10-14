@@ -10,9 +10,10 @@ Raigal can inspect code edits proposed by AI coding agents before they are saved
 ## How hooks work
 
 When a coding agent modifies a file:
-1. The hook runs a localized AST scan on the modified buffer.
-2. If the edit introduces pattern violations, such as redundant null checks or stripped error handling, the hook rejects the edit or emits a warning.
-3. The agent receives the diagnostic output in its context and adjusts its proposal.
+1. The hook executes a scoped in-memory AST scan on the changed files via `runScopedScan`.
+2. Heavy processes (network audits, type-checking, and formatters) are skipped to keep turn latency low.
+3. If the edit introduces pattern violations (such as swallowed exceptions or unsafe type assertions), the hook returns structured feedback into the agent turn.
+4. The agent reads the machine-readable feedback and can self-correct within the same turn.
 
 ```mermaid
 sequenceDiagram
@@ -23,8 +24,8 @@ sequenceDiagram
     participant Code as Workspace File
     Developer->>Agent: Prompt: "Add user profile validation"
     Agent->>Hook: Propose edit with redundant 'as any'
-    Hook->>Hook: Run sub-second AST scan
-    Hook-->>Agent: Rejection: ai-slop/any-cast on line 42
+    Hook->>Hook: Run in-process AST scan
+    Hook-->>Agent: Diagnostic: ai-slop/unsafe-type-assertion on line 42
     Agent->>Agent: Self-corrects to proper Zod schema
     Agent->>Code: Writes clean, validated code
 ```
@@ -40,25 +41,38 @@ raigal hook install
 Or target specific tools:
 
 ```bash
-raigal hook install claude cursor opencode
+raigal hook install --claude
+raigal hook install --cursor
+raigal hook install --gemini
 ```
 
-## Status and baselines
+Pass `--project` to scope hooks to the current repository only instead of your global user directory.
 
-Check active hooks:
+## Status, baselines, and safety
+
+### Status and sentinel integrity
+Check active hooks and verified SHA-256 sentinel hashes:
 
 ```bash
 raigal hook status
 ```
 
-Record the current score as the project baseline:
+### Capturing baselines
+Record pre-existing technical debt before running incremental checks:
 
 ```bash
 raigal hook baseline
 ```
 
-Subsequent agent edits that drop the score below this baseline are rejected.
+This writes a fingerprint snapshot to `.raigal/baseline.json`. Subsequent agent edits are evaluated using 3-stage baseline matching, ensuring pre-existing debt does not trigger false regressions.
+
+### Safe uninstallation
+Remove hooks cleanly without disturbing hand-written editor settings:
+
+```bash
+raigal hook uninstall
+```
 
 {% hint style="info" %}
-To connect Raigal tools directly to your agent's tool-calling loop instead of relying on file system hooks, see the [Raigal MCP Server](../automation-and-ci-cd/mcp-server.md).
+To connect Raigal tools directly to your agent tool-calling loop instead of relying on file system hooks, see the [Raigal MCP Server](../automation-and-ci-cd/mcp-server.md).
 {% endhint %}

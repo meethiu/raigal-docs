@@ -5,14 +5,15 @@ icon: link
 
 # Hooks de intercepción para agentes
 
-Raigal puede analizar los cambios propuestos por agentes de programación antes de que se guarden en el disco.
+Raigal puede analizar los cambios propuestos por asistentes y agentes de programación antes de que se consoliden en disco.
 
 ## Funcionamiento de los hooks
 
-Cuando un agente intenta modificar un archivo:
-1. El hook ejecuta un análisis AST rápido sobre el búfer modificado.
-2. Si el cambio introduce problemas como comprobaciones de nulos redundantes o eliminación de control de errores, el hook rechaza la edición o emite un aviso.
-3. El agente recibe el mensaje de diagnóstico en su contexto y corrige el código propuesto.
+Cuando un agente modifica un archivo:
+1. El hook ejecuta un análisis AST acotado sobre los archivos modificados mediante `runScopedScan`.
+2. Las tareas pesadas (auditorías de red, chequeo de tipos con `tsc` y formateadores) se desactivan para mantener baja la latencia del turno.
+3. Si la edición introduce infracciones de patrones (como excepciones silenciadas o aserciones de tipo inseguras), el hook devuelve información estructurada en el turno del agente.
+4. El agente lee el diagnóstico e intenta autocorregirse en el mismo turno.
 
 ```mermaid
 sequenceDiagram
@@ -23,8 +24,8 @@ sequenceDiagram
     participant Codigo as Archivo del Repositorio
     Desarrollador->>Agente: Petición: "Añadir validación a perfil"
     Agente->>Hook: Propone edición con 'as any' innecesario
-    Hook->>Hook: Análisis AST en submilisegundos
-    Hook-->>Agente: Rechazo: ai-slop/any-cast en línea 42
+    Hook->>Hook: Análisis AST en memoria
+    Hook-->>Agente: Diagnóstico: ai-slop/unsafe-type-assertion en línea 42
     Agente->>Agente: Se autocorrige con esquema Zod estricto
     Agente->>Codigo: Escribe código limpio y verificado
 ```
@@ -40,24 +41,37 @@ raigal hook install
 O configure herramientas específicas:
 
 ```bash
-raigal hook install claude cursor opencode
+raigal hook install --claude
+raigal hook install --cursor
+raigal hook install --gemini
 ```
 
-## Estado y línea base
+Añada `--project` para limitar los hooks únicamente al repositorio actual en lugar de la configuración global de usuario.
 
-Compruebe el estado de los hooks:
+## Estado, línea base y seguridad
+
+### Estado e integridad de centinelas
+Compruebe los hooks activos y sus hashes SHA-256 de integridad:
 
 ```bash
 raigal hook status
 ```
 
-Guarde la puntuación actual como referencia base del proyecto:
+### Captura de líneas base (Baseline)
+Registre la deuda técnica previa antes de realizar comprobaciones incrementales:
 
 ```bash
 raigal hook baseline
 ```
 
-Las ediciones posteriores del agente que reduzcan la puntuación por debajo de esta base serán rechazadas.
+Esto genera una instantánea en `.raigal/baseline.json`. Las ediciones posteriores del agente se comparan mediante correspondencia en 3 etapas, asegurando que la deuda preexistente no se marque como regresión.
+
+### Desinstalación segura
+Elimine los hooks limpiamente sin alterar configuraciones manuales del editor:
+
+```bash
+raigal hook uninstall
+```
 
 {% hint style="info" %}
 Para conectar las herramientas de Raigal directamente al flujo de llamadas de herramientas del agente en lugar de usar hooks de archivos, consulte el [Servidor MCP de Raigal](../automatizacion-y-ci-cd/servidor-mcp.md).

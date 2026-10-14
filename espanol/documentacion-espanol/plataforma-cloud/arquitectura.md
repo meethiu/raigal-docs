@@ -57,22 +57,22 @@ graph TD
 
 ## Tratamiento del código fuente
 
-El código fuente del cliente nunca se envía, procesa ni almacena en los servidores de Raigal Cloud.
+Los archivos de código fuente completos del cliente nunca se envían, procesan ni almacenan en los servidores de Raigal Cloud.
 
 Separación entre cómputo local y servicios en la nube:
 1. Ejecución local y en runners: el análisis sintáctico (AST), linters (oxlint, ruff, biome), análisis de complejidad y detección de patrones se ejecutan íntegramente en su máquina o runner de CI.
-2. Envío exclusivo de metadatos: al terminar el escaneo, solo se transmiten resúmenes diagnósticos:
+2. Informes de diagnóstico: al terminar el escaneo, solo se transmiten resúmenes diagnósticos:
    - Puntuación final (0-100) y desglose por categorías
-   - Identificadores de reglas (como `ai-slop/trivial-comment` o `security/no-eval`)
-   - Rutas relativas de archivos y números de línea
+   - Identificadores de reglas (como `ai-slop/trivial-comment` o `security/eval`)
+   - Rutas relativas de archivos y coordenadas de línea
    - Métricas de diff (archivos modificados, líneas añadidas y eliminadas)
-3. Depuración previa de secretos: el CLI elimina cabeceras de autorización, tokens, claves privadas y patrones de credenciales antes de enviar los datos.
+3. Vistas previas de diff en pull requests: al ejecutar con `--report-pr`, se envía una vista previa del parche unificado (limitada a 20 KB) para visualizar las líneas modificadas en el tablero de pull requests. Antes de transmitirse, este diff pasa por `maskSecrets`, que elimina cabeceras de autorización, tokens Bearer, claves privadas y patrones de credenciales habituales.
 
 ## Integración con la GitHub App
 
 Raigal se conecta con GitHub mediante la app oficial `raigal-cloud`:
 
-- Comprobaciones basadas en eventos: al abrir o actualizar un pull request, GitHub notifica a Raigal Cloud, que crea un check pendiente `"Raigal Quality Gate"` en el commit head.
+- Comprobaciones basadas en eventos: al abrir o actualizar un pull request, GitHub notifica a Raigal Cloud, que crea un check pendiente "Raigal Quality Gate" en el commit head.
 - Resolución de comprobaciones: tras la evaluación en CI, el runner envía la puntuación a Raigal Cloud. Raigal marca el check como aprobado o rechazado, resolviendo las reglas de protección de rama.
 - Eventos de ciclo de vida: las fusiones y cierres se reciben mediante webhooks de GitHub, manteniendo el tablero actualizado sin scripts adicionales.
 - Limpieza de comprobaciones pendientes: si un trabajo de CI se cancela o interrumpe, Raigal Cloud elimina comprobaciones huérfanas tras 20 minutos para no bloquear pull requests.
@@ -92,11 +92,10 @@ Para flujos de CI, los runners se autentican con tokens efímeros:
 ### Autenticación del CLI (RFC 8628)
 Los desarrolladores inician sesión con `raigal login`. El comando utiliza el flujo OAuth 2.0 Device Authorization (RFC 8628), abriendo una ventana del navegador para autorizar el equipo.
 
-### Licencias fuera de línea (Ed25519)
-Para escanear sin conexión de red continua:
-- Al autenticarse, Raigal Cloud emite una licencia firmada con Ed25519.
-- El CLI verifica la firma en local con una clave pública incluida en el ejecutable.
-- La licencia es válida durante 72 horas, lo que permite realizar escaneos sin conexión a internet.
+### Tolerancia sin conexión y entornos aislados (Air-Gap)
+Raigal admite dos niveles de operación sin conexión continua:
+- Licencias temporales fuera de línea (72 horas): para desarrollo local y desplazamientos, los equipos autenticados guardan una licencia firmada con Ed25519 válida durante 72 horas. El CLI valida la firma en local con una clave pública incrustada en el binario.
+- Licencias estáticas para redes aisladas: para redes completamente desconectadas o runners en VPCs sin salida a internet, Raigal admite tokens de licencia estáticos (válidos de 1 a 3 años) sin necesidad de conexión externa, así como despliegues del plano de control en infraestructura propia.
 
 ## Gestión de repositorios
 

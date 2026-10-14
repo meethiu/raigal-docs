@@ -58,17 +58,17 @@ GET /v1/policy
 Respuesta:
 ```json
 {
-  "minScore": 80,
+  "minScore": 75,
   "failOnSeverity": "error",
   "blockedRules": [
     "ai-slop/trivial-comment",
-    "security/no-eval",
-    "quality/silent-catch"
+    "security/eval",
+    "ai-slop/swallowed-exception"
   ],
   "engines": {
     "format": true,
     "lint": true,
-    "quality": true,
+    "codeQuality": true,
     "aiSlop": true,
     "security": true
   }
@@ -165,15 +165,15 @@ Cuerpo de la solicitud:
   "commitSha": "e4f5a6b7...",
   "score": 88,
   "exitCode": 0,
-  "engines": ["format", "lint", "aiSlop", "security"],
+  "engines": ["format", "lint", "code-quality", "ai-slop", "security"],
   "findingsCount": 2,
   "findings": [
     {
-      "ruleId": "ai-slop/redundant-type-assertion",
+      "ruleId": "ai-slop/unsafe-type-assertion",
       "severity": "warn",
       "file": "src/auth/jwt.ts",
       "line": 45,
-      "message": "Aserción de tipo redundante detectada."
+      "message": "Aserción de tipo insegura que elude la comprobación de tipos."
     }
   ]
 }

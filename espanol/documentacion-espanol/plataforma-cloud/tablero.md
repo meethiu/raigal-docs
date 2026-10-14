@@ -35,54 +35,54 @@ La interfaz organiza el estado del repositorio en cinco áreas principales:
 ### 1. Cabecera del repositorio
 
 La barra superior muestra el contexto en tiempo real del proyecto seleccionado:
-- **Selector de repositorio**: permite alternar entre repositorios autorizados o filtrar por nombre.
-- **Selector de ramas**: cambia entre ramas (`main`, `develop`, ramas de funcionalidad) para inspeccionar incidencias específicas.
-- **Insignia de puntuación de salud**: muestra la puntuación numérica actual de 0 a 100 con un indicador de color según la banda. Raigal emplea estrictamente valores numéricos; no se utilizan letras (A–E).
-- **Marca temporal relativa**: indica cuándo finalizó el último análisis.
-- **Recuento de hallazgos**: número total de incidencias activas en la rama seleccionada.
-- **Botón de actualización**: solicita los datos más recientes de escaneo.
+- Selector de repositorio: permite alternar entre repositorios autorizados o filtrar por nombre.
+- Selector de ramas: cambia entre ramas (`main`, `develop`, ramas de funcionalidad) para inspeccionar incidencias específicas.
+- Insignia de puntuación de salud: muestra la puntuación numérica actual de 0 a 100 con un indicador de color según la banda. Raigal emplea estrictamente valores numéricos sin calificaciones por letras.
+- Marca temporal relativa: indica cuándo finalizó el último análisis.
+- Recuento de hallazgos: número total de incidencias activas en la rama seleccionada.
+- Botón de actualización: solicita los datos más recientes de escaneo.
 
 ### 2. Barra lateral y acciones rápidas
 
 La barra lateral izquierda gestiona la navegación del espacio de trabajo:
-- **Navegación principal**: accesos directos a **Overview**, **Activity**, **Settings** y **Docs**.
-- **Acciones rápidas (`⌘ K`)**: abre la paleta de comandos para buscar repositorios, cambiar de rama o copiar comandos del CLI.
-- **Faceta de infracciones frecuentes**: enumera las seis reglas con mayor número de avisos activos junto con su severidad y recuento. Al pulsar sobre una regla, la vista filtra las tarjetas inmediatamente.
+- Navegación principal: accesos directos a Overview, Activity, Settings y Docs.
+- Acciones rápidas (`Cmd + K` o `Ctrl + K`): abre la paleta de comandos para buscar repositorios, cambiar de rama o copiar comandos del CLI.
+- Faceta de infracciones frecuentes: enumera las seis reglas con mayor número de avisos activos junto con su severidad y recuento. Al pulsar sobre una regla, la vista filtra las tarjetas inmediatamente.
 
 ### 3. Etapas de hallazgos
 
 El panel central divide las incidencias en cuatro pestañas especializadas:
 
 #### Errors
-- **Elementos**: avisos bloqueantes, vulnerabilidades de seguridad, credenciales filtradas, aserciones inseguras (`as any`), bloques `catch` vacíos (`silent-catch`) y fallos estrictos de compilador.
-- **Detalles**: número de línea, descripción de la regla e insignias de severidad.
-- **Acciones**: selección de tarjeta para abrir el panel de vulnerabilidad o copiar comandos de corrección.
+- Incidencias de alta severidad: vulnerabilidades de seguridad (`security/hardcoded-secret`, `security/eval`), excepciones silenciadas (`ai-slop/swallowed-exception`) y fallos estrictos de compilador o linter.
+- Detalles: rutas relativas, coordenadas de línea, descripción de la regla e insignias de severidad.
+- Acciones: selección de tarjeta para abrir el panel de vulnerabilidad o copiar comandos de corrección.
 
 #### Warnings
-- **Elementos**: advertencias no bloqueantes, discrepancias de formato, deuda de mantenibilidad y patrones de severidad media (comentarios triviales, comprobaciones nulas redundantes).
-- **Acciones**: copia directa del comando de corrección por regla (`npx @methiu/raigal fix --rule <rule-id>`).
+- Avisos no bloqueantes: problemas de estilo (`ai-slop/trivial-comment`), duplicación de código (`code-quality/duplicate-block`), stubs incompletos (`ai-slop/todo-stub`) y advertencias de mantenibilidad (`ai-slop/unsafe-type-assertion`).
+- Acciones: copia directa del comando de corrección por regla (`npx @methiu/raigal fix --rule <rule-id>`).
 
 #### Pull Requests
-- **Elementos**: solicitudes de cambios evaluadas por `raigal ci` o por la GitHub App.
-- **Insignias de estado**:
+- Solicitudes de cambios evaluadas por `raigal ci` o por la GitHub App.
+- Insignias de estado:
   - `Passed [puntuación]`: la puntuación cumple `ci.failBelow` y no contiene errores bloqueantes.
   - `Failed [puntuación]`: la puntuación queda por debajo del umbral o contiene errores bloqueantes.
   - `Pending`: análisis en curso o a la espera del runner de CI.
-- **Filtros**: filtrado inmediato por resultado del control de calidad (`Passed` o `Failed`).
+- Filtros: filtrado inmediato por resultado del control de calidad (`Passed` o `Failed`).
 
 #### Agent Actions
-- **Elementos**: pull requests generados por agentes de código (`raigal agent --pr`).
-- **Detalles**:
-  - **Insignia del proveedor**: identifica el agente utilizado (`claude`, `codex`, `opencode`).
-  - **Diferencia de puntuación**: muestra la mejora conseguida (por ejemplo, `71 -> 89 (+18 pts)`).
-  - **Diff del parche**: muestra el diff unificado verificado en el worktree aislado.
+- Pull requests generados durante sesiones de reparación autónoma con agentes.
+- Detalles del resumen:
+  - Insignia del proveedor: identifica el agente utilizado (`claude`, `codex`, `opencode`).
+  - Diferencia de puntuación: muestra la mejora conseguida (por ejemplo, `71 -> 89 (+18 pts)`).
+  - Diff del parche: muestra el diff unificado verificado en el worktree aislado.
 
 ### 4. Filtros facetados
 
 Situada junto al listado de tarjetas, la barra de filtros permite acotar grandes volúmenes de incidencias:
-- **Faceta de motor**: filtra incidencias según el motor de diagnóstico (`security`, `ai-slop`, `lint`, `code-quality`, `format`, `architecture`).
-- **Faceta de carpeta**: aísla las incidencias a subdirectorios concretos (como `src/api` o `packages/core`).
-- **Faceta de control de calidad**: filtra registros de pull requests según su resultado (`Passed` o `Failed`).
+- Faceta de motor: filtra incidencias según el motor de diagnóstico (`security`, `ai-slop`, `lint`, `code-quality`, `format`, `architecture`).
+- Faceta de carpeta: aísla las incidencias a subdirectorios concretos (como `src/api` o `packages/core`).
+- Faceta de control de calidad: filtra registros de pull requests según su resultado (`Passed` o `Failed`).
 
 ### 5. Paneles deslizantes de inspección
 
@@ -117,15 +117,16 @@ Al pulsar sobre una tarjeta se despliega un panel lateral con información detal
 
 ## Rangos de salud de la puntuación
 
-El panel clasifica las puntuaciones en cinco bandas de salud:
+El panel clasifica las puntuaciones en cuatro bandas de salud calibradas:
 
-| Rango de puntuación | Banda en panel web | Color identificativo |
-|---|---|---|
-| $90 - 100$ | `Excellent` | Verde lima |
-| $80 - 89$ | `Good` | Verde esmeralda |
-| $70 - 79$ | `Fair` | Ámbar / amarillo |
-| $60 - 69$ | `Poor` | Naranja |
-| $< 60$ | `Critical` | Rojo |
+| Rango de puntuación | Banda en panel web | Color identificativo | Estado del control de calidad |
+|---|---|---|---|
+| 90 - 100 | `Excellent` | Verde lima | Aprobado |
+| 75 - 89 | `Good` | Verde esmeralda | Aprobado (supera el umbral por defecto de 75) |
+| 50 - 74 | `Needs Work` | Ámbar / amarillo | Requiere atención (no alcanza el umbral) |
+| < 50 | `Critical` | Rojo | Falla el control de calidad |
+
+En la salida de la terminal, el CLI simplifica estos rangos en tres estados operativos: `Healthy` (75 o superior), `Needs Work` (50 a 74) y `Critical` (inferior a 50). No se utilizan letras (A-E).
 
 ## Configuración de la organización
 

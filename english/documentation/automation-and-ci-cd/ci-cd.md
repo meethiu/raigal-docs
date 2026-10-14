@@ -16,13 +16,13 @@ Provide these variables in your CI environment:
 | `RAIGAL_TOKEN` | Yes* | Organization API key (`rgl_live_...`) | `rgl_live_8f3a9b...` |
 | `RAIGAL_API_URL` | Optional | Custom backend URL (defaults to `https://app.raigal.dev`) | `https://app.raigal.dev` |
 
-*Note: In GitHub Actions jobs configured with `permissions: id-token: write`, you do not need `RAIGAL_TOKEN` because Raigal can authenticate using GitHub OIDC tokens directly.*
+*Note: In GitHub Actions jobs configured with `permissions: id-token: write`, static tokens are not required because Raigal validates the runner using GitHub OIDC directly.*
 
 ## GitHub Actions
 
-### 1. Pull request check
+### 1. Hardened pull request check
 
-Create `.github/workflows/raigal.yml` to check pull requests and send scores to the dashboard:
+Create `.github/workflows/raigal.yml` to evaluate pull requests, report to your dashboard, and generate SARIF annotations:
 
 ```yaml
 name: Raigal Quality Gate
@@ -33,33 +33,56 @@ on:
   pull_request:
     branches: [main, develop]
 
+permissions:
+  contents: read
+  id-token: write        # Enables cryptographic OIDC authentication
+  pull-requests: write   # Single-comment PR summary reporting
+  security-events: write # Required for GitHub Code Scanning SARIF upload
+
 jobs:
   gate:
     name: Code Quality & Slop Gate
     runs-on: ubuntu-latest
-    permissions:
-      contents: read
-      id-token: write
 
     steps:
-      - uses: actions/checkout@v4
+      - name: Checkout Code
+        uses: actions/checkout@v4
         with:
-          fetch-depth: 0
+          fetch-depth: 0 # Full git history required for diff base resolution
 
-      - uses: actions/setup-node@v4
+      - name: Setup Node.js
+        uses: actions/setup-node@v4
         with:
           node-version: 22
 
-      - name: Run Raigal PR Quality Gate
+      - name: Fetch Base Branch for Diff Analysis
+        if: github.event_name == 'pull_request'
+        run: git fetch origin ${{ github.base_ref }} --depth=1
+
+      - name: Run Raigal Quality Gate
         env:
           RAIGAL_TOKEN: ${{ secrets.RAIGAL_TOKEN }}
-          RAIGAL_API_URL: ${{ secrets.RAIGAL_API_URL }}
+          RAIGAL_API_URL: https://app.raigal.dev
+          IS_FORK: ${{ github.event.pull_request.head.repo.full_name != github.repository }}
         run: |
-          npx @methiu/raigal ci --changes --base origin/${{ github.base_ref || 'main' }} --human
+          if [ "$IS_FORK" = "true" ]; then
+            echo "Fork PR: running in advisory mode without write permissions"
+            npx -y @methiu/raigal@0.2.2 ci --changes --base origin/${{ github.base_ref }} --human
+          else
+            npx -y @methiu/raigal@0.2.2 ci --changes --base origin/${{ github.base_ref || 'main' }} --report-pr --sarif-output raigal-results.sarif
+          fi
+
+      - name: Upload SARIF to GitHub Code Scanning
+        if: always() && github.event.pull_request.head.repo.full_name == github.repository
+        uses: github/codeql-action/upload-sarif@v3
+        continue-on-error: true
+        with:
+          sarif_file: raigal-results.sarif
+          category: raigal
 ```
 
-{% hint style="tip" %}
-Setting `permissions: id-token: write` allows the runner to generate a short-lived OIDC token. Raigal passes this token in `X-GitHub-OIDC`, so you do not need to store static tokens in repository secrets.
+{% hint style="info" %}
+Uploading SARIF reports to GitHub Code Scanning on private repositories requires GitHub Advanced Security (GHAS) enabled on your GitHub enterprise account. On public repositories, code scanning is included for free.
 {% endhint %}
 
 ### 2. Pull request close and merge sync
@@ -91,7 +114,7 @@ jobs:
           RAIGAL_TOKEN: ${{ secrets.RAIGAL_TOKEN }}
           RAIGAL_API_URL: ${{ secrets.RAIGAL_API_URL || 'https://app.raigal.dev' }}
         run: |
-          npx @methiu/raigal report-pr-closed --pr ${{ github.event.pull_request.number }} ${{ github.event.pull_request.merged && '--merged' || '' }}
+          npx -y @methiu/raigal@0.2.2 report-pr-closed --pr ${{ github.event.pull_request.number }} ${{ github.event.pull_request.merged && '--merged' || '' }}
 ```
 
 ## GitLab CI
@@ -106,15 +129,5 @@ raigal_gate:
     RAIGAL_TOKEN: $RAIGAL_TOKEN
     RAIGAL_API_URL: $RAIGAL_API_URL
   script:
-    - npx @methiu/raigal ci --human
+    - npx -y @methiu/raigal@0.2.2 ci --human
 ```
-
-## Pull request annotations and SARIF
-
-To generate annotations in GitHub's code scanning view:
-
-```bash
-npx @methiu/raigal scan --sarif > results.sarif
-```
-
-Upload the output with the standard GitHub SARIF action (`github/codeql-action/upload-sarif@v3`).

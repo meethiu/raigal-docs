@@ -60,10 +60,11 @@ npx @methiu/raigal whoami
 
 ## Limpieza de secretos y gestión de datos
 
-Antes de enviar telemetría a la nube:
-1. El CLI elimina cabeceras de autorización, tokens Bearer, claves privadas y patrones de credenciales habituales.
-2. Solo se transmiten recuentos diagnósticos, identificadores de reglas, rutas relativas y diferencias de puntuación. El código fuente nunca se sube a Raigal Cloud.
-3. El servidor almacena los registros en tablas de PostgreSQL (`telemetry_runs`, `pull_requests`) mediante operaciones idempotentes.
+Antes de enviar telemetría al panel:
+1. Los archivos de código fuente completos nunca se suben ni se almacenan en Raigal Cloud. El análisis ocurre íntegramente en la máquina o runner local.
+2. Al ejecutar con `--report-pr`, se envía una vista previa del parche unificado (limitada a 20 KB) para mostrar las líneas afectadas en el tablero de pull requests. Antes de enviarse, este diff pasa por `maskSecrets`, que elimina cabeceras de autorización, tokens Bearer, claves privadas y patrones de credenciales habituales.
+3. Los informes de escaneo habituales solo transmiten recuentos diagnósticos, identificadores de reglas, rutas relativas y coordenadas de línea.
+4. El servidor almacena los registros en bases de datos PostgreSQL particionadas por organización mediante operaciones idempotentes.
 
 ## Autenticación OIDC en GitHub Actions
 
@@ -74,10 +75,9 @@ Para ejecutar flujos en GitHub Actions sin almacenar secretos fijos:
 3. Raigal envía dicho token en la cabecera `X-GitHub-OIDC` a `/api/v1/telemetry/runs`.
 4. Raigal Cloud valida la firma criptográfica con `https://token.actions.githubusercontent.com` y comprueba que el propietario del repositorio pertenece a su organización.
 
-## Licencias fuera de línea (Ed25519)
+## Tolerancia sin conexión y entornos aislados (Air-Gap)
 
-Raigal no realiza consultas de red en cada archivo analizado:
+Raigal no realiza consultas de red por cada archivo analizado y admite dos niveles de trabajo desconectado:
 
-1. Al iniciar sesión con `raigal login` o definir `RAIGAL_TOKEN`, el servidor firma una licencia temporal mediante una clave privada Ed25519.
-2. El CLI valida la firma sin conexión utilizando la clave pública incluida en el binario (`src/cloud/keys.ts`).
-3. La licencia se guarda en `~/.raigal/entitlement.json` durante un máximo de 72 horas, lo que permite trabajar sin conexión a internet.
+1. **Licencia temporal fuera de línea (72 horas)**: Al iniciar sesión con `raigal login` o definir `RAIGAL_TOKEN`, el servidor firma una concesión temporal mediante Ed25519. El CLI valida la firma sin conexión utilizando la clave pública incrustada en el binario. La concesión se guarda en `~/.raigal/entitlement.json` y permite trabajar durante 72 horas sin acceso a la red.
+2. **Licencia estática para redes aisladas (1 a 3 años)**: Para instalaciones completamente desconectadas o runners de CI en VPCs sin acceso a internet, Raigal proporciona tokens de licencia estáticos (con validez de 1 a 3 años) validados localmente por la clave pública del binario sin requerir conexión a servidores externos. También es posible desplegar el plano de control en infraestructura propia.

@@ -18,7 +18,6 @@ Raigal incluye comandos para análisis locales, correcciones automáticas, sesio
 | `raigal agent [dir]` | Sesiones de reparación en worktrees aislados (Claude, Cursor, OpenCode) |
 | `raigal hook` | Gestiona hooks en tiempo real para agentes de IA |
 | `raigal report-pr-closed` | Sincroniza el ciclo de vida (cierre/fusión) de Pull Requests con Raigal Cloud |
-| `raigal telemetry` | Inspecciona eventos de telemetría registrados y estado del outbox |
 | `raigal login` | Inicio de sesión interactivo vía navegador OAuth o token API |
 | `raigal logout` | Elimina credenciales locales y concesiones offline en caché |
 | `raigal whoami` | Muestra credenciales activas, usuario, organización y repositorios permitidos |
@@ -43,7 +42,6 @@ Opciones:
 - `-d, --verbose`: muestra el desglose detallado de archivos por cada regla.
 - `--json`: emite el árbol completo de diagnósticos en formato JSON.
 - `--sarif`: genera diagnósticos en estándar OASIS SARIF 2.1.0.
-- `--format <formato>`: define explícitamente el formato de salida (`json` o `sarif`).
 - `--exclude <patrones>`: lista de rutas separadas por comas o repetidas a excluir.
 - `--include <patrones>`: lista de rutas separadas por comas o repetidas a incluir.
 - `--fail-on <nivel>`: finaliza con código de salida 1 según el nivel: `none`, `error` o `warning`.
@@ -60,22 +58,22 @@ raigal ci [opciones] [ruta]
 - `--changes`: valida únicamente los archivos modificados respecto a `--base` (o `HEAD`).
 - `--staged`: valida únicamente archivos en stage.
 - `--base <ref>`: referencia base para el diff de `--changes` (ej: `origin/main`).
+- `--report-pr`: envía el resumen de la ejecución y la vista previa del diff enmascarado al tablero de PRs en Raigal Cloud.
 - `--human`: genera resúmenes legibles en la salida de consola en lugar de JSON.
-- `--sarif`: exporta resultados en SARIF 2.1.0 para anotaciones en GitHub Code Scanning.
-- `--format <formato>`: formato de salida (`json` o `sarif`).
+- `--sarif-output <archivo>`: exporta el informe SARIF 2.1.0 para anotaciones en GitHub Code Scanning.
 
 ### `raigal fix`
 
-Aplica correcciones automáticas y seguras para problemas de formato y patrones.
+Aplica correcciones automáticas para formateo, importaciones no utilizadas y comentarios narrativos.
 
 ```bash
 raigal fix [opciones] [ruta]
 ```
 
-- `--safe`: aplica únicamente cambios que preservan la semántica (importaciones, eliminación de comentarios triviales, formateadores).
-- `-f, --force`: ejecuta correcciones más amplias, como auditorías de dependencias y alineación de frameworks.
+- `--safe`: aplica únicamente cambios deterministas que preservan la semántica (por defecto).
+- `-f, --force, --unsafe`: ejecuta correcciones más amplias, como auditorías de dependencias y limpieza de archivos muertos.
 - `--dry-run`: previsualiza las modificaciones sin escribir en disco.
-- `-p, --prompt`: convierte los problemas restantes en un prompt para su agente de programación.
+- `-p, --prompt`: convierte los problemas no corregibles en un prompt estructurado para su agente de programación.
 - `--changes` / `--staged`: limita las correcciones a archivos modificados o en stage.
 - `--base <ref>`: referencia base para `--changes`.
 
@@ -89,8 +87,9 @@ raigal agent [opciones] [ruta]
 
 Opciones principales:
 - `--provider <proveedor>`: proveedor a invocar (`auto`, `codex`, `claude`, `opencode`).
-- `--target-score <n>`: umbral de puntuación objetivo a alcanzar (por defecto: 90).
-- `--max-turns <n>`: número máximo de turnos del agente por intento de reparación (por defecto: 4).
+- `--target <n>`: umbral de puntuación objetivo a alcanzar (por defecto: 90).
+- `--max-turns <n>`: número máximo de turnos del agente por intento de reparación (por defecto: 5).
+- `--max-cost <usd>`: tope presupuestario en dólares que detiene la sesión si el consumo de tokens supera el límite.
 - `--limit <n>`: número máximo de hallazgos entregados al agente (por defecto: 8).
 - `--in-place`: edita directamente en el árbol de trabajo actual en lugar de aislar en worktree.
 - `--apply`: aplica los cambios aceptados a la rama original al finalizar.
@@ -115,14 +114,28 @@ Subcomandos:
 - `raigal agent sessions [dir]`: lista sesiones de reparación activas y anteriores.
 - `raigal agent show <session-id>`: inspecciona diff y metadatos de una sesión en particular.
 - `raigal agent apply <session-id>`: fusiona los cambios de una sesión en su rama de trabajo.
-- `raigal agent monitor [dir]`: supervisa cambios en git y ejecuta reparaciones cuando la puntuación baja del objetivo.
+- `raigal agent monitor [dir]`: supervisa cambios en git y realiza auditorías en segundo plano (use `--auto-fix` para permitir ediciones).
+
+### `raigal hook`
+
+Gestiona hooks de intercepción para Claude Code, Cursor, Gemini CLI y otras herramientas.
+
+```bash
+raigal hook <subcomando>
+```
+
+Subcomandos:
+- `raigal hook install [agentes...]`: instala hooks de intercepción (ej: `raigal hook install --claude`).
+- `raigal hook status`: inspecciona hooks registrados y la integridad de los centinelas SHA-256.
+- `raigal hook baseline`: guarda una instantánea de los hallazgos actuales en `.raigal/baseline.json`.
+- `raigal hook uninstall [agentes...]`: elimina hooks de forma segura preservando la configuración del editor.
 
 ### `raigal report-pr-closed`
 
 Notifica el cierre o fusión de un pull request a Raigal Cloud para actualizar el tablero de remediación.
 
 ```bash
-raigal report-pr-closed --pr <numero> [--merged]
+raigal report-pr-closed [--pr <numero>] [--merged]
 ```
 
 - `--pr <numero>`: número del pull request (obtenido automáticamente de `GITHUB_EVENT_PATH` en GitHub Actions).
@@ -151,19 +164,18 @@ Muestra el usuario autenticado, organización, plan y repositorios de GitHub con
 raigal whoami
 ```
 
-### `raigal telemetry`
-
-Inspecciona las cargas de telemetría registradas y el estado de la cola de salida (outbox).
-
-```bash
-raigal telemetry --show
-raigal telemetry --show --json
-```
-
 ### `raigal doctor`
 
 Verifica el entorno del sistema, formateadores, linters y binarios de agentes de programación.
 
 ```bash
 raigal doctor
+```
+
+### `raigal rules`
+
+Muestra el catálogo de reglas registradas, niveles de severidad, disponibilidad de corrección automática y niveles de impacto.
+
+```bash
+raigal rules
 ```

@@ -72,6 +72,8 @@ jobs:
     permissions:
       contents: read
       id-token: write
+      pull-requests: write
+      security-events: write
 
     steps:
       - name: Descargar Código
@@ -84,12 +86,21 @@ jobs:
         with:
           node-version: 22
 
+      - name: Descargar Rama Base para Comparación
+        if: github.event_name == 'pull_request'
+        run: git fetch origin ${{ github.base_ref }} --depth=1
+
       - name: Ejecutar Puerta de Calidad Raigal
         env:
           RAIGAL_TOKEN: ${{ secrets.RAIGAL_TOKEN }}
           RAIGAL_API_URL: https://app.raigal.dev
+          IS_FORK: ${{ github.event.pull_request.head.repo.full_name != github.repository }}
         run: |
-          npx @methiu/raigal ci --changes --base origin/${{ github.base_ref || 'main' }} --human
+          if [ "$IS_FORK" = "true" ]; then
+            npx -y @methiu/raigal@0.2.2 ci --changes --base origin/${{ github.base_ref }} --human
+          else
+            npx -y @methiu/raigal@0.2.2 ci --changes --base origin/${{ github.base_ref || 'main' }} --report-pr --sarif-output raigal-results.sarif
+          fi
 ```
 
 En su repositorio de GitHub:

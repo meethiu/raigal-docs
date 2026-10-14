@@ -21,6 +21,12 @@ To run a scan without installing the package globally:
 npx @methiu/raigal scan .
 ```
 
+To pin a specific release in CI or local scripts:
+
+```bash
+npx -y @methiu/raigal@0.2.2 scan .
+```
+
 ## Global installation
 
 To keep the `raigal` command available in your terminal:
@@ -48,8 +54,7 @@ yarn global add @methiu/raigal
 Verify that the CLI is installed:
 
 ```bash
-raigal version
-# Output: @methiu/raigal v1.0.0 (or current release)
+raigal --version
 ```
 
 ## Project dependency

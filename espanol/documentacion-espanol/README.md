@@ -27,23 +27,23 @@ layout:
 
 # Visión general de Raigal
 
-Raigal detecta patrones defectuosos introducidos por asistentes de programación de IA, como comentarios innecesarios, comprobaciones nulas redundantes, errores silenciados y llamadas inseguras. Reúne formateo, linting, análisis de complejidad, reglas de seguridad y detección de patrones en un único comando que devuelve una puntuación de 0 a 100.
+Raigal detecta patrones defectuosos introducidos por asistentes de programación asistidos por IA, como comentarios triviales, excepciones silenciadas (`swallowed-exception`), aserciones de tipo inseguras (`as any`) y llamadas dinámicas de riesgo (`eval`). Reúne formateo, linting, análisis de complejidad, reglas de seguridad y detección de patrones en un único comando que devuelve una puntuación de 0 a 100.
 
 Junto con [Raigal Cloud](https://app.raigal.dev) y la [GitHub App de Raigal](https://github.com/apps/raigal-cloud), evalúa pull requests, gestiona comprobaciones de estado para la protección de ramas, organiza las incidencias en un tablero de remediación y ejecuta reparaciones con agentes de programación.
 
 {% hint style="success" %}
-Raigal ejecuta el análisis de AST, las auditorías de seguridad y la detección de patrones dentro de su máquina local o runner de CI. El código fuente nunca se envía a los servidores de Raigal.
+Los archivos de código fuente completos nunca se suben ni se almacenan en Raigal Cloud. El análisis de AST, la ejecución de linters y el cálculo de complejidad ocurren localmente en su máquina o runner de CI. Al usar `--report-pr`, se envía una vista previa del parche (limitada a 20 KB) con enmascaramiento de credenciales (`maskSecrets`) para inspeccionar cambios en el tablero.
 {% endhint %}
 
 ## Qué detecta Raigal
 
 Los asistentes de programación como Claude Code, Cursor, Copilot u OpenCode aceleran el desarrollo, pero suelen introducir defectos concretos:
 
-* Comentarios que solo repiten el nombre de funciones o variables.
-* Comprobaciones defensivas sobre valores que el sistema de tipos ya garantiza.
-* Bloques `catch` vacíos o errores ignorados sin registrar.
-* Consultas SQL sin escapar, inyección de comandos y llamadas a `eval()`.
-* Dependencias circulares o referencias que violan los límites entre capas del proyecto.
+* Comentarios triviales que solo repiten el nombre de funciones o variables.
+* Aserciones de tipo que eluden el compilador (`as any`).
+* Bloques `catch` vacíos o excepciones silenciadas sin registrar.
+* Consultas SQL concatenadas, inyección de comandos o llamadas a `eval()`.
+* Bloques de código duplicados y funciones con complejidad ciclomática excesiva.
 
 Raigal evalúa el código en local mediante hooks de agente, en CI con cada commit y en pull requests antes de la fusión.
 

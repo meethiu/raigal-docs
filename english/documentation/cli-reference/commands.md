@@ -43,7 +43,6 @@ Options:
 - `-d, --verbose`: show file-level details for each rule.
 - `--json`: output full diagnostic tree as JSON.
 - `--sarif`: output diagnostics in OASIS SARIF 2.1.0 format.
-- `--format <format>`: choose output format (`json` or `sarif`).
 - `--exclude <patterns>`: comma-separated or repeatable list of paths to exclude.
 - `--include <patterns>`: comma-separated or repeatable list of paths to include.
 - `--fail-on <level>`: exit with code 1 on findings matching `none`, `error`, or `warning`.
@@ -60,22 +59,22 @@ raigal ci [options] [path]
 - `--changes`: gate files changed relative to `--base` (or `HEAD`) only.
 - `--staged`: gate staged files only.
 - `--base <ref>`: diff base for `--changes` (such as `origin/main`).
+- `--report-pr`: upload run summary and masked patch diff preview to Raigal Cloud PR dashboard.
 - `--human`: render formatted terminal summaries instead of JSON in CI logs.
-- `--sarif`: output SARIF 2.1.0 for GitHub code scanning annotations.
-- `--format <format>`: choose output format (`json` or `sarif`).
+- `--sarif-output <file>`: output SARIF 2.1.0 report for GitHub code scanning annotations.
 
 ### `raigal fix`
 
-Applies automated fixes for safe formatting and pattern violations.
+Applies automated fixes for formatting, unused imports, and narrative comments.
 
 ```bash
 raigal fix [options] [path]
 ```
 
-- `--safe`: applies changes with preserved semantics only (imports, comment removal, standard formatting).
-- `-f, --force`: runs broader fixes including dependency audits and framework alignment.
+- `--safe`: applies deterministic changes with preserved semantics only (default).
+- `-f, --force, --unsafe`: runs broader fixes including dependency audits and dead file cleanups.
 - `--dry-run`: previews proposed fixes without modifying files.
-- `-p, --prompt`: formats remaining unfixed issues into a prompt for your coding agent.
+- `-p, --prompt`: formats remaining unfixable issues into a prompt for your coding agent.
 - `--changes` / `--staged`: restrict fixes to changed or staged files.
 - `--base <ref>`: diff base for `--changes`.
 
@@ -89,8 +88,9 @@ raigal agent [options] [path]
 
 Flags:
 - `--provider <provider>`: agent provider to invoke (`auto`, `codex`, `claude`, `opencode`).
-- `--target-score <n>`: score threshold to reach (default: 90).
-- `--max-turns <n>`: maximum provider turns for one repair attempt (default: 4).
+- `--target <n>`: score threshold to reach (default: 90).
+- `--max-turns <n>`: maximum provider turns for one repair attempt (default: 5).
+- `--max-cost <usd>`: hard dollar ceiling aborting session if token costs exceed limit.
 - `--limit <n>`: maximum number of findings to pass to the provider (default: 8).
 - `--in-place`: edit current working tree directly instead of creating an isolated worktree.
 - `--apply`: apply accepted diff back to the original worktree upon completion.
@@ -115,14 +115,28 @@ Subcommands:
 - `raigal agent sessions [dir]`: list active and past repair sessions.
 - `raigal agent show <session-id>`: inspect diff and metadata from an agent session.
 - `raigal agent apply <session-id>`: merge changes from a session into your working branch.
-- `raigal agent monitor [dir]`: watch git changes and run repairs when scores drop below target.
+- `raigal agent monitor [dir]`: watch git changes and run background audits (use `--auto-fix` to enable edits).
+
+### `raigal hook`
+
+Manages shift-left agent interception hooks across Claude Code, Cursor, Gemini CLI, and other tools.
+
+```bash
+raigal hook <subcommand>
+```
+
+Subcommands:
+- `raigal hook install [agents...]`: install interception hooks (e.g. `raigal hook install --claude`).
+- `raigal hook status`: inspect registered hooks and SHA-256 sentinel integrity.
+- `raigal hook baseline`: capture current findings snapshot to `.raigal/baseline.json`.
+- `raigal hook uninstall [agents...]`: cleanly remove hooks while preserving user configuration.
 
 ### `raigal report-pr-closed`
 
 Reports a pull request closed or merged event to Raigal Cloud to update the remediation board.
 
 ```bash
-raigal report-pr-closed --pr <number> [--merged]
+raigal report-pr-closed [--pr <number>] [--merged]
 ```
 
 - `--pr <number>`: pull request number (read automatically from `GITHUB_EVENT_PATH` in GitHub Actions).
@@ -151,19 +165,18 @@ Displays active user, organization, plan tier, and authorized GitHub repositorie
 raigal whoami
 ```
 
-### `raigal telemetry`
-
-Inspects recorded cloud run telemetry payloads and outbox transmission status.
-
-```bash
-raigal telemetry --show
-raigal telemetry --show --json
-```
-
 ### `raigal doctor`
 
 Verifies local environment, linters, formatters, and coding-agent binaries.
 
 ```bash
 raigal doctor
+```
+
+### `raigal rules`
+
+Displays registered rules, severity levels, auto-fix availability, and impact tiers.
+
+```bash
+raigal rules
 ```

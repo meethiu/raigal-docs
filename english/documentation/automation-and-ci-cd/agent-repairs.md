@@ -5,15 +5,15 @@ icon: robot
 
 # Automated agent repairs
 
-For findings that require semantic edits or refactoring, `raigal agent` runs a repair session with a local coding tool inside a git worktree.
+For findings that require semantic edits or refactoring, `raigal agent` runs an iterative repair session with a local coding tool inside an isolated git worktree.
 
 ## How worktree repairs work
 
 To protect your active working branch from unverified edits, `raigal agent` isolates all changes:
 
-1. Raigal creates a temporary git worktree at `.git/raigal-worktrees/<session-id>`.
-2. The agent provider (Claude Code, OpenCode, or Codex) receives the diagnostic output and rule expectations.
-3. The agent edits code and runs tests inside the worktree.
+1. Raigal creates an ephemeral git worktree at `.raigal/worktrees/agent-<timestamp>-<pid>/`, automatically registered in `.git/info/exclude` to prevent polluting git status.
+2. The agent provider (Claude Code, OpenCode, or Codex) receives diagnostic output, file context, and target score expectations in its prompt.
+3. The provider makes edits and verifies changes inside the worktree.
 4. After reviewing the diff, you can run `raigal agent apply <session-id>` to merge changes locally, or pass `--pr` to open a pull request on GitHub.
 
 ## Supported providers
@@ -60,15 +60,15 @@ raigal agent apply <session-id>
 To create a branch and open a pull request automatically, run:
 
 ```bash
-raigal agent --provider claude --pr --target-score 95
+raigal agent --provider claude --pr --target 95
 ```
 
 With `--pr`, Raigal:
 1. Runs safe autofixes and passes remaining issues to the agent provider.
-2. Checks that tests pass and the quality score meets `--target-score` (default: 90).
+2. Checks that the quality score meets `--target` (default: 90).
 3. Commits the changes to an isolated branch (`raigal/repair-...`).
 4. Pushes the branch and opens a GitHub pull request.
-5. Sends telemetry to Raigal Cloud to create a card in the **Agent Remediations** column.
+5. Sends telemetry to Raigal Cloud to create a card in the **Agent Actions** column.
 
 ### 3. Lifecycle synchronization (`report-pr-closed`)
 
@@ -95,9 +95,9 @@ jobs:
           RAIGAL_TOKEN: ${{ secrets.RAIGAL_TOKEN }}
           RAIGAL_API_URL: ${{ secrets.RAIGAL_API_URL }}
         run: |
-          npx @methiu/raigal report-pr-closed --pr ${{ github.event.pull_request.number }} ${{ github.event.pull_request.merged && '--merged' || '' }}
+          npx -y @methiu/raigal@0.2.2 report-pr-closed --pr ${{ github.event.pull_request.number }} ${{ github.event.pull_request.merged && '--merged' || '' }}
 ```
 
 {% hint style="success" %}
-Opening a pull request with `raigal agent --pr` creates a card in the **Agent Remediations** column. When the PR merges, `report-pr-closed` moves the card to **Merged** and records the score change.
+Opening a pull request with `raigal agent --pr` creates a card in the **Agent Actions** column. When the PR merges, `report-pr-closed` moves the card to **Merged** and records the score change.
 {% endhint %}

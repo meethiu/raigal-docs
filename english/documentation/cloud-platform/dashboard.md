@@ -35,54 +35,54 @@ The interface organizes codebase health into five key areas:
 ### 1. Repository header
 
 The top header provides real-time context for the selected project:
-- **Repository selector**: switch between authorized repositories or filter by name.
-- **Branch switcher**: toggle between branches (`main`, `develop`, feature branches) to inspect branch-specific findings.
-- **Health score badge**: displays the current 0–100 numeric health score with color-coded band indicators. Raigal uses purely numeric scores; letter grades (A–E) are not used.
-- **Relative timestamp**: shows when the last scan run completed.
-- **Findings count**: shows total active findings for the current branch.
-- **Refresh action**: triggers a manual update from the latest scan telemetry.
+- Repository selector: switch between authorized repositories or filter by slug.
+- Branch switcher: toggle between branches (`main`, `develop`, feature branches) to inspect branch-specific findings.
+- Health score badge: displays the current 0-100 numeric health score with color-coded band indicators. Raigal uses purely numeric scores without letter grades.
+- Relative timestamp: indicates when the last scan run completed.
+- Findings count: shows total active findings for the current branch.
+- Refresh action: triggers a manual update from the latest scan telemetry.
 
 ### 2. Left sidebar and quick actions
 
 The left sidebar handles workspace navigation:
-- **Primary navigation**: quick links to **Overview**, **Activity**, **Settings**, and **Documentation**.
-- **Quick actions (`⌘ K`)**: opens the command palette to search repositories, navigate branches, or copy CLI commands.
-- **Top violations facet**: displays the six most frequent active rule violations with severity badges and occurrence counts. Selecting a rule filters the dashboard cards immediately.
+- Primary navigation: direct links to Overview, Activity, Settings, and Documentation.
+- Quick actions (`Cmd + K` or `Ctrl + K`): opens the command palette to search repositories, navigate branches, or copy CLI commands.
+- Top violations facet: displays the six most frequent active rule violations with severity badges and occurrence counts. Selecting a rule filters the dashboard cards immediately.
 
 ### 3. Finding stages
 
 The central board divides issues into four distinct tabs:
 
 #### Errors
-- **Items**: blocking issues, security vulnerabilities, leaked credentials, unsafe type assertions (`as any`), empty catch blocks (`silent-catch`), and strict compiler failures.
-- **Details**: line numbers, rule descriptions, and severity badges.
-- **Actions**: select a card to open the vulnerability drawer or copy automated fix commands.
+- High-severity findings: security vulnerabilities (`security/hardcoded-secret`, `security/eval`), swallowed exceptions (`ai-slop/swallowed-exception`), and strict compiler or linter errors.
+- Card details: relative file paths, line coordinates, rule descriptions, and severity badges.
+- Available actions: selecting a card opens the vulnerability drawer with remediation advice or copies the CLI fix command.
 
 #### Warnings
-- **Items**: non-blocking warnings, style discrepancies, maintainability findings, minor dead code, and low-severity pattern issues (trivial comments, redundant null checks).
-- **Actions**: copy single-rule autofix commands (`npx @methiu/raigal fix --rule <rule-id>`).
+- Non-blocking findings: style issues (`ai-slop/trivial-comment`), code quality findings (`code-quality/duplicate-block`), unfinished stubs (`ai-slop/todo-stub`), and maintainability items (`ai-slop/unsafe-type-assertion`).
+- Available actions: copy single-rule autofix commands (`npx @methiu/raigal fix --rule <rule-id>`).
 
 #### Pull Requests
-- **Items**: pull requests evaluated by `raigal ci` or the GitHub App.
-- **Status badges**:
+- Pull requests evaluated by `raigal ci` or the GitHub App.
+- Status badges:
   - `Passed [score]`: score satisfies `ci.failBelow` and contains zero blocking errors.
   - `Failed [score]`: score fell below threshold or contains blocking errors.
   - `Pending`: scan in progress or awaiting CI runner completion.
-- **Filters**: quickly filter pull requests by quality gate outcome (`Passed` or `Failed`).
+- Filtering: filter pull request records by quality gate outcome (`Passed` or `Failed`).
 
 #### Agent Actions
-- **Items**: pull requests opened by automated coding agents (`raigal agent --pr`).
-- **Details**:
-  - **Provider badge**: identifies the agent provider (`claude`, `codex`, `opencode`).
-  - **Score delta**: displays before and after scores (such as `71 -> 89 (+18 pts)`).
-  - **Patch diff**: shows the reviewed unified diff generated in the isolated worktree.
+- Pull requests opened during autonomous agent remediation sessions.
+- Summary details:
+  - Provider badge: identifies the agent provider (`claude`, `codex`, `opencode`).
+  - Score delta: displays before and after scores (such as `71 -> 89 (+18 pts)`).
+  - Patch diff: shows the reviewed unified diff generated in the isolated worktree.
 
 ### 4. Facet filters
 
 Located alongside the finding cards, the facet sidebar narrows down large finding lists:
-- **Engine facet**: filter findings by diagnostic engine (`security`, `ai-slop`, `lint`, `code-quality`, `format`, `architecture`).
-- **Folder facet**: isolate findings to specific subdirectories (such as `src/api` or `packages/core`).
-- **Quality gate facet**: filter pull request records by `Passed` or `Failed` status.
+- Engine facet: filter findings by diagnostic engine (`security`, `ai-slop`, `lint`, `code-quality`, `format`, `architecture`).
+- Folder facet: isolate findings to specific subdirectories (such as `src/api` or `packages/core`).
+- Quality gate facet: filter pull request records by `Passed` or `Failed` status.
 
 ### 5. Slide-over inspection drawers
 
@@ -117,15 +117,16 @@ Selecting any finding card opens a detailed slide-over panel:
 
 ## Health score bands
 
-The dashboard groups scores into five health bands:
+The dashboard displays scores across four calibrated health tiers:
 
-| Score range | Band | Indicator |
-|---|---|---|
-| $90 - 100$ | `Excellent` | Lime green |
-| $80 - 89$ | `Good` | Emerald green |
-| $70 - 79$ | `Fair` | Amber / yellow |
-| $60 - 69$ | `Poor` | Orange |
-| $< 60$ | `Critical` | Red |
+| Score range | Band | Indicator | Quality gate status |
+|---|---|---|---|
+| 90 - 100 | `Excellent` | Lime green | Passing |
+| 75 - 89 | `Good` | Emerald green | Passing (meets default 75 threshold) |
+| 50 - 74 | `Needs Work` | Amber / yellow | Failing default threshold |
+| < 50 | `Critical` | Red | Failing |
+
+In terminal output, the CLI simplifies these into three actionable states: `Healthy` (75 and above), `Needs Work` (50 to 74), and `Critical` (below 50). Letter grades (A-E) are never used.
 
 ## Organization settings
 

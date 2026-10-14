@@ -5,15 +5,15 @@ icon: robot
 
 # Reparación automatizada con agentes
 
-Para hallazgos que requieran refactorización o cambios semánticos, `raigal agent` ejecuta una sesión de reparación con una herramienta local de IA en un git worktree.
+Para hallazgos que requieran refactorización o cambios semánticos, `raigal agent` ejecuta una sesión de reparación iterativa con una herramienta local de IA en un git worktree aislado.
 
 ## Cómo funcionan las reparaciones en worktrees
 
-Para proteger la rama activa de modificaciones no verificadas, `raigal agent` aísla los cambios:
+Para proteger la rama activa de modificaciones no verificadas, `raigal agent` aísla todos los cambios:
 
-1. Raigal crea un git worktree temporal en `.git/raigal-worktrees/<session-id>`.
-2. El proveedor del agente (Claude Code, OpenCode o Codex) recibe el diagnóstico y las reglas a cumplir.
-3. El agente modifica los archivos y ejecuta las pruebas dentro del worktree.
+1. Raigal crea un git worktree temporal en `.raigal/worktrees/agent-<timestamp>-<pid>/`, registrado automáticamente en `.git/info/exclude` para no ensuciar el estado de git.
+2. El proveedor del agente (Claude Code, OpenCode o Codex) recibe el diagnóstico, el contexto de los archivos y la puntuación objetivo en su prompt.
+3. El agente realiza ediciones y verifica los cambios dentro del worktree.
 4. Tras revisar los cambios, puede ejecutar `raigal agent apply <session-id>` para fusionarlos en local o usar `--pr` para abrir un pull request en GitHub.
 
 ## Proveedores compatibles
@@ -60,15 +60,15 @@ raigal agent apply <session-id>
 Para generar una rama y abrir un pull request directamente:
 
 ```bash
-raigal agent --provider claude --pr --target-score 95
+raigal agent --provider claude --pr --target 95
 ```
 
 Con la opción `--pr`, Raigal:
 1. Aplica arreglos seguros y traslada los problemas restantes al agente.
-2. Comprueba que las pruebas pasan y la puntuación alcanza `--target-score` (por defecto: 90).
+2. Comprueba que las pruebas pasan y la puntuación alcanza `--target` (por defecto: 90).
 3. Confirma los cambios en una rama aislada (`raigal/repair-...`).
 4. Publica la rama en el repositorio remoto y abre un pull request en GitHub.
-5. Envía la telemetría a Raigal Cloud para crear una tarjeta en la columna **Agent Remediations**.
+5. Envía la telemetría a Raigal Cloud para crear una tarjeta en la pestaña **Agent Actions**.
 
 ### 3. Sincronización del ciclo de vida (`report-pr-closed`)
 
@@ -95,9 +95,9 @@ jobs:
           RAIGAL_TOKEN: ${{ secrets.RAIGAL_TOKEN }}
           RAIGAL_API_URL: ${{ secrets.RAIGAL_API_URL }}
         run: |
-          npx @methiu/raigal report-pr-closed --pr ${{ github.event.pull_request.number }} ${{ github.event.pull_request.merged && '--merged' || '' }}
+          npx -y @methiu/raigal@0.2.2 report-pr-closed --pr ${{ github.event.pull_request.number }} ${{ github.event.pull_request.merged && '--merged' || '' }}
 ```
 
 {% hint style="success" %}
-Al abrir un pull request mediante `raigal agent --pr`, se crea una tarjeta en la columna **Agent Remediations**. Cuando se fusiona el PR, `report-pr-closed` mueve la tarjeta a **Merged** y registra la diferencia de puntuación.
+Al abrir un pull request mediante `raigal agent --pr`, se crea una tarjeta en la pestaña **Agent Actions**. Cuando se fusiona el PR, `report-pr-closed` mueve la tarjeta a **Merged** y registra la diferencia de puntuación.
 {% endhint %}

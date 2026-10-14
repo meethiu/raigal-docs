@@ -18,7 +18,7 @@ raigal init .
 ```
 
 This generates:
-- `.raigal/config.yml`: score threshold, engine toggles, and exclude paths.
+- `.raigal/config.yml`: score thresholds, engine toggles, and exclude paths.
 - `.raigal/rules.yml`: rule severity overrides.
 {% endstep %}
 
@@ -31,7 +31,7 @@ Run the scan command from your repository root:
 raigal scan .
 ```
 
-Raigal runs formatting, linting, quality, and pattern engines in parallel and prints the quality score (0-100):
+Raigal runs formatting, linting, code-quality, and AI-pattern engines in parallel and outputs the calibrated score (0-100):
 
 ```text
 ╭───────────────────────────────────────────────────╮
@@ -53,6 +53,6 @@ Apply safe automated fixes for formatting, trivial comments, and unused imports:
 raigal fix .
 ```
 
-For issues that need semantic edits, run `raigal agent .` to start a worktree repair session with Claude Code, Cursor, or OpenCode.
+For structural issues that require generative edits, run `raigal agent .` to start a worktree repair session with Claude Code, Cursor, or OpenCode.
 {% endstep %}
 {% endstepper %}

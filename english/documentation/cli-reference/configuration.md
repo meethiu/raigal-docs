@@ -1,11 +1,11 @@
 ---
-description: "Configure project engines, score thresholds, and file scopes in .raigal/config.yml."
+description: "Reference for .raigal/config.yml, rule overrides, and schema validation."
 icon: gear
 ---
 
 # Configuration
 
-Raigal reads its project settings from `.raigal/config.yml` in your repository root. Configuration files use strict schema validation validated with Zod; unexpected or misspelled keys trigger validation errors.
+Raigal reads project settings from `.raigal/config.yml` in your repository root. Configuration files use strict schema validation validated with Zod; unexpected or misspelled keys trigger validation errors.
 
 ## Complete configuration example
 
@@ -18,10 +18,10 @@ version: 1
 engines:
   format: true          # Biome, Ruff, Gofmt, Cargo fmt, etc.
   lint: true            # Oxlint, Ruff, Clippy, Golangci-lint, Roslynator, etc.
-  code-quality: true    # Knip unused exports, dead code, complexity (NOT "quality")
-  ai-slop: true         # 50+ AI anti-pattern detection rules (NOT "ai_slop")
+  code-quality: true    # Knip unused exports, dead code, complexity
+  ai-slop: true         # 26+ AI anti-pattern detection rules
   architecture: false   # Dependency & boundary rules
-  security: true        # Secrets, injections, unsafe deserialization
+  security: true        # Secrets, prompt injections, unsafe deserialization
 
 # Quality and complexity limits
 quality:
@@ -32,7 +32,7 @@ quality:
 
 # Engine-specific lint settings
 lint:
-  typecheck: false      # Bundled tsc compiler diagnostics
+  typecheck: false      # Bundled tsc compiler diagnostics (slow in CI)
   expoDoctor: false     # Expo React Native project hygiene checks
   csharp:
     projectEvaluation: false
@@ -46,7 +46,7 @@ lint:
 
 # CI gate configuration
 ci:
-  failBelow: 70         # Default score threshold (NOT scoring.fail_under)
+  failBelow: 75         # Minimum passing score (defaults to 70 in standard config)
   format: "json"
 
 # Score calculation tuning
@@ -57,12 +57,28 @@ scoring:
   smoothing: 5
   maxPerRule: 40
 
+# Baseline regression protection
+baseline:
+  mode: strict          # "strict" (disables Stage 3 absorption) or "relaxed"
+
+# Enterprise licensing lapse behavior
+licensing:
+  onLapse: "fail-closed" # "fail-closed" (exits 2 in CI) or "fail-open"
+
+# Monorepo policy governance
+workspace:
+  minimumFloor: 75      # Prevents child package configs from setting failBelow < 75
+
+# Outbound telemetry controls
+telemetry:
+  enabled: true         # Set to false to disable all outbound telemetry queueing
+
 # Rule severity overrides
 rules:
   ai-slop/trivial-comment: "off"
   ai-slop/unsafe-type-assertion: "error"
 
-# Path exclusions (NOT "ignore")
+# Path exclusions
 exclude:
   - "node_modules"
   - ".git"
@@ -74,11 +90,11 @@ include: []
 
 ## File locations and precedence
 
-Raigal resolves its configuration by searching upward from the target directory until reaching repository root:
+Raigal resolves configuration by searching upward from the target directory until reaching the repository root:
 1. `.raigal/config.yml` or `.raigal/config.yaml`
 2. `.raigal/config.json`
 3. Root files: `.raigal.yml`, `.raigal.yaml`, or `.raigal.json`
-4. Backward-compatible directory paths (`.aislop/config.yml`, `.aislop.yml`)
+4. Legacy directory paths for backward compatibility (`.aislop/config.yml`)
 
 ## Options reference
 
@@ -88,8 +104,8 @@ Enables or disables individual analysis engines:
 
 - `format` (boolean, default: `true`): whitespace, indentation, line wrapping, and import ordering.
 - `lint` (boolean, default: `true`): static analysis rules via Oxlint, Ruff, Clippy, and language tools.
-- `code-quality` (boolean, default: `true`): unused exports (Knip), dead code detection, and complexity limits. Notice the key is `code-quality`, not `quality`.
-- `ai-slop` (boolean, default: `true`): 50+ rules detecting AI-generated anti-patterns, trivial comments, and redundant wrappers. Notice the key is `ai-slop`, not `ai_slop`.
+- `code-quality` (boolean, default: `true`): unused exports (Knip), dead code detection, and complexity limits. Notice the key is `code-quality`.
+- `ai-slop` (boolean, default: `true`): rules detecting AI-generated anti-patterns, trivial comments, and redundant wrappers. Notice the key is `ai-slop`.
 - `architecture` (boolean, default: `false`): layer boundary enforcement and dependency validation.
 - `security` (boolean, default: `true`): hardcoded secrets, injection vulnerabilities, and risky APIs.
 
@@ -115,12 +131,30 @@ Configures language-specific compiler and diagnostic tools:
 
 Configures automated continuous integration behavior:
 
-- `failBelow` (number, default: `70`): minimum passing quality score. If a scan score falls below this value or encounters an `error`-level finding, `raigal ci` exits with code 1. Notice the key is `ci.failBelow`, not `scoring.fail_under`.
+- `failBelow` (number, default: `70`): minimum passing quality score. If a scan score falls below this value or encounters an `error`-level finding, `raigal ci` exits with code 1.
 - `format` (`"json"`, default: `"json"`): output serialization format for CI runs.
+
+### `baseline`
+
+Configures incremental regression matching against `.raigal/baseline.json`:
+
+- `mode` (`"strict"` | `"relaxed"`, default: `"relaxed"`): when set to `"strict"`, Stage 3 file-level absorption is disabled. Any finding outside the 11-line window is flagged as a blocking regression.
+
+### `licensing`
+
+Defines CI behavior when entitlement verification lapses:
+
+- `onLapse` (`"fail-open"` | `"fail-closed"`, default: `"fail-open"`): when set to `"fail-closed"`, CI exits with code 2 if entitlement cannot be verified after the grace period.
+
+### `workspace`
+
+Enforces organizational minimum standards across monorepo packages:
+
+- `minimumFloor` (number, default: `50`): sets a hard lower bound on `ci.failBelow` that child package configs cannot lower.
 
 ### `scoring`
 
-Tunes the scoring engine parameters:
+Tunes scoring engine parameters:
 
 - `thresholds`: object defining CLI status boundaries.
   - `good` (number, default: `75`): score at or above which status is labeled `Healthy`.
@@ -145,7 +179,7 @@ Valid severity values are `"error"`, `"warning"`, and `"off"`.
 
 Defines filesystem scope for all engines:
 
-- `exclude` (array of strings): paths and directories to ignore. Default: `["node_modules", ".git", "dist", "build", "coverage"]`. Notice the key is `exclude`, not `ignore`.
+- `exclude` (array of strings): paths and directories to ignore. Default: `["node_modules", ".git", "dist", "build", "coverage"]`.
 - `include` (array of strings): explicit paths to scan. When empty (`[]`), all non-excluded supported files are scanned.
 
 ### `overrides`
@@ -170,4 +204,4 @@ telemetry:
   enabled: true
 ```
 
-Telemetry events transmit numeric metric counts, rule hit totals, and execution timings only. Source code and file contents are never transmitted.
+Set to `false` to disable outbound telemetry queueing.

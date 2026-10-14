@@ -1,111 +1,101 @@
 ---
-description: "How Raigal computes the 0-100 quality score, weighted penalties, and logarithmic compression."
+description: "Calibrated 0-100 quality score, density normalization, and status bands."
 icon: gauge
 ---
 
 # Scoring engine
 
-Raigal evaluates codebases on a scale from 0 to 100, where 100 represents zero detected issues. Rather than subtracting arbitrary flat points or dividing by arbitrary lines-of-code metrics, the scoring engine normalizes findings by source file count, applies per-rule saturation caps, and compresses total deductions logarithmically.
+Raigal assigns each repository a calibrated quality score between 0 and 100. The score measures issue density rather than raw finding counts, preventing large codebases from failing solely due to codebase volume.
 
-## Deduction calculation
+## Scoring formula
 
-Every finding generates a raw deduction based on severity, engine category, and rule impact tier:
+Raigal evaluates findings across six diagnostic engines using density-normalized logarithmic scaling:
 
-$$\text{deduction} = \text{severityPenalty} \times \text{engineWeight} \times \text{ruleImpactMultiplier}$$
+$$\text{Deduction Density} = \frac{\sum \text{Capped Deductions}}{\text{Effective Source Files} + S}$$
 
-### Severity penalties
+$$\text{Score} = \max\left(0, \operatorname{round}\left(100 - \frac{100 \cdot \ln(1 + 5 \cdot \text{Deduction Density})}{\ln(101 + 5 \cdot \text{Deduction Density})}\right)\right)$$
 
-| Severity | Penalty | Description |
-|---|---|---|
-| `error` | 3.0 | Blocking bugs, security flaws, type failures, or critical pattern violations |
-| `warning` | 1.0 | Unsafe casts, code complexity, or maintenance warnings |
-| `info` / `advisory` | 0.25 | Style suggestions and informational notices |
+Where:
+* **Smoothing constant ($S$)**: Defaults to `5` in configuration (internal fallback `10`). Prevents a single warning on a small two-file project from collapsing the score.
+* **Density scale**: Multiplier of `5.0` applied to deduction density.
+* **Effective source files**: Count of non-excluded source and test files in the workspace (or modified files during incremental PR scans).
+
+## Severity multipliers and engine weights
+
+Each diagnostic finding generates a raw penalty based on its severity and parent engine:
+
+$$\text{Raw Deduction} = \text{Severity Multiplier} \times \text{Engine Weight} \times \text{Tier Multiplier}$$
+
+### Severity multipliers
+* `error`: $3.0$ (also triggers immediate exit code 1 in CI)
+* `warning`: $1.0$
+* `info`: $0.25$
 
 ### Engine weights
+* `security`: $1.5$ (secrets, injections, unsafe APIs, vulnerable dependencies)
+* `architecture`: $1.0$ (module boundary crossings, circular imports)
+* `ai-slop`: $1.0$ (swallowed exceptions, narrative comments, loose type casts)
+* `code-quality`: $0.8$ (dead code, complexity, parameter limits)
+* `lint`: $0.6$ (Oxlint, Ruff, Clippy, Roslynator)
+* `format`: $0.3$ (whitespace, indentation, import ordering)
 
-Each diagnostic engine applies a category multiplier to reflect risk:
+## Dynamic rule capping
 
-| Engine | Weight | Scope |
-|---|---|---|
-| `security` | 1.5 | Hardcoded secrets, injection vulnerabilities, and dangerous APIs |
-| `ai-slop` | 1.0 | Redundant null checks, hallucinated polyfills, trivial comments, and AI anti-patterns |
-| `architecture` | 1.0 | Layer boundary rules and cross-module circular dependencies |
-| `code-quality` | 0.8 | Unused exports (Knip), dead code, and function complexity limits |
-| `lint` | 0.6 | Static analysis rules powered by Oxlint, Ruff, and compiler diagnostics |
-| `format` | 0.3 | Formatting inconsistencies, whitespace, and import sorting |
+To ensure widespread style issues (such as 500 missing trailing commas) do not drown out security vulnerabilities or force score collapse on large projects, rules belong to impact tiers with dynamic baseline caps:
 
-### Rule impact tiers and default caps
-
-Rules belong to impact tiers that define their multiplier and baseline deduction cap:
-
-| Tier | Multiplier | Default cap | Typical finding types |
+| Impact tier | Multiplier | Baseline cap | Typical findings |
 |---|---|---|---|
-| `strict` | $1.0\times$ | Uncapped | Type check errors, syntax failures, and leaked credentials |
-| `standard` | $1.0\times$ | Uncapped | Standard linter diagnostics and reliable defect checks |
-| `maintainability` | $0.75\times$ | 24 | High cyclomatic complexity and large functions |
-| `mechanical` | $0.5\times$ | 16 | Minor dead code and unreferenced local variables |
-| `style` | $0.5\times$ | 8 | Formatting variances and naming conventions |
-| `advisory` | $0.25\times$ | 8 | Trivial comments and informational notices |
+| `strict` | $1.0\times$ | Uncapped (`maxPerRule`) | Syntax errors, leaked secrets, unhandled rejections |
+| `standard` | $1.0\times$ | Uncapped (`maxPerRule`) | General linter diagnostics, compiler warnings |
+| `maintainability` | $0.75\times$ | 24 | Cyclomatic complexity, oversized functions |
+| `mechanical` | $0.5\times$ | 16 | Dead imports, unreferenced local variables |
+| `style` | $0.5\times$ | 8 | Formatting variances, trailing commas |
+| `advisory` | $0.25\times$ | 8 | Informational notices, missing docstrings |
 
-### Dynamic rule capping
+### Repository scale scaling
+The effective cap scales with repository size:
+$$\text{Cap Scale} = \max\left(1, \frac{\text{Effective Source Files}}{10}\right)$$
+$$\text{Effective Cap} = \min(\text{maxPerRule}, \text{Tier Cap}) \times \text{Cap Scale}$$
 
-To ensure a single repetitive rule does not collapse the entire project score, per-rule deductions are capped dynamically based on project size:
+## Worked examples
 
-$$\text{capScale} = \max\left(1, \frac{\text{fileCount}}{10}\right)$$
+### Example 1: Microservice (10 files, 1 warning)
+* **Finding**: 1 `ai-slop/swallowed-exception` (`warning`, severity $1.0$, engine $1.0$, tier *strict* $1.0$).
+* **Calculation**:
+  $$\text{Deduction} = 1.0, \quad \text{Density} = \frac{1.0}{10 + 5} = \frac{1.0}{15} \approx 0.0667$$
+  $$\text{Scaled Density} = 0.0667 \times 5.0 = 0.3333$$
+  $$\text{Score} = 100 - \frac{100 \cdot \ln(1.3333)}{\ln(101.3333)} \approx 100 - 6.23 = \mathbf{94} \quad (\text{Healthy})$$
 
-The deduction for any single rule is bounded by:
-
-$$\text{effectiveCap} = \min(\text{maxPerRule}, \text{ruleCap}) \times \text{capScale}$$
-
-By default, `maxPerRule` is 40. In a project with 50 source files, `capScale` is 5.0, so an advisory rule with a base cap of 8 cannot deduct more than 40 points across the repository.
-
-## Deduction density and scaling
-
-Deductions are summed across all rules and normalized against the project size:
-
-$$\text{deductionDensity} = \frac{\sum \text{cappedDeductions}}{\text{fileCount} + \text{smoothingConstant}}$$
-
-- `fileCount`: Total source files scanned. When running on pre-filtered diagnostics without file lists, Raigal uses observed files with findings.
-- `smoothingConstant`: Set to 5 by default (with a fallback to 10 in raw calculations). This smoothing factor prevents small projects or single-file edits from receiving disproportionately harsh score drops.
-- Density scaling: The density is multiplied by a calibration factor of 5 to determine final scaled deductions:
-
-$$\text{scaledDeductions} = \text{deductionDensity} \times 5$$
-
-## Logarithmic score compression
-
-The final score compresses scaled deductions into a stable 0–100 range:
-
-$$\text{score} = \max\left(0, \text{round}\left(100 - \frac{100 \times \ln(1 + \text{scaledDeductions})}{\ln(1 + 100 + \text{scaledDeductions})}\right)\right)$$
-
-This mathematical curve provides key characteristics:
-- A repository with 0 findings receives a score of 100.
-- Marginal penalties are highest for the first few findings, rewarding clean codebases for staying clean.
-- Large legacy codebases with hundreds of findings asymptotically approach 0, guaranteeing the score never drops below 0 without hard truncations.
+### Example 2: Monolith (200 files, 500 style findings)
+* **Findings**: 500 missing trailing commas (`format/trailing-comma`, `info` $0.25$, engine $0.3$, tier *style* $0.5$, cap $8$).
+* **Calculation**:
+  $$\text{Raw Deductions} = 500 \times 0.25 \times 0.3 \times 0.5 = 18.75$$
+  $$\text{Cap Scale} = \frac{200}{10} = 20, \quad \text{Effective Cap} = 8 \times 20 = 160$$
+  $$\text{Capped Deductions} = \min(18.75, 160) = 18.75$$
+  $$\text{Density} = \frac{18.75}{200 + 5} = \frac{18.75}{205} \approx 0.0915, \quad \text{Scaled Density} = 0.4573$$
+  $$\text{Score} = 100 - \frac{100 \cdot \ln(1.4573)}{\ln(101.4573)} \approx 100 - 8.15 = \mathbf{92} \quad (\text{Healthy})$$
 
 ## Score thresholds and status bands
 
-Raigal relies exclusively on numeric 0–100 scores. Letter grades (A–E) are not used.
+Raigal relies exclusively on numeric 0 - 100 scores. Letter grades (A - F) are not used.
 
 ### CLI status labels
-
-When running `raigal scan` or `raigal ci`, the CLI assigns status labels based on configured thresholds (`good: 75`, `ok: 50`):
+When running `raigal scan` or `raigal ci`, status labels correspond to score boundaries:
 
 | Score range | CLI label | Exit code in CI |
 |---|---|---|
 | $75 - 100$ | `Healthy` | `0` (Passing) |
-| $50 - 74$ | `Needs Work` | `0` (or `1` if `--fail-on` or `failBelow` triggered) |
-| $< 50$ | `Critical` | `1` (Fails quality gate by default) |
+| $50 - 74$ | `Needs Work` | `0` (or `1` if `ci.failBelow` is breached) |
+| $< 50$ | `Critical` | `1` (Fails quality gate) |
 
-In CI environments, `raigal ci` fails with exit code 1 if the score is lower than `ci.failBelow` (default: 70) or if any error-level finding is detected.
+In CI environments, `raigal ci` exits with code 1 if the score is lower than `ci.failBelow` (default: 70) or if any error-level finding is detected.
 
-### Web dashboard bands
-
-The Raigal Cloud web interface (`app.raigal.dev`) categorizes repositories into five health bands:
+### Dashboard health bands
+The Raigal Cloud web interface (`app.raigal.dev`) categorizes repositories into calibrated health bands:
 
 | Score range | Dashboard band | Color token |
 |---|---|---|
 | $90 - 100$ | `Excellent` | Lime green |
-| $80 - 89$ | `Good` | Emerald green |
-| $70 - 79$ | `Fair` | Amber / yellow |
-| $60 - 69$ | `Poor` | Orange |
-| $< 60$ | `Critical` | Red |
+| $75 - 89$ | `Good / Healthy` | Emerald green |
+| $50 - 74$ | `Needs Work` | Amber / yellow |
+| $< 50$ | `Critical` | Red |

@@ -1,48 +1,41 @@
 ---
-description: "How to install the GitHub App, enforce pull request quality gates, configure branch protection, and track PRs."
+description: "Pull request checks, GitHub App integration, and branch protection."
 icon: git-pull-request
 ---
 
-# Pull request quality gate and board
+# Pull request checks and GitHub App
 
-Set up Raigal to check pull requests, enforce branch protection, and track review status on your remediation board at `https://app.raigal.dev`.
+Raigal connects to GitHub to create pending checks when pull requests open, evaluate code changes, and update branch protection status.
 
-## Architecture: GitHub App and Actions
+## Architecture
 
-Raigal combines the official GitHub App (`raigal-cloud`) with your GitHub Actions workflows:
-
-```
-┌────────────────────────────────────────────────────────────────────────┐
-│                          GitHub Ecosystem                              │
-│                                                                        │
-│   1. Developer opens PR / pushes commit                                │
-│          │                                                             │
-│          ▼                                                             │
-│   GitHub Webhook ──────────────────────────┐                           │
-│          │                                 │                           │
-│          ▼ (triggers CI)                   │ (pull_request event)      │
-│   GitHub Actions Runner                    │                           │
-│     • Runs AST Lint & Slop Scans           ▼                           │
-│     • Computes diff & score        Raigal Cloud Control Plane          │
-│     • Zero code leaves runner       (https://app.raigal.dev)           │
-│          │                                 │                           │
-│          ▼ (POST /v1/runs)                 │ 2. Creates Pending Check  │
-│   Ingest Metrics & Head SHA                │    "Raigal Quality Gate"  │
-│          │                                 ▼                           │
-│          └─────────────────────────► Resolves Check Run                │
-│                                      (Success / Failure + Summary)     │
-│                                            │                           │
-│                                            ▼                           │
-│   Branch Protection Enforced ◄─────────────┘                           │
-│   Instant Kanban Board Card Updated                                    │
-└────────────────────────────────────────────────────────────────────────┘
+```text
+┌───────────────────────────────┐        ┌───────────────────────────────┐
+│     GitHub Repository         │        │       Raigal Cloud            │
+│                               │        │                               │
+│  Developer Opens Pull Request │───────►│ 1. GitHub App Receives Event  │
+│  (Head SHA: 3b2a1c...)        │        │    (pull_request.opened)      │
+│                               │        │                               │
+│  Actions Runner Starts        │        │                               │
+│  (runs npx raigal ci)         │        │                               │
+│          │                    │        │                               │
+│          ▼ (POST /v1/runs)    │        │ 2. Creates Pending Check      │
+│   Ingest Metrics & Head SHA   │───────►│    "Raigal Quality Gate"      │
+│                               │        │                               │
+│                               │        ▼                               │
+│                               │◄─────── Resolves Check Run             │
+│                               │         (Success / Failure + Summary)  │
+│                               │        │                               │
+│  Branch Protection Enforced   │        │                               │
+│  Board Card Updated           │        │                               │
+└───────────────────────────────┘        └───────────────────────────────┘
 ```
 
 How this setup works:
-- Code stays in your runner: source code never leaves your local machine or GitHub Actions runner. Raigal Cloud does not clone or store your code.
+- Local processing: AST parsing and rule evaluation run inside your runner. Raigal Cloud does not clone or store your codebase.
 - Immediate pending check: when a pull request opens or receives new commits, the GitHub App creates a `"Raigal Quality Gate"` check in `in_progress` status on the head commit and adds a card to your board.
-- Branch protection: the `"Raigal Quality Gate"` check can be selected as a required status check in GitHub branch rules.
-- Automatic updates on merge or close: GitHub sends merge and close webhook events directly to the app, which updates board cards without extra CI steps.
+- Branch protection: the `"Raigal Quality Gate"` check can be selected as a required status check in GitHub repository rules.
+- Automatic updates on merge or close: GitHub sends merge and close webhook events directly to the app, updating board cards without extra CI steps.
 
 ## Setup: GitHub App and Actions
 
@@ -73,7 +66,7 @@ How this setup works:
 4. Select **Add secret**.
 
 {% hint style="tip" %}
-If you prefer not to manage static tokens, add `permissions: id-token: write` to your workflow. Raigal Cloud authenticates the runner using GitHub OIDC directly.
+If you prefer not to manage static tokens, add `permissions: id-token: write` to your workflow. Raigal Cloud validates the runner using GitHub OIDC directly.
 {% endhint %}
 {% endstep %}
 
@@ -98,6 +91,7 @@ jobs:
     permissions:
       contents: read
       id-token: write
+      pull-requests: write
 
     steps:
       - name: Checkout Code
@@ -110,12 +104,20 @@ jobs:
         with:
           node-version: 22
 
+      - name: Fetch Base Branch for Diff Analysis
+        run: git fetch origin ${{ github.base_ref }} --depth=1
+
       - name: Run Raigal Quality Gate
         env:
           RAIGAL_TOKEN: ${{ secrets.RAIGAL_TOKEN }}
           RAIGAL_API_URL: ${{ secrets.RAIGAL_API_URL || 'https://app.raigal.dev' }}
+          IS_FORK: ${{ github.event.pull_request.head.repo.full_name != github.repository }}
         run: |
-          npx @methiu/raigal ci --changes --base origin/${{ github.base_ref || 'main' }} --human
+          if [ "$IS_FORK" = "true" ]; then
+            npx -y @methiu/raigal@0.2.2 ci --changes --base origin/${{ github.base_ref }} --human
+          else
+            npx -y @methiu/raigal@0.2.2 ci --changes --base origin/${{ github.base_ref || 'main' }} --report-pr
+          fi
 ```
 
 {% hint style="success" %}
@@ -125,7 +127,7 @@ Because the GitHub App receives `pull_request.closed` events directly, you do no
 
 {% step %}
 ### 5. Require status check in branch protection
-1. In your GitHub repository, open **Settings** > **Branches**.
+1. In your GitHub repository, open **Settings** > **Branches** (or **Rules > Rulesets**).
 2. Under **Branch protection rules**, edit the rule for your default branch.
 3. Check **Require status checks to pass before merging**.
 4. Search for and select **Raigal Quality Gate**.
@@ -152,7 +154,7 @@ Add `.github/workflows/raigal.yml` using the workflow above. In standalone mode,
 
 {% step %}
 ### 3. Add close sync workflow (optional)
-To update the board when PRs close without the GitHub App, add a second workflow:
+To update the board when PRs close without the GitHub App, add a lifecycle sync workflow:
 
 ```yaml
 name: Raigal PR Lifecycle
@@ -176,7 +178,7 @@ jobs:
           RAIGAL_TOKEN: ${{ secrets.RAIGAL_TOKEN }}
           RAIGAL_API_URL: ${{ secrets.RAIGAL_API_URL || 'https://app.raigal.dev' }}
         run: |
-          npx @methiu/raigal report-pr-closed \
+          npx -y @methiu/raigal@0.2.2 report-pr-closed \
             --pr ${{ github.event.pull_request.number }} \
             ${{ github.event.pull_request.merged && '--merged' || '' }}
 ```
@@ -197,27 +199,11 @@ In [Raigal Cloud](https://app.raigal.dev), open your repository board:
    - Inspect diff statistics and unified diff preview.
    - Copy the `git checkout` command to inspect changes locally, or select **Open on GitHub** to jump to the PR.
 
-## PRs from public forks
-
-{% hint style="danger" %}
-GitHub Actions suppresses repository secrets on `pull_request` triggers from external forks to prevent credential leaks.
-{% endhint %}
-
-If your repository accepts pull requests from forks, use GitHub Actions OIDC:
-
-```yaml
-permissions:
-  contents: read
-  id-token: write
-```
-
-With `id-token: write`, the CLI requests a short-lived OIDC token from GitHub and passes it via `X-GitHub-OIDC`. Raigal Cloud verifies the token with `token.actions.githubusercontent.com` and confirms that the repository owner is registered to your organization.
-
 ## Troubleshooting
 
 | Symptom | Cause | Solution |
 | :--- | :--- | :--- |
-| Check remains pending | CI workflow did not run or timed out | Check that the workflow completed for the commit `head_sha`. Raigal Cloud cleans up orphaned pending checks after 20 minutes. |
+| Check remains pending | CI workflow did not run or timed out | Check that the workflow completed for the commit `head_sha`. Raigal Cloud clears orphaned pending checks after 20 minutes. |
 | Check run does not appear on PR | GitHub App not installed on repository | Ensure the [raigal-cloud GitHub App](https://github.com/apps/raigal-cloud) is installed on the repository. |
 | HTTP 401 or invalid token in CI | Missing or expired `RAIGAL_TOKEN` | Confirm that `RAIGAL_TOKEN` is set in GitHub repository secrets and matches an active token in [Settings](https://app.raigal.dev/settings). |
 | HTTP 403 `owner_not_allowed` in CI | Repository owner not in allowlist | Go to **Settings > Allowed Owners** in Raigal Cloud and select **Sync GitHub**. |

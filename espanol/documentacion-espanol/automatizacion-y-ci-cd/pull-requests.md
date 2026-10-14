@@ -11,31 +11,26 @@ Configure Raigal para evaluar pull requests, aplicar protección de ramas y supe
 
 Raigal combina la GitHub App oficial (`raigal-cloud`) con los flujos de trabajo de GitHub Actions:
 
-```
-┌────────────────────────────────────────────────────────────────────────┐
-│                          Ecosistema de GitHub                          │
-│                                                                        │
-│   1. El desarrollador abre un PR o sube un commit                      │
-│          │                                                             │
-│          ▼                                                             │
-│   Webhook de GitHub ───────────────────────┐                           │
-│          │                                 │                           │
-│          ▼ (desencadena CI)                │ (evento pull_request)     │
-│   Runner de GitHub Actions                 │                           │
-│     • Ejecuta linters AST y escaneo slop   ▼                           │
-│     • Calcula diff y puntuación    Plano de Control Raigal Cloud       │
-│     • Cero código sale del runner   (https://app.raigal.dev)           │
-│          │                                 │                           │
-│          ▼ (POST /v1/runs)                 │ 2. Crea Check Pendiente   │
-│   Ingesta de métricas y Head SHA           │    "Raigal Quality Gate"  │
-│          │                                 ▼                           │
-│          └─────────────────────────► Resuelve el Check Run             │
-│                                      (Éxito / Fallo + Resumen)         │
-│                                            │                           │
-│                                            ▼                           │
-│   Protección de Ramas Aplicada ◄───────────┘                           │
-│   Tarjeta Actualizada en Vivo en el Tablero Kanban                     │
-└────────────────────────────────────────────────────────────────────────┘
+```text
+┌───────────────────────────────┐        ┌───────────────────────────────┐
+│     Repositorio de GitHub     │        │       Raigal Cloud            │
+│                               │        │                               │
+│  El desarrollador abre un PR  │───────►│ 1. GitHub App recibe evento   │
+│  (Head SHA: 3b2a1c...)        │        │    (pull_request.opened)      │
+│                               │        │                               │
+│  El runner de Actions inicia  │        │                               │
+│  (ejecuta raigal ci)          │        │                               │
+│          │                    │        │                               │
+│          ▼ (POST /v1/runs)    │        │ 2. Crea check pendiente       │
+│   Ingesta de métricas y SHA   │───────►│    "Raigal Quality Gate"      │
+│                               │        │                               │
+│                               │        ▼                               │
+│                               │◄─────── Resuelve el check run          │
+│                               │         (Éxito / Fallo + Resumen)      │
+│                               │        │                               │
+│  Protección de rama aplicada  │        │                               │
+│  Tarjeta actualizada en vivo  │        │                               │
+└───────────────────────────────┘        └───────────────────────────────┘
 ```
 
 Funcionamiento de este modelo:
@@ -99,6 +94,7 @@ jobs:
     permissions:
       contents: read
       id-token: write
+      pull-requests: write
 
     steps:
       - name: Descargar Código
@@ -111,12 +107,20 @@ jobs:
         with:
           node-version: 22
 
+      - name: Descargar Rama Base para Comparación
+        run: git fetch origin ${{ github.base_ref }} --depth=1
+
       - name: Ejecutar Puerta de Calidad Raigal
         env:
           RAIGAL_TOKEN: ${{ secrets.RAIGAL_TOKEN }}
           RAIGAL_API_URL: ${{ secrets.RAIGAL_API_URL || 'https://app.raigal.dev' }}
+          IS_FORK: ${{ github.event.pull_request.head.repo.full_name != github.repository }}
         run: |
-          npx @methiu/raigal ci --changes --base origin/${{ github.base_ref || 'main' }} --human
+          if [ "$IS_FORK" = "true" ]; then
+            npx -y @methiu/raigal@0.2.2 ci --changes --base origin/${{ github.base_ref }} --human
+          else
+            npx -y @methiu/raigal@0.2.2 ci --changes --base origin/${{ github.base_ref || 'main' }} --report-pr
+          fi
 ```
 
 {% hint style="success" %}
@@ -126,7 +130,7 @@ Al recibir los webhooks de cierre directamente a través de la GitHub App, no se
 
 {% step %}
 ### 5. Exigir la comprobación en la protección de ramas
-1. En GitHub, abra **Settings** > **Branches**.
+1. En GitHub, abra **Settings** > **Branches** (o **Rules > Rulesets**).
 2. En las reglas de protección, edite la regla para su rama principal.
 3. Marque **Require status checks to pass before merging**.
 4. Busque y seleccione **Raigal Quality Gate**.
@@ -177,7 +181,7 @@ jobs:
           RAIGAL_TOKEN: ${{ secrets.RAIGAL_TOKEN }}
           RAIGAL_API_URL: ${{ secrets.RAIGAL_API_URL || 'https://app.raigal.dev' }}
         run: |
-          npx @methiu/raigal report-pr-closed \
+          npx -y @methiu/raigal@0.2.2 report-pr-closed \
             --pr ${{ github.event.pull_request.number }} \
             ${{ github.event.pull_request.merged && '--merged' || '' }}
 ```
@@ -191,28 +195,12 @@ En [Raigal Cloud](https://app.raigal.dev), abra el tablero de su repositorio:
 
 1. Columna de pull requests:
    - Aprobado: muestra la puntuación (ej: `94/100`), autor, rama de origen y rama de destino.
-   - Bloqueado: muestra el recuento de infracciones bloqueantes y alertas.
+   - Bloqueado: muestra el recuento de infracciones bloqueantes y categorías con alertas.
 2. Panel lateral de inspección:
    - Pulse cualquier tarjeta para desplegar el panel de detalles.
    - Revise los hallazgos bloqueantes con identificador de regla, ruta y línea.
    - Compruebe las estadísticas de cambios y la vista previa del diff unificado.
    - Copie el comando `git checkout` para revisar la rama localmente o pulse **Open on GitHub** para abrir el PR.
-
-## Pull requests desde forks públicos
-
-{% hint style="danger" %}
-GitHub Actions no expone secretos de repositorio en flujos originados en forks externos para evitar filtraciones de credenciales.
-{% endhint %}
-
-Si su repositorio admite contribuciones desde forks públicos, configure OIDC:
-
-```yaml
-permissions:
-  contents: read
-  id-token: write
-```
-
-Con `id-token: write`, el CLI solicita un token OIDC a GitHub y lo transmite mediante `X-GitHub-OIDC`. Raigal Cloud verifica la firma con `token.actions.githubusercontent.com` y comprueba que el repositorio pertenece a su organización.
 
 ## Resolución de incidencias
 
