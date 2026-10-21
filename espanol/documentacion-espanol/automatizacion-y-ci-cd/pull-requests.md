@@ -117,9 +117,9 @@ jobs:
           IS_FORK: ${{ github.event.pull_request.head.repo.full_name != github.repository }}
         run: |
           if [ "$IS_FORK" = "true" ]; then
-            npx -y @methiu/raigal@0.2.2 ci --changes --base origin/${{ github.base_ref }} --human
+            npx -y @methiu/raigal@latest ci --changes --base origin/${{ github.base_ref }} --human
           else
-            npx -y @methiu/raigal@0.2.2 ci --changes --base origin/${{ github.base_ref || 'main' }} --report-pr
+            npx -y @methiu/raigal@latest ci --changes --base origin/${{ github.base_ref || 'main' }}
           fi
 ```
 
@@ -138,6 +138,16 @@ Al recibir los webhooks de cierre directamente a través de la GitHub App, no se
 {% endstep %}
 
 {% endstepper %}
+
+## Veredictos de calidad en tres estados
+
+Los Check Runs de GitHub y las tarjetas de pull request evalúan los resultados en tres estados claros:
+
+| Veredicto de estado | Criterios | Resultado del Check Run |
+|---|---|---|
+| **PASSED** | Puntuación >= umbral (por defecto 70), 0 errores, 0 advertencias | `success` (Marca verde) |
+| **PASSED (WITH WARNINGS)** | Puntuación >= umbral (por defecto 70), 0 errores, advertencias presentes | `neutral` (Aprobado con avisos, no bloquea el merge) |
+| **FAILED / BLOCKED** | Puntuación < umbral (por defecto 70), código de salida != 0, o errores presentes | `failure` (Cruz roja, bloquea el merge) |
 
 ## Modo CI independiente (sin GitHub App)
 
@@ -181,7 +191,7 @@ jobs:
           RAIGAL_TOKEN: ${{ secrets.RAIGAL_TOKEN }}
           RAIGAL_API_URL: ${{ secrets.RAIGAL_API_URL || 'https://app.raigal.dev' }}
         run: |
-          npx -y @methiu/raigal@0.2.2 report-pr-closed \
+          npx -y @methiu/raigal@latest report-pr-closed \
             --pr ${{ github.event.pull_request.number }} \
             ${{ github.event.pull_request.merged && '--merged' || '' }}
 ```

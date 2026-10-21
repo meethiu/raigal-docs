@@ -27,7 +27,7 @@ graph TD
 ## Built-in diagnostic engines
 
 1. **`security`** (Weight: 1.5): checks hardcoded credentials, secret leaks, prompt injection surfaces, unsandboxed agent tools, SQL/shell injections, and vulnerable dependencies.
-2. **`ai-slop`** (Weight: 1.0): detects 26+ patterns left behind by coding agents, including swallowed exceptions, repetitive narrative comments, unsafe type casts, and unimplemented stubs.
+2. **`ai-slop`** (Weight: 1.0): detects 50+ specialized rules across 6 language targets (TypeScript/JavaScript, Python, Go, Rust, C#, C++), including swallowed exceptions, repetitive narrative comments, unsafe type casts, and unimplemented stubs.
 3. **`architecture`** (Weight: 1.0): checks module boundary crossings and circular dependency graphs.
 4. **`code-quality`** (Weight: 0.8): checks unused code and exports (via Knip), function complexity, nesting depth, and parameter limits.
 5. **`lint`** (Weight: 0.6): runs static analysis across TypeScript/JavaScript (Oxlint), Python (Ruff), Rust (Clippy), Go, C# (Roslynator, InspectCode), C++ (Clang-Tidy, Cppcheck), and Ruby.

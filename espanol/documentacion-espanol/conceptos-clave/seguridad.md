@@ -62,7 +62,7 @@ npx @methiu/raigal whoami
 
 Antes de enviar telemetría al panel:
 1. Los archivos de código fuente completos nunca se suben ni se almacenan en Raigal Cloud. El análisis ocurre íntegramente en la máquina o runner local.
-2. Al ejecutar con `--report-pr`, se envía una vista previa del parche unificado (limitada a 20 KB) para mostrar las líneas afectadas en el tablero de pull requests. Antes de enviarse, este diff pasa por `maskSecrets`, que elimina cabeceras de autorización, tokens Bearer, claves privadas y patrones de credenciales habituales.
+2. Durante la evaluación de pull requests en CI, se envía una vista previa del parche unificado (limitada a 20 KB) para mostrar las líneas afectadas en el tablero de pull requests. Antes de enviarse, este diff pasa por `maskSecrets`, que elimina cabeceras de autorización, tokens Bearer, claves privadas y patrones de credenciales habituales.
 3. Los informes de escaneo habituales solo transmiten recuentos diagnósticos, identificadores de reglas, rutas relativas y coordenadas de línea.
 4. El servidor almacena los registros en bases de datos PostgreSQL particionadas por organización mediante operaciones idempotentes.
 

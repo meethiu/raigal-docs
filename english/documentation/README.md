@@ -30,7 +30,7 @@ Raigal checks code for patterns introduced by AI coding tools, including verbose
 Used with the [Raigal Cloud Platform](https://app.raigal.dev) and the [Raigal GitHub App](https://github.com/apps/raigal-cloud), it evaluates pull requests, updates status checks for branch protection, tracks issues on a remediation board, and coordinates repair sessions with local coding agents.
 
 {% hint style="success" %}
-Raigal runs AST parsing, linting, and pattern checks locally inside your runner. Full source code is never uploaded to Raigal servers. When using `--report-pr`, an in-memory secret-masked git patch diff preview (up to 20 KB) is sent to render the PR dashboard. Autonomous repair sessions (`raigal agent`) communicate with your configured local LLM provider.
+Raigal runs AST parsing, linting, and pattern checks locally inside your runner. Full source code is never uploaded to Raigal servers. During pull request CI evaluations, an in-memory secret-masked git patch diff preview (up to 20 KB) is sent to render the PR dashboard. Autonomous repair sessions (`raigal agent`) communicate with your configured local LLM provider.
 {% endhint %}
 
 ## What Raigal catches

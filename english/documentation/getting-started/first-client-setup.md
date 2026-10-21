@@ -93,14 +93,17 @@ jobs:
       - name: Run Raigal Quality Gate
         env:
           RAIGAL_TOKEN: ${{ secrets.RAIGAL_TOKEN }}
-          RAIGAL_API_URL: https://app.raigal.dev
-          IS_FORK: ${{ github.event.pull_request.head.repo.full_name != github.repository }}
+          # RAIGAL_ORG_ID: ${{ vars.RAIGAL_ORG_ID }} # Required if owner belongs to multiple orgs
         run: |
-          if [ "$IS_FORK" = "true" ]; then
-            npx -y @methiu/raigal@0.2.2 ci --changes --base origin/${{ github.base_ref }} --human
+          if [ "${{ github.event_name }}" = "pull_request" ]; then
+            npx --yes @methiu/raigal@latest ci --changes --base origin/${{ github.base_ref }}
           else
-            npx -y @methiu/raigal@0.2.2 ci --changes --base origin/${{ github.base_ref || 'main' }} --report-pr --sarif-output raigal-results.sarif
+            npx --yes @methiu/raigal@latest ci .
           fi
+
+      - name: Generate SARIF Security Report
+        if: always()
+        run: npx --yes @methiu/raigal@latest scan . --sarif > raigal-results.sarif
 
       - name: Upload SARIF to GitHub Code Scanning
         if: always() && github.event.pull_request.head.repo.full_name == github.repository

@@ -97,9 +97,9 @@ jobs:
           IS_FORK: ${{ github.event.pull_request.head.repo.full_name != github.repository }}
         run: |
           if [ "$IS_FORK" = "true" ]; then
-            npx -y @methiu/raigal@0.2.2 ci --changes --base origin/${{ github.base_ref }} --human
+            npx -y @methiu/raigal@latest ci --changes --base origin/${{ github.base_ref }} --human
           else
-            npx -y @methiu/raigal@0.2.2 ci --changes --base origin/${{ github.base_ref || 'main' }} --report-pr --sarif-output raigal-results.sarif
+            npx -y @methiu/raigal@latest ci --changes --base origin/${{ github.base_ref || 'main' }}
           fi
 ```
 

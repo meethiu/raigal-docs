@@ -1,38 +1,28 @@
 ---
-description: "Endpoints de la API de organización, autenticación, gestión de repositorios y rotación de tokens."
+description: "Endpoints de la API para gestión de tokens, métricas de repositorios, inspección de políticas e ingesta de ejecuciones."
 icon: key
 ---
 
-# API de la organización y gestión de tokens
+# API de organización y gestión de tokens
 
-Raigal Cloud ofrece una API REST para consultar puntuaciones, gestionar tokens, registrar resultados de CI y eliminar repositorios.
+Raigal Cloud proporciona una API REST para consultar puntuaciones, inspeccionar políticas activas, gestionar tokens e ingerir resultados del CLI.
 
 ## Autenticación
 
-Las solicitudes deben incluir una clave de API de la organización (`rgl_live_...`) en la cabecera de autorización:
+Todas las solicitudes deben incluir un token Bearer válido en el encabezado `Authorization`:
 
-{% tabs %}
-{% tab title="Cabecera Bearer" %}
 ```http
-Authorization: Bearer rgl_live_su_clave_aqui
+Authorization: Bearer rgl_live_su_clave_api_aqui
 ```
-{% endtab %}
-
-{% tab title="Cabecera x-api-key" %}
-```http
-x-api-key: rgl_live_su_clave_aqui
-```
-{% endtab %}
-{% endtabs %}
 
 {% hint style="info" %}
-Puede generar claves de API en [app.raigal.dev/settings](https://app.raigal.dev/settings), dentro de **Tokens de API**.
+Genere claves de API en [app.raigal.dev/settings](https://app.raigal.dev/settings) en la sección **API Tokens**.
 {% endhint %}
 
 ## Endpoints
 
-### 1. Comprobación de identidad
-Verifica el token activo y devuelve los datos de la organización.
+### 1. Verificación de identidad
+Verifica el token activo y devuelve el usuario, la organización y los propietarios de repositorios permitidos.
 
 ```http
 GET /v1/whoami
@@ -41,147 +31,111 @@ GET /v1/whoami
 Respuesta:
 ```json
 {
-  "orgId": "org_2tQ...",
-  "orgName": "Acme Engineering",
-  "tier": "enterprise",
-  "authenticated": true
-}
-```
-
-### 2. Política de calidad
-Recupera los umbrales de calidad configurados para la organización.
-
-```http
-GET /v1/policy
-```
-
-Respuesta:
-```json
-{
-  "minScore": 75,
-  "failOnSeverity": "error",
-  "blockedRules": [
-    "ai-slop/trivial-comment",
-    "security/eval",
-    "ai-slop/swallowed-exception"
-  ],
-  "engines": {
-    "format": true,
-    "lint": true,
-    "codeQuality": true,
-    "aiSlop": true,
-    "security": true
-  }
-}
-```
-
-### 3. Listar repositorios
-Obtiene la lista de repositorios vinculados a la organización.
-
-```http
-GET /v1/runs/repos
-```
-
-Respuesta:
-```json
-{
-  "repositories": [
+  "user": {
+    "id": "user_2tQ...",
+    "email": "dev@acme.com"
+  },
+  "org": {
+    "id": "org_2tQ...",
+    "name": "Acme Engineering",
+    "status": "active"
+  },
+  "plan": "active",
+  "trial_started_at": null,
+  "trial_ends_at": null,
+  "allowed_owners": [
     {
-      "id": "a9b8c7d6-...",
-      "repoId": "acme/payment-service",
-      "latestScore": 92,
-      "lastRunAt": "2026-09-24T14:32:00Z",
-      "activeBranches": ["main", "feat/apple-pay"]
+      "id": 1234567,
+      "login": "acme"
     }
   ]
 }
 ```
 
-### 4. Eliminar un repositorio
-Elimina un repositorio y su historial de escaneos, registros de pull requests y hallazgos asociados.
+### 2. Política de calidad de la organización
+Recupera los umbrales de calidad y las reglas bloqueadas para la organización o un repositorio específico.
 
 ```http
-DELETE /v1/runs/repos/:repoId
+GET /v1/policy?repo=acme%2Fbackend-api
 ```
-
-`:repoId` puede ser el UUID del repositorio o el nombre del repositorio codificado en la URL (ej: `acme%2Fpayment-service`).
 
 Respuesta:
 ```json
 {
-  "ok": true,
-  "message": "Repository acme/payment-service and all associated runs removed successfully."
+  "version": 1,
+  "hash": "7b8f9a2e...",
+  "config": {
+    "ci": {
+      "failBelow": 80
+    },
+    "rules": {
+      "ai-slop/swallowed-exception": "error"
+    },
+    "exclude": []
+  },
+  "locked": [
+    "ci.failBelow",
+    "rules.ai-slop/swallowed-exception"
+  ]
 }
 ```
 
-{% hint style="warning" %}
-Esta operación es definitiva. También puede eliminar repositorios desde la sección **Configuración** del panel web.
-{% endhint %}
-
-### 5. Obtener datos del tablero
-Descarga las columnas y tarjetas del tablero en formato JSON.
-
-```http
-GET /v1/runs/board?repoId=acme/payment-service&branch=main
-```
-
-Parámetros de consulta:
-- `repoId`: (opcional) filtrar por nombre de repositorio.
-- `branch`: (opcional) filtrar por rama git (por defecto, rama principal).
-
-Respuesta:
-```json
-{
-  "mediumPriority": [],
-  "highRisk": [],
-  "pullRequests": [
-    {
-      "prNumber": 142,
-      "title": "feat: introduce stripe webhooks",
-      "author": "octocat",
-      "status": "passed",
-      "score": 94,
-      "headSha": "3b2a1c...",
-      "diff": { "filesChanged": 6, "additions": 140, "deletions": 12 }
-    }
-  ],
-  "agentRemediations": []
-}
-```
-
-### 6. Registrar ejecución de CI personalizada
-Para sistemas de CI distintos a GitHub Actions (Jenkins, GitLab CI, CircleCI), envíe los resultados del escaneo directamente:
+### 3. Ingesta de ejecuciones del CLI
+Envía un informe de ejecución generado por el CLI (`raigal ci` o `raigal scan`):
 
 ```http
 POST /v1/runs
 Content-Type: application/json
 ```
 
-Cuerpo de la solicitud:
+Cuerpo de la solicitud (esquema estricto del contrato `Run`):
 ```json
 {
-  "repoId": "acme/backend-api",
-  "branch": "main",
-  "commitSha": "e4f5a6b7...",
-  "score": 88,
-  "exitCode": 0,
-  "engines": ["format", "lint", "code-quality", "ai-slop", "security"],
-  "findingsCount": 2,
-  "findings": [
-    {
-      "ruleId": "ai-slop/unsafe-type-assertion",
-      "severity": "warn",
-      "file": "src/auth/jwt.ts",
-      "line": 45,
-      "message": "Aserción de tipo insegura que elude la comprobación de tipos."
-    }
-  ]
+  "run_id": "c9bf9e57-1685-4c89-bafb-ff5af830be8a",
+  "command": "ci",
+  "repo": {
+    "provider": "github",
+    "slug": "acme/backend-api"
+  },
+  "owner_verified": true,
+  "git": {
+    "branch": "main",
+    "head_sha": "e4f5a6b7c8d9e0f1a2b3c4d5e6f7a8b9c0d1e2f3",
+    "base_ref": "main"
+  },
+  "ci": {
+    "provider": "github-actions",
+    "run_url": "https://github.com/acme/backend-api/actions/runs/123456"
+  },
+  "flags": ["changes"],
+  "cli_version": "0.2.5",
+  "started_at": "2026-10-21T10:00:00.000Z",
+  "ended_at": "2026-10-21T10:00:12.000Z",
+  "exit_code": 0,
+  "steps": [
+    { "seq": 0, "name": "engine:ai-slop", "ok": true, "ms": 45 },
+    { "seq": 1, "name": "engine:security", "ok": true, "ms": 32 }
+  ],
+  "report": {
+    "score": 92,
+    "scoreable": true,
+    "files_scanned": 12,
+    "findings": []
+  }
+}
+```
+
+Respuesta:
+```json
+{
+  "ok": true,
+  "run_id": "c9bf9e57-1685-4c89-bafb-ff5af830be8a"
 }
 ```
 
 ## Gestión de tokens
 
-Los tokens pueden crearse y revocarse desde el panel web o mediante la API de tokens:
+Los tokens pueden crearse en el panel web o mediante la API de tokens:
 
 ### Crear token de API
 ```http
@@ -189,7 +143,7 @@ POST /api/tokens
 Content-Type: application/json
 
 {
-  "name": "Production Deploy Runner"
+  "name": "Runner de Producción"
 }
 ```
 
@@ -198,18 +152,16 @@ Respuesta:
 {
   "token": "rgl_live_8f3a9b1c7e2d...",
   "prefix": "rgl_live_8f3a",
-  "name": "Production Deploy Runner",
-  "created_at": "2026-09-24T18:00:00Z"
+  "name": "Runner de Producción",
+  "id": "key_9b2e...",
+  "created_at": "2026-10-21T10:00:00.000Z"
 }
 ```
 
 {% hint style="danger" %}
-Guarde su token al crearlo. El valor completo solo se muestra una vez. Raigal Cloud almacena un hash SHA-256 y no puede recuperar tokens perdidos.
+Guarde su token al crearlo. La cadena completa se muestra una sola vez. Raigal Cloud almacena un hash SHA-256 y no puede recuperar tokens perdidos.
 {% endhint %}
 
-### Revocar token de API
-```http
-DELETE /api/tokens/:tokenId
-```
+### Gestión del dashboard y repositorios
 
-Revoca de inmediato el token indicado, denegando solicitudes posteriores.
+La gestión de repositorios, seguimiento de ramas y revocación de tokens está disponible a través de la interfaz web en [app.raigal.dev/settings](https://app.raigal.dev/settings) utilizando su sesión autenticada de navegador.

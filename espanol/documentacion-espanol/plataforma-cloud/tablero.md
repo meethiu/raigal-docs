@@ -60,12 +60,13 @@ El panel central divide las incidencias en cuatro pestañas especializadas:
 
 #### Warnings
 - Avisos no bloqueantes: problemas de estilo (`ai-slop/trivial-comment`), duplicación de código (`code-quality/duplicate-block`), stubs incompletos (`ai-slop/todo-stub`) y advertencias de mantenibilidad (`ai-slop/unsafe-type-assertion`).
-- Acciones: copia directa del comando de corrección por regla (`npx @methiu/raigal fix --rule <rule-id>`).
+- Acciones: copia directa del comando de corrección (`npx @methiu/raigal fix`) para aplicar arreglos automáticos seguros.
 
 #### Pull Requests
 - Solicitudes de cambios evaluadas por `raigal ci` o por la GitHub App.
-- Insignias de estado:
-  - `Passed [puntuación]`: la puntuación cumple `ci.failBelow` y no contiene errores bloqueantes.
+- Insignias de estado (puerta de calidad en 3 estados):
+  - `Passed [puntuación]`: cumple `ci.failBelow` con 0 errores y 0 advertencias.
+  - `Passed (With Warnings) [puntuación]`: cumple `ci.failBelow` sin errores bloqueantes, pero con advertencias consultivas.
   - `Failed [puntuación]`: la puntuación queda por debajo del umbral o contiene errores bloqueantes.
   - `Pending`: análisis en curso o a la espera del runner de CI.
 - Filtros: filtrado inmediato por resultado del control de calidad (`Passed` o `Failed`).

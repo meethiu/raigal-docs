@@ -37,7 +37,7 @@ In CI pipelines, Docker containers, or scripts, pass authentication using enviro
   env:
     RAIGAL_TOKEN: ${{ secrets.RAIGAL_TOKEN }}
     RAIGAL_API_URL: ${{ secrets.RAIGAL_API_URL || 'https://app.raigal.dev' }}
-  run: npx -y @methiu/raigal@0.2.2 ci --changes --base origin/${{ github.base_ref || 'main' }}
+  run: npx -y @methiu/raigal@latest ci --changes --base origin/${{ github.base_ref || 'main' }}
 ```
 {% endtab %}
 
@@ -63,7 +63,7 @@ raigal whoami
 Before telemetry or PR summaries are sent to the cloud:
 1. Local scans execute 100% in-process. Source code files are never uploaded to Raigal Cloud.
 2. `maskSecrets` automatically replaces high-entropy credentials, private keys, database URLs, and API tokens with redaction placeholders (`[REDACTED_SECRET]`).
-3. When using `--report-pr`, a git patch diff preview (up to 20 KB) is transmitted after in-memory secret masking to populate the dashboard diff viewer. Diff uploads can be disabled organization-wide.
+3. During pull request CI evaluations, a git patch diff preview (up to 20 KB) is transmitted after in-memory secret masking to populate the dashboard diff viewer. Diff uploads can be disabled organization-wide.
 4. Autonomous repair (`raigal agent`) passes relevant source snippets to the customer's configured LLM provider CLI (Claude Code, OpenCode, Codex).
 
 ## GitHub Actions OIDC authentication

@@ -25,6 +25,7 @@ Raigal provides commands for local code checks, automatic fixes, agent repair se
 | `raigal doctor` | Check system binaries, tools, and engine status |
 | `raigal rules` | Display rule explanations and impact weights |
 | `raigal init` | Create configuration file and optional CI workflow |
+| `raigal mcp` | Run the Model Context Protocol (MCP) server over stdio |
 
 ## Command reference
 
@@ -59,9 +60,11 @@ raigal ci [options] [path]
 - `--changes`: gate files changed relative to `--base` (or `HEAD`) only.
 - `--staged`: gate staged files only.
 - `--base <ref>`: diff base for `--changes` (such as `origin/main`).
-- `--report-pr`: upload run summary and masked patch diff preview to Raigal Cloud PR dashboard.
 - `--human`: render formatted terminal summaries instead of JSON in CI logs.
-- `--sarif-output <file>`: output SARIF 2.1.0 report for GitHub code scanning annotations.
+- `--sarif`: output SARIF 2.1.0 to stdout for code scanning annotations (e.g. `raigal ci --sarif > results.sarif`).
+- `--format <format>`: choose output format: `json` (default) or `sarif`.
+
+*(Note: Reporting to the Raigal Cloud dashboard happens automatically in CI when authenticated via OIDC or `RAIGAL_TOKEN`).*
 
 ### `raigal fix`
 
@@ -72,7 +75,7 @@ raigal fix [options] [path]
 ```
 
 - `--safe`: applies deterministic changes with preserved semantics only (default).
-- `-f, --force, --unsafe`: runs broader fixes including dependency audits and dead file cleanups.
+- `-f, --force`: runs broader fixes including dependency audits and framework alignment.
 - `--dry-run`: previews proposed fixes without modifying files.
 - `-p, --prompt`: formats remaining unfixable issues into a prompt for your coding agent.
 - `--changes` / `--staged`: restrict fixes to changed or staged files.

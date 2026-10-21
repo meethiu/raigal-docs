@@ -60,12 +60,13 @@ The central board divides issues into four distinct tabs:
 
 #### Warnings
 - Non-blocking findings: style issues (`ai-slop/trivial-comment`), code quality findings (`code-quality/duplicate-block`), unfinished stubs (`ai-slop/todo-stub`), and maintainability items (`ai-slop/unsafe-type-assertion`).
-- Available actions: copy single-rule autofix commands (`npx @methiu/raigal fix --rule <rule-id>`).
+- Available actions: copy the autofix command (`npx @methiu/raigal fix`) to apply safe automated cleanups.
 
 #### Pull Requests
 - Pull requests evaluated by `raigal ci` or the GitHub App.
-- Status badges:
-  - `Passed [score]`: score satisfies `ci.failBelow` and contains zero blocking errors.
+- Status badges (3-state quality gate):
+  - `Passed [score]`: score satisfies `ci.failBelow` with 0 errors and 0 warnings.
+  - `Passed (With Warnings) [score]`: score satisfies `ci.failBelow` with 0 blocker errors, but advisory warnings exist.
   - `Failed [score]`: score fell below threshold or contains blocking errors.
   - `Pending`: scan in progress or awaiting CI runner completion.
 - Filtering: filter pull request records by quality gate outcome (`Passed` or `Failed`).

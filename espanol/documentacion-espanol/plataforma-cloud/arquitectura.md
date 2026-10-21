@@ -66,7 +66,7 @@ Separación entre cómputo local y servicios en la nube:
    - Identificadores de reglas (como `ai-slop/trivial-comment` o `security/eval`)
    - Rutas relativas de archivos y coordenadas de línea
    - Métricas de diff (archivos modificados, líneas añadidas y eliminadas)
-3. Vistas previas de diff en pull requests: al ejecutar con `--report-pr`, se envía una vista previa del parche unificado (limitada a 20 KB) para visualizar las líneas modificadas en el tablero de pull requests. Antes de transmitirse, este diff pasa por `maskSecrets`, que elimina cabeceras de autorización, tokens Bearer, claves privadas y patrones de credenciales habituales.
+3. Vistas previas de diff en pull requests: durante la evaluación de pull requests en CI, se envía una vista previa del parche unificado (limitada a 20 KB) para visualizar las líneas modificadas en el tablero de pull requests. Antes de transmitirse, este diff pasa por `maskSecrets`, que elimina cabeceras de autorización, tokens Bearer, claves privadas y patrones de credenciales habituales.
 
 ## Integración con la GitHub App
 

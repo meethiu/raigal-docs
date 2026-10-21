@@ -99,3 +99,12 @@ The Raigal Cloud web interface (`app.raigal.dev`) categorizes repositories into 
 | $75 - 89$ | `Good / Healthy` | Emerald green |
 | $50 - 74$ | `Needs Work` | Amber / yellow |
 | $< 50$ | `Critical` | Red |
+
+### Quality gate verdicts (3-state)
+PR status checks and CI gates evaluate pull requests into three distinct states:
+
+| Verdict | Criteria | Check run outcome |
+|---|---|---|
+| `PASSED` | Score >= 70 (or `ci.failBelow`), 0 errors, 0 warnings | `success` (Green check) |
+| `PASSED (WITH WARNINGS)` | Score >= 70, 0 errors, non-blocking warnings present | `neutral` (Advisory pass, does not block merge) |
+| `FAILED / BLOCKED` | Score < 70, non-zero exit code, or blocker errors present | `failure` (Blocks merge) |

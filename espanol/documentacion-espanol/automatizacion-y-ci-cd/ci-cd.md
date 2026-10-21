@@ -1,31 +1,34 @@
 ---
-description: "Integración de Raigal en GitHub Actions, GitLab CI y pipelines de despliegue."
+description: "Integre Raigal en GitHub Actions, GitLab CI y Bitbucket Pipelines."
 icon: route
 ---
 
-# Pipelines de CI/CD y GitHub Actions
+# Pipelines CI/CD y puertas de calidad automatizadas
 
-Configure Raigal para evaluar pull requests en CI y enviar las puntuaciones a su panel de control.
+Configure Raigal para evaluar pull requests en CI, aplicar puertas de calidad y enviar métricas a su panel de control.
+
+Al ejecutar `raigal init`, el CLI detecta automáticamente su proveedor de CI y genera el flujo adecuado sin conjeturas.
 
 ## Variables de entorno
 
-Configure estas variables en su entorno de CI:
+Proporcione estas variables en su entorno de CI:
 
 | Variable | Requerida | Descripción | Ejemplo |
 |---|---|---|---|
 | `RAIGAL_TOKEN` | Sí* | Clave de API de la organización (`rgl_live_...`) | `rgl_live_8f3a9b...` |
-| `RAIGAL_API_URL` | Opcional | Dirección del backend (por defecto `https://app.raigal.dev`) | `https://app.raigal.dev` |
+| `RAIGAL_ORG_ID` | Opcional | ID de organización (`org_...`), requerido sólo si el propietario del repositorio pertenece a múltiples organizaciones de Raigal | `org_2tQ...` |
+| `RAIGAL_API_URL` | Opcional | URL del backend (por defecto `https://app.raigal.dev`) | `https://app.raigal.dev` |
 
-*Nota: En flujos de GitHub Actions con `permissions: id-token: write`, no es necesario definir claves fijas porque Raigal autentica al runner directamente mediante OIDC de GitHub.*
+*Nota: En GitHub Actions configurado con `permissions: id-token: write`, los tokens estáticos no son obligatorios porque Raigal valida el runner mediante OIDC criptográfico sin token.*
 
 ## GitHub Actions
 
-### 1. Validación reforzada de pull requests
+### 1. Control de calidad de pull requests
 
-Cree `.github/workflows/raigal.yml` para analizar pull requests, enviar resultados al panel y generar anotaciones SARIF:
+Cree `.github/workflows/raigal.yml` para evaluar pull requests, notificar al dashboard y generar anotaciones SARIF opcionales:
 
 ```yaml
-name: Puerta de Calidad Raigal
+name: Raigal Quality Gate
 
 on:
   push:
@@ -35,44 +38,41 @@ on:
 
 permissions:
   contents: read
-  id-token: write        # Autenticación criptográfica OIDC sin contraseñas
-  pull-requests: write   # Publicación de resumen de calidad en un único comentario
-  security-events: write # Requerido para subir anotaciones SARIF a GitHub Code Scanning
+  id-token: write        # Habilita autenticación OIDC criptográfica sin token
+  security-events: write # Requerido para subir SARIF a GitHub Code Scanning
 
 jobs:
   gate:
-    name: Filtro de Calidad y AI Slop
+    name: Code Quality & Slop Gate
     runs-on: ubuntu-latest
 
     steps:
-      - name: Descargar Código
+      - name: Checkout Code
         uses: actions/checkout@v4
         with:
-          fetch-depth: 0 # Historial completo requerido para resolver la base del diff
+          fetch-depth: 0 # Historial completo necesario para calcular diffs con la rama base
 
-      - name: Configurar Node.js
+      - name: Setup Node.js
         uses: actions/setup-node@v4
         with:
           node-version: 22
 
-      - name: Descargar Rama Base para Comparación
-        if: github.event_name == 'pull_request'
-        run: git fetch origin ${{ github.base_ref }} --depth=1
-
-      - name: Ejecutar Puerta de Calidad Raigal
+      - name: Run Raigal Quality Gate
         env:
           RAIGAL_TOKEN: ${{ secrets.RAIGAL_TOKEN }}
-          RAIGAL_API_URL: https://app.raigal.dev
-          IS_FORK: ${{ github.event.pull_request.head.repo.full_name != github.repository }}
+          # RAIGAL_ORG_ID: ${{ vars.RAIGAL_ORG_ID }} # Requerido si el propietario pertenece a varias orgs
         run: |
-          if [ "$IS_FORK" = "true" ]; then
-            echo "PR desde bifurcación (fork): ejecutando en modo consultivo sin permisos de escritura"
-            npx -y @methiu/raigal@0.2.2 ci --changes --base origin/${{ github.base_ref }} --human
+          if [ "${{ github.event_name }}" = "pull_request" ]; then
+            npx --yes @methiu/raigal@latest ci --changes --base origin/${{ github.base_ref }}
           else
-            npx -y @methiu/raigal@0.2.2 ci --changes --base origin/${{ github.base_ref || 'main' }} --report-pr --sarif-output raigal-results.sarif
+            npx --yes @methiu/raigal@latest ci .
           fi
 
-      - name: Subir SARIF a GitHub Code Scanning
+      - name: Generate SARIF Security Report
+        if: always()
+        run: npx --yes @methiu/raigal@latest scan . --sarif > raigal-results.sarif
+
+      - name: Upload SARIF to GitHub Code Scanning
         if: always() && github.event.pull_request.head.repo.full_name == github.repository
         uses: github/codeql-action/upload-sarif@v3
         continue-on-error: true
@@ -82,19 +82,19 @@ jobs:
 ```
 
 {% hint style="info" %}
-La subida de informes SARIF a GitHub Code Scanning en repositorios privados requiere que la cuenta empresarial tenga habilitado GitHub Advanced Security (GHAS). En repositorios públicos, el análisis de código se incluye sin coste adicional.
+Subir informes SARIF a GitHub Code Scanning en repositorios privados requiere GitHub Advanced Security (GHAS). En repositorios públicos es gratuito.
 {% endhint %}
 
-### 2. Sincronización de cierre y fusión
+### 2. Sincronización al fusionar o cerrar PRs
 
 {% hint style="info" %}
-Si utiliza la **GitHub App de Raigal**, este paso no es necesario. La app recibe los webhooks de cierre y fusión directamente de GitHub y actualiza el tablero de forma automática.
+Si utiliza la **GitHub App de Raigal**, este paso es innecesario. La aplicación recibe los webhooks de GitHub y actualiza el estado automáticamente.
 {% endhint %}
 
-Para entornos de CI sin la GitHub App, sincronice el estado cuando un PR se fusione o se cierre:
+Para entornos sin la GitHub App, sincronice el estado al fusionar o cerrar:
 
 ```yaml
-name: Ciclo de Vida de PRs Raigal
+name: Raigal PR Lifecycle
 
 on:
   pull_request:
@@ -109,25 +109,61 @@ jobs:
         with:
           node-version: 22
 
-      - name: Sincronizar PR con Raigal Cloud
+      - name: Synchronize PR with Raigal Cloud
         env:
           RAIGAL_TOKEN: ${{ secrets.RAIGAL_TOKEN }}
-          RAIGAL_API_URL: ${{ secrets.RAIGAL_API_URL || 'https://app.raigal.dev' }}
         run: |
-          npx -y @methiu/raigal@0.2.2 report-pr-closed --pr ${{ github.event.pull_request.number }} ${{ github.event.pull_request.merged && '--merged' || '' }}
+          npx --yes @methiu/raigal@latest report-pr-closed --pr ${{ github.event.pull_request.number }} ${{ github.event.pull_request.merged && '--merged' || '' }}
 ```
 
 ## GitLab CI
 
-En `.gitlab-ci.yml`:
+En `.gitlab-ci.yml` (autogenerado por `raigal init`):
 
 ```yaml
-raigal_gate:
+raigal_quality_gate:
+  image: node:24
   stage: test
-  image: node:22
+  script:
+    - if [ -n "$CI_MERGE_REQUEST_IID" ]; then npx --yes @methiu/raigal@latest ci --changes --base "$CI_MERGE_REQUEST_DIFF_BASE_SHA"; else npx --yes @methiu/raigal@latest ci .; fi
   variables:
     RAIGAL_TOKEN: $RAIGAL_TOKEN
-    RAIGAL_API_URL: $RAIGAL_API_URL
-  script:
-    - npx -y @methiu/raigal@0.2.2 ci --human
+    # RAIGAL_ORG_ID: $RAIGAL_ORG_ID # Requerido si el propietario pertenece a varias orgs
+  rules:
+    - if: $CI_PIPELINE_SOURCE == "merge_request_event"
+    - if: $CI_COMMIT_BRANCH == $CI_DEFAULT_BRANCH
 ```
+
+Configure `RAIGAL_TOKEN` en **Settings > CI/CD > Variables**.
+
+## Bitbucket Pipelines
+
+En `bitbucket-pipelines.yml` (autogenerado por `raigal init`):
+
+```yaml
+pipelines:
+  default:
+    - step:
+        name: raigal quality gate
+        image: node:24
+        script:
+          - npx --yes @methiu/raigal@latest ci .
+        secrets:
+          - RAIGAL_TOKEN
+          # - RAIGAL_ORG_ID
+  pull-requests:
+    "**":
+      - step:
+          name: raigal quality gate
+          image: node:24
+          clone:
+            depth: full   # Se requiere historial completo para diffs
+          script:
+            - git fetch origin "$BITBUCKET_PR_DESTINATION_BRANCH"
+            - npx --yes @methiu/raigal@latest ci --changes --base FETCH_HEAD
+          secrets:
+            - RAIGAL_TOKEN
+            # - RAIGAL_ORG_ID
+```
+
+Configure `RAIGAL_TOKEN` en **Repository settings > Repository variables**.

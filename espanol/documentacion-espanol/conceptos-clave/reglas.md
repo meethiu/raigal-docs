@@ -27,7 +27,7 @@ graph TD
 ## Motores de diagnóstico integrados
 
 1. **`security`** (Peso: 1.5): detecta credenciales expuestas en código, fugas de secretos, superficies de inyección en prompts de LLMs, herramientas de agentes sin aislamiento en sandbox, inyecciones SQL o de shell y dependencias vulnerables.
-2. **`ai-slop`** (Peso: 1.0): analiza más de 26 antipatrones habituales en código generado por asistentes de IA, como excepciones silenciadas, comentarios narrativos repetitivos, aserciones de tipo laxas y stubs incompletos.
+2. **`ai-slop`** (Peso: 1.0): analiza más de 50 reglas especializadas en 6 lenguajes (TypeScript/JavaScript, Python, Go, Rust, C#, C++), como excepciones silenciadas, comentarios narrativos repetitivos, aserciones de tipo laxas y stubs incompletos.
 3. **`architecture`** (Peso: 1.0): valida límites entre módulos y detecta dependencias circulares.
 4. **`code-quality`** (Peso: 0.8): localiza código y exportaciones sin uso (mediante Knip), complejidad ciclomática excesiva, anidamiento profundo y límites de parámetros.
 5. **`lint`** (Peso: 0.6): ejecuta análisis estático multilingüe en TypeScript/JavaScript (Oxlint), Python (Ruff), Rust (Clippy), Go, C# (Roslynator, InspectCode), C++ (Clang-Tidy, Cppcheck) y Ruby.

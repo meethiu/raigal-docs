@@ -32,7 +32,7 @@ Raigal detecta patrones defectuosos introducidos por asistentes de programación
 Junto con [Raigal Cloud](https://app.raigal.dev) y la [GitHub App de Raigal](https://github.com/apps/raigal-cloud), evalúa pull requests, gestiona comprobaciones de estado para la protección de ramas, organiza las incidencias en un tablero de remediación y ejecuta reparaciones con agentes de programación.
 
 {% hint style="success" %}
-Los archivos de código fuente completos nunca se suben ni se almacenan en Raigal Cloud. El análisis de AST, la ejecución de linters y el cálculo de complejidad ocurren localmente en su máquina o runner de CI. Al usar `--report-pr`, se envía una vista previa del parche (limitada a 20 KB) con enmascaramiento de credenciales (`maskSecrets`) para inspeccionar cambios en el tablero.
+Los archivos de código fuente completos nunca se suben ni se almacenan en Raigal Cloud. El análisis de AST, la ejecución de linters y el cálculo de complejidad ocurren localmente en su máquina o runner de CI. Durante la evaluación de pull requests en CI, se envía una vista previa del parche (limitada a 20 KB) con enmascaramiento de credenciales (`maskSecrets`) para inspeccionar cambios en el tablero.
 {% endhint %}
 
 ## Qué detecta Raigal

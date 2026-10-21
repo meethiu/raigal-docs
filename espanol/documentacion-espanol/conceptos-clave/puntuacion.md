@@ -99,3 +99,12 @@ La interfaz de Raigal Cloud (`app.raigal.dev`) agrupa los repositorios en cuatro
 | $75 - 89$ | `Good / Healthy` | Verde esmeralda |
 | $50 - 74$ | `Needs Work` | Ámbar / amarillo |
 | $< 50$ | `Critical` | Rojo |
+
+### Veredictos de calidad (3 estados)
+Las puertas de CI y revisiones de PR evalúan las solicitudes en tres estados distintos:
+
+| Veredicto | Criterios | Resultado del Check Run |
+|---|---|---|
+| `PASSED` | Puntuación >= 70 (o `ci.failBelow`), 0 errores, 0 advertencias | `success` (Aprobado sin advertencias) |
+| `PASSED (WITH WARNINGS)` | Puntuación >= 70, 0 errores, advertencias presentes | `neutral` (Paso consultivo, no bloquea el merge) |
+| `FAILED / BLOCKED` | Puntuación < 70, código de salida != 0, o errores presentes | `failure` (Bloquea el merge) |

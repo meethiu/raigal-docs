@@ -110,13 +110,12 @@ jobs:
       - name: Run Raigal Quality Gate
         env:
           RAIGAL_TOKEN: ${{ secrets.RAIGAL_TOKEN }}
-          RAIGAL_API_URL: ${{ secrets.RAIGAL_API_URL || 'https://app.raigal.dev' }}
-          IS_FORK: ${{ github.event.pull_request.head.repo.full_name != github.repository }}
+          # RAIGAL_ORG_ID: ${{ vars.RAIGAL_ORG_ID }} # Required if owner belongs to multiple orgs
         run: |
-          if [ "$IS_FORK" = "true" ]; then
-            npx -y @methiu/raigal@0.2.2 ci --changes --base origin/${{ github.base_ref }} --human
+          if [ "${{ github.event_name }}" = "pull_request" ]; then
+            npx --yes @methiu/raigal@latest ci --changes --base origin/${{ github.base_ref }}
           else
-            npx -y @methiu/raigal@0.2.2 ci --changes --base origin/${{ github.base_ref || 'main' }} --report-pr
+            npx --yes @methiu/raigal@latest ci .
           fi
 ```
 
@@ -135,6 +134,16 @@ Because the GitHub App receives `pull_request.closed` events directly, you do no
 {% endstep %}
 
 {% endstepper %}
+
+## Three-state quality gate verdicts
+
+GitHub Check Runs and pull request cards evaluate results into three clear states:
+
+| Status verdict | Criteria | Check run outcome |
+|---|---|---|
+| **PASSED** | Score >= threshold (default 70), 0 errors, 0 warnings | `success` (Green check) |
+| **PASSED (WITH WARNINGS)** | Score >= threshold (default 70), 0 errors, warnings present | `neutral` (Advisory pass, does not block merge) |
+| **FAILED / BLOCKED** | Score < threshold (default 70), exit code != 0, or errors present | `failure` (Red cross, blocks merge) |
 
 ## Standalone CI mode (without GitHub App)
 
@@ -178,7 +187,7 @@ jobs:
           RAIGAL_TOKEN: ${{ secrets.RAIGAL_TOKEN }}
           RAIGAL_API_URL: ${{ secrets.RAIGAL_API_URL || 'https://app.raigal.dev' }}
         run: |
-          npx -y @methiu/raigal@0.2.2 report-pr-closed \
+          npx -y @methiu/raigal@latest report-pr-closed \
             --pr ${{ github.event.pull_request.number }} \
             ${{ github.event.pull_request.merged && '--merged' || '' }}
 ```

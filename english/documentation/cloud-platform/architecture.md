@@ -66,7 +66,7 @@ Separation between client compute and cloud control plane:
    - Rule IDs (such as `ai-slop/trivial-comment` and `security/eval`)
    - Relative file paths and line coordinates
    - Summary diff metrics (files changed, additions, deletions)
-3. Pull request diff previews: when running with `--report-pr`, a git patch diff preview (capped at 20 KB) is transmitted to display modified lines in the pull request dashboard. Before transmission, this preview passes through `maskSecrets`, which strips authorization headers, access tokens, private keys, and common credential patterns.
+3. Pull request diff previews: during pull request CI evaluations, a git patch diff preview (capped at 20 KB) is transmitted to display modified lines in the pull request dashboard. Before transmission, this preview passes through `maskSecrets`, which strips authorization headers, access tokens, private keys, and common credential patterns.
 
 ## GitHub App integration
 

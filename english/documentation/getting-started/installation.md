@@ -24,7 +24,7 @@ npx @methiu/raigal scan .
 To pin a specific release in CI or local scripts:
 
 ```bash
-npx -y @methiu/raigal@0.2.2 scan .
+npx -y @methiu/raigal@latest scan .
 ```
 
 ## Global installation

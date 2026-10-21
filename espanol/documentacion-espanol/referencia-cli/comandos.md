@@ -58,9 +58,11 @@ raigal ci [opciones] [ruta]
 - `--changes`: valida únicamente los archivos modificados respecto a `--base` (o `HEAD`).
 - `--staged`: valida únicamente archivos en stage.
 - `--base <ref>`: referencia base para el diff de `--changes` (ej: `origin/main`).
-- `--report-pr`: envía el resumen de la ejecución y la vista previa del diff enmascarado al tablero de PRs en Raigal Cloud.
 - `--human`: genera resúmenes legibles en la salida de consola en lugar de JSON.
-- `--sarif-output <archivo>`: exporta el informe SARIF 2.1.0 para anotaciones en GitHub Code Scanning.
+- `--sarif`: emite informe SARIF 2.1.0 por stdout para anotaciones en GitHub Code Scanning (ej: `raigal ci --sarif > resultados.sarif`).
+- `--format <formato>`: formato de salida: `json` (por defecto) o `sarif`.
+
+*(Nota: El reporte al panel de Raigal Cloud se ejecuta automáticamente en entornos CI autenticados mediante OIDC o `RAIGAL_TOKEN`).*
 
 ### `raigal fix`
 
@@ -71,7 +73,7 @@ raigal fix [opciones] [ruta]
 ```
 
 - `--safe`: aplica únicamente cambios deterministas que preservan la semántica (por defecto).
-- `-f, --force, --unsafe`: ejecuta correcciones más amplias, como auditorías de dependencias y limpieza de archivos muertos.
+- `-f, --force`: ejecuta correcciones más amplias, como auditorías de dependencias y limpieza de archivos muertos.
 - `--dry-run`: previsualiza las modificaciones sin escribir en disco.
 - `-p, --prompt`: convierte los problemas no corregibles en un prompt estructurado para su agente de programación.
 - `--changes` / `--staged`: limita las correcciones a archivos modificados o en stage.
