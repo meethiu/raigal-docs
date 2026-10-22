@@ -121,5 +121,23 @@
       "linkedin": "https://www.linkedin.com/company/raigal-dev"
     }
   },
-  "description": "Code quality and AI-generated pattern detection for engineering teams.\nRaigal checks code for patterns introduced by AI coding tools, including verbose comments, unnecessary type assertions, swallowed errors, and insecure calls. It combines formatting, linting, complexity checks, security rules, and pattern detection into one CLI command that returns a calibrated score from 0 to 100."
+  "description": "Code quality and AI-generated pattern detection for engineering teams.",
+  "errors": {
+    "404": {
+      "redirect": true
+    }
+  },
+  "navbar": {
+    "links": [
+      {
+        "href": "https://github.com/apps/raigal-cloud",
+        "label": "GitHub App"
+      }
+    ],
+    "primary": {
+      "type": "button",
+      "label": "Dashboard",
+      "href": "https://app.raigal.dev"
+    }
+  }
 }
