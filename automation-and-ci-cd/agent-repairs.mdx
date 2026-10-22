@@ -74,7 +74,7 @@ When an agent pull request is merged or closed on GitHub, update your board stat
 
 ```yaml
 # .github/workflows/raigal-pr-closed.yml
-name: Raigal PR Lifecycle
+name: Raigal PR lifecycle
 
 on:
   pull_request:
@@ -88,16 +88,14 @@ jobs:
       - uses: actions/setup-node@v4
         with:
           node-version: 22
-      - name: Report PR Closed to Raigal Cloud
+      - name: Report PR closed to Raigal Cloud
         env:
           RAIGAL_TOKEN: ${{ secrets.RAIGAL_TOKEN }}
           RAIGAL_API_URL: ${{ secrets.RAIGAL_API_URL }}
         run: |
-          npx -y @methiu/raigal@latest report-pr-closed --pr `{{ github.event.pull_request.number  `{{ github.event.pull_request.merged && '--merged' || '' }}
+          npx -y @methiu/raigal@latest report-pr-closed --pr ${{ github.event.pull_request.number }} ${{ github.event.pull_request.merged && '--merged' || '' }}
 ```
 
-
 <Info>
-  Opening a pull request with `raigal agent --pr` creates a card in the **Agent Actions** column. When the PR merges, `report-pr-closed` moves the card to **Merged** and records the score change.
+  Opening a pull request with `raigal agent --pr` creates a card in the **Agent Actions** tab. When merged, `report-pr-closed` moves it to **Merged** and records the score delta.
 </Info>
-

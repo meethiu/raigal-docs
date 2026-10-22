@@ -7,17 +7,17 @@ Raigal Cloud (`https://app.raigal.dev`) aggregates scan telemetry from local dev
 
 ```mermaid
 graph LR
-    subgraph Incoming ["Incoming Telemetry"]
+    subgraph Incoming ["Incoming telemetry"]
         Scan[raigal scan]
-        CI[raigal ci - PR Gate]
+        CI[raigal ci - PR gate]
         Agent[raigal agent --pr]
     end
 
-    subgraph Dashboard ["Raigal Cloud Dashboard"]
-        Stage1[1. Errors Tab]
-        Stage2[2. Warnings Tab]
-        Stage3[3. Pull Requests Tab]
-        Stage4[4. Agent Actions Tab]
+    subgraph Dashboard ["Raigal Cloud dashboard"]
+        Stage1[1. Errors tab]
+        Stage2[2. Warnings tab]
+        Stage3[3. Pull requests tab]
+        Stage4[4. Agent actions tab]
     end
 
     Scan --> Stage1
@@ -40,11 +40,9 @@ The top header provides real-time context for the selected project:
 - **Findings count**: Shows total active findings for the selected branch.
 - **Refresh action**: Triggers a manual update from the latest scan telemetry.
 
-
 <Info>
   Scans pushed to your default branch (`main` / `develop`) establish the repository baseline displayed in the **Errors** and **Warnings** tabs. Incremental PR scans are recorded under the **Pull Requests** tab.
 </Info>
-
 
 ### 2. Left sidebar and quick actions
 
@@ -105,7 +103,7 @@ Selecting any finding card opens a detailed slide-over panel:
     <tr>
       <td><strong>Vulnerability drawer</strong></td>
       <td>Rule ID, engine, file path, line number, code snippet, and remediation guidance.</td>
-      <td><code>Copy CLI Fix</code>: copies the deterministic autofix command to clipboard.</td>
+      <td><code>Copy CLI fix</code>: copies the deterministic autofix command to clipboard.</td>
     </tr>
     <tr>
       <td><strong>Pull request drawer</strong></td>

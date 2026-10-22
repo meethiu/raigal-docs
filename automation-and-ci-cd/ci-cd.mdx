@@ -3,7 +3,7 @@ title: "CI/CD pipelines and automated gates"
 description: "Integrate Raigal into GitHub Actions, GitLab CI, and Bitbucket Pipelines."
 ---
 
-Configure Raigal to evaluate pull requests in CI, enforce quality gates, and report live metrics to your remediation dashboard at [app.raigal.dev](https://app.raigal.dev).
+Configure Raigal to evaluate pull requests in CI, enforce quality gates, and report live metrics to your dashboard at [app.raigal.dev](https://app.raigal.dev).
 
 Running `raigal init` automatically detects your repository's CI provider and scaffolds your workflow file without guesswork.
 
@@ -17,7 +17,7 @@ Provide these variables in your CI runner environment:
 | `RAIGAL_ORG_ID` | Conditional | Organization ID (`org_...`), required if repository owner belongs to multiple Raigal organizations | `org_2tQ...` |
 | `RAIGAL_API_URL` | Optional | Custom backend URL (defaults to `https://app.raigal.dev`) | `https://app.raigal.dev` |
 
-*Note: In GitHub Actions jobs configured with `permissions: id-token: write`, static tokens can be omitted because Raigal validates the runner using zero-token cryptographic GitHub OIDC directly. However, configuring `RAIGAL_TOKEN` as a repository secret is recommended for full multi-platform consistency.*
+*Note: In GitHub Actions jobs configured with `permissions: id-token: write`, static tokens can be omitted because Raigal validates the runner using zero-token cryptographic GitHub OIDC directly. Configuring `RAIGAL_TOKEN` as a repository secret is still recommended for multi-platform consistency.*
 
 ## GitHub Actions
 
@@ -26,7 +26,7 @@ Provide these variables in your CI runner environment:
 Create `.github/workflows/raigal.yml` to evaluate pull requests, report results to your dashboard, and optionally generate SARIF annotations:
 
 ```yaml
-name: Raigal Quality Gate
+name: Raigal quality gate
 
 on:
   push:
@@ -41,21 +41,21 @@ permissions:
 
 jobs:
   quality-gate:
-    name: Code Quality & Slop Gate
+    name: Code quality gate
     runs-on: ubuntu-latest
 
     steps:
-      - name: Checkout Code
+      - name: Checkout code
         uses: actions/checkout@v4
         with:
           fetch-depth: 0 # Full git history required for base diff resolution
 
-      - name: Setup Node.js
+      - name: Set up Node.js
         uses: actions/setup-node@v4
         with:
           node-version: 22
 
-      - name: Run Raigal Quality Gate
+      - name: Run Raigal quality gate
         env:
           RAIGAL_TOKEN: ${{ secrets.RAIGAL_TOKEN }}
           # RAIGAL_ORG_ID: ${{ vars.RAIGAL_ORG_ID }} # Required only if account owner is bound to multiple organizations
@@ -67,11 +67,11 @@ jobs:
             npx --yes @methiu/raigal@latest ci .
           fi
 
-      - name: Generate SARIF Security Report (Optional)
+      - name: Generate SARIF security report (optional)
         if: always()
         run: npx --yes @methiu/raigal@latest scan . --sarif > raigal-results.sarif
 
-      - name: Upload SARIF to GitHub Code Scanning (Optional)
+      - name: Upload SARIF to GitHub Code Scanning (optional)
         if: always() && github.event.pull_request.head.repo.full_name == github.repository
         uses: github/codeql-action/upload-sarif@v3
         continue-on-error: true
@@ -80,24 +80,20 @@ jobs:
           category: raigal
 ```
 
-
 <Info>
   Uploading SARIF reports to GitHub Code Scanning on private repositories requires GitHub Advanced Security (GHAS) enabled on your GitHub enterprise account. On public repositories, GitHub Code Scanning is provided at no additional cost by GitHub.
 </Info>
 
-
 ### 2. Pull request close and merge sync
-
 
 <Info>
   If you use the official **Raigal GitHub App**, this step is unnecessary. The app receives `pull_request.closed` webhook events directly from GitHub and updates your remediation board automatically.
 </Info>
 
-
 For standalone CI environments without the GitHub App, synchronize card status when pull requests merge or close:
 
 ```yaml
-name: Raigal PR Lifecycle
+name: Raigal PR lifecycle
 
 on:
   pull_request:
@@ -116,7 +112,7 @@ jobs:
         env:
           RAIGAL_TOKEN: ${{ secrets.RAIGAL_TOKEN }}
         run: |
-          npx --yes @methiu/raigal@latest report-pr-closed --pr `{{ github.event.pull_request.number  `{{ github.event.pull_request.merged && '--merged' || '' }}
+          npx --yes @methiu/raigal@latest report-pr-closed --pr ${{ github.event.pull_request.number }} ${{ github.event.pull_request.merged && '--merged' || '' }}
 ```
 
 ## GitLab CI
@@ -128,13 +124,13 @@ raigal_quality_gate:
   image: node:22
   stage: test
   script:
-    - if [ -n "`CI_MERGE_REQUEST_IID" ]; then npx --yes @methiu/raigal@latest ci --changes --base "`CI_MERGE_REQUEST_DIFF_BASE_SHA"; else npx --yes @methiu/raigal@latest ci .; fi
+    - if [ -n "$CI_MERGE_REQUEST_IID" ]; then npx --yes @methiu/raigal@latest ci --changes --base "$CI_MERGE_REQUEST_DIFF_BASE_SHA"; else npx --yes @methiu/raigal@latest ci .; fi
   variables:
     RAIGAL_TOKEN: $RAIGAL_TOKEN
     # RAIGAL_ORG_ID: $RAIGAL_ORG_ID # Required only if repository owner belongs to multiple Raigal orgs
   rules:
     - if: $CI_PIPELINE_SOURCE == "merge_request_event"
-    - if: `CI_COMMIT_BRANCH == `CI_DEFAULT_BRANCH
+    - if: $CI_COMMIT_BRANCH == $CI_DEFAULT_BRANCH
 ```
 
 Configure `RAIGAL_TOKEN` in GitLab under **Settings > CI/CD > Variables**.

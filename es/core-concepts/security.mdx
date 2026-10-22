@@ -1,17 +1,17 @@
 ---
 title: "Modelo de seguridad y credenciales"
-description: "Modelo de seguridad, almacenamiento de credenciales, variables de entorno, limpieza de secretos y licencias offline."
+description: "Gestión de credenciales, variables de entorno, limpieza de secretos y soporte para entornos sin conexión."
 ---
 
-Raigal almacena credenciales de forma aislada, limpia secretos antes de enviar metricas y admite autenticacion sin claves fijas mediante OIDC de GitHub Actions.
+Raigal guarda las credenciales en local con permisos restringidos, enmascara tokens sensibles antes de enviar telemetría y soporta autenticación sin contraseñas fijas mediante GitHub Actions OIDC.
 
 ## Almacenamiento de credenciales
 
-En equipos locales, las credenciales y licencias se guardan en el directorio del usuario:
+En los puestos de trabajo locales, las credenciales y las licencias temporales se guardan en el directorio del usuario:
 
 - Ruta: `~/.raigal/credentials.json`
 - Permisos: `0600` (lectura y escritura exclusivas para el usuario propietario)
-- Estructura:
+- Estructura del archivo:
   ```json
   {
     "token": "rgl_sess_...",
@@ -21,22 +21,19 @@ En equipos locales, las credenciales y licencias se guardan en el directorio del
   }
   ```
 
-## Configuracion de `RAIGAL_TOKEN` y `RAIGAL_API_URL`
+## Variables de entorno `RAIGAL_TOKEN` y `RAIGAL_API_URL`
 
-En pipelines de CI, contenedores Docker o scripts de automatizacion, configure la autenticacion con variables de entorno:
+En pipelines de CI, contenedores Docker o scripts automatizados, puedes configurar el acceso con variables de entorno:
 
-- `RAIGAL_TOKEN`: token de API de su organizacion (`rgl_live_...`). Tiene prioridad sobre `~/.raigal/credentials.json`.
-- `RAIGAL_ORG_ID`: ID de organizacion (`org_...`), requerido si la cuenta propietaria pertenece a multiples organizaciones de Raigal.
-- `RAIGAL_API_URL`: direccion del backend (por defecto `https://app.raigal.dev`).
-
+- `RAIGAL_TOKEN`: clave de API de la organización (`rgl_live_...`). Tiene prioridad sobre `~/.raigal/credentials.json`.
+- `RAIGAL_ORG_ID`: identificador de la organización (`org_...`), obligatorio si la cuenta de GitHub pertenece a varias organizaciones de Raigal.
+- `RAIGAL_API_URL`: dirección del backend (por defecto `https://app.raigal.dev`).
 
 <Tabs>
-
-
   <Tab title="GitHub Actions">
 
 ```yaml
-- name: Escaneo Raigal
+- name: Run Raigal quality gate
   env:
     RAIGAL_TOKEN: ${{ secrets.RAIGAL_TOKEN }}
     RAIGAL_API_URL: ${{ secrets.RAIGAL_API_URL || 'https://app.raigal.dev' }}
@@ -45,54 +42,49 @@ En pipelines de CI, contenedores Docker o scripts de automatizacion, configure l
 
   </Tab>
 
-
-
   <Tab title="Terminal (macOS/Linux)">
 
 ```bash
-export RAIGAL_TOKEN="rgl_live_su_token_aqui"
+export RAIGAL_TOKEN="rgl_live_tu_token_aqui"
 export RAIGAL_API_URL="https://app.raigal.dev"
 npx @methiu/raigal whoami
 ```
 
   </Tab>
 
-
-
   <Tab title="Windows PowerShell">
 
 ```powershell
-$env:RAIGAL_TOKEN="rgl_live_su_token_aqui"
+$env:RAIGAL_TOKEN="rgl_live_tu_token_aqui"
 $env:RAIGAL_API_URL="https://app.raigal.dev"
 npx @methiu/raigal whoami
 ```
 
   </Tab>
-
-
 </Tabs>
 
+## Limpieza de secretos y privacidad de datos
 
-## Limpieza de secretos y gestion de datos
+Antes de enviar telemetría o resúmenes de PR a Raigal Cloud:
+1. **Ejecución 100% en local**: El análisis de código (AST, linters y reglas) se ejecuta dentro de tu máquina o del runner de CI. Tu código fuente completo nunca se sube ni se guarda en los servidores de Raigal.
+2. **Enmascaramiento de secretos (`maskSecrets`)**: Cadenas de alta entropía, claves privadas, tokens Bearer y cadenas de conexión a bases de datos se reemplazan automáticamente por `[REDACTED_SECRET]`.
+3. **Vistas previas de diff en pull requests**: Durante las comprobaciones en CI, se envía una vista previa del parche git (limitada a 20 KB) con los secretos ya enmascarados para mostrar el diff en el panel web. Nunca se envían archivos completos.
+4. **Reparaciones con agentes (`raigal agent`)**: Las sesiones de reparación corren en worktrees locales aislados y se comunican directamente con el proveedor de IA configurado (Claude Code, Cursor u OpenCode).
 
-Antes de enviar telemetria o resumenes al panel:
-1. **Ejecucion en proceso**: El codigo fuente completo nunca se sube ni se almacena en los servidores de Raigal Cloud. El analisis de AST, linters y reglas ocurre integramente en su maquina o runner local.
-2. **Enmascaramiento de credenciales (`maskSecrets`)**: Cadenas de alta entropia, claves de API, cadenas de conexion a bases de datos y tokens se eliminan y reemplazan por `[REDACTED_SECRET]`.
-3. **Vistas previas de diff en pull requests**: Durante la evaluacion de PRs en CI, se envia una vista previa del parche git (limitada a 20 KB) con secretos enmascarados para visualizar los cambios en el tablero. No se envian archivos completos.
-4. **Reparaciones con agentes (`raigal agent`)**: Las sesiones de reparacion se ejecutan en worktrees locales aislados y se comunican directamente con el proveedor de LLM configurado por el usuario (Claude Code, Cursor u OpenCode).
+## Autenticación OIDC en GitHub Actions
 
-## Autenticacion OIDC en GitHub Actions
+Para ejecutar flujos en GitHub Actions sin necesidad de guardar secretos fijos en el repositorio:
 
-Para ejecutar flujos en GitHub Actions sin almacenar secretos fijos:
+1. Añade `permissions: id-token: write` al trabajo del flujo.
+2. El runner de GitHub solicita un token OIDC firmado criptográficamente.
+3. Raigal envía ese token en la cabecera `X-GitHub-OIDC` a `/v1/runs`.
+4. Raigal Cloud valida la firma contra `https://token.actions.githubusercontent.com` y comprueba que el repositorio pertenece a tu organización.
 
-1. Añada `permissions: id-token: write` al trabajo del flujo.
-2. El runner de GitHub genera un token OIDC firmado criptograficamente.
-3. Raigal envia dicho token en la cabecera `X-GitHub-OIDC` a `/v1/runs`.
-4. Raigal Cloud valida la firma criptografica con `https://token.actions.githubusercontent.com` y comprueba que el propietario del repositorio pertenece a su organizacion.
+## Funcionamiento sin conexión y entornos aislados (air-gap)
 
-## Tolerancia sin conexion y entornos aislados (Air-Gap)
+Raigal no realiza llamadas de red por cada archivo analizado:
 
-Raigal no realiza consultas de red por cada archivo analizado y admite dos niveles de trabajo desconectado:
-
-1. **Licencia temporal fuera de linea (72 horas)**: Al iniciar sesion con `raigal login` o definir `RAIGAL_TOKEN`, el servidor firma una concesion temporal mediante Ed25519. El CLI valida la firma sin conexion utilizando la clave publica incrustada en el binario. La concesion se guarda en `~/.raigal/entitlement.json` y permite trabajar durante 72 horas sin conexion.
-2. **Licencia estatica para redes aisladas (1 a 3 años)**: Para instalaciones completamente desconectadas o runners de CI en VPCs sin acceso a internet, Raigal proporciona tokens de licencia estaticos (con validez de 1 a 3 años) validados localmente por la clave publica del binario sin requerir conexion a servidores externos. Tambien es posible desplegar el plano de control en infraestructura propia.
+1. **SaaS tolerante a desconexiones (licencia de 72 horas)**: Al hacer `raigal login` o configurar `RAIGAL_TOKEN`, Raigal Cloud emite una licencia temporal firmada con Ed25519. La CLI verifica esta firma en local con una clave pública incrustada en el binario, permitiendo escaneos sin conexión durante 72 horas.
+2. **Entornos completamente aislados (banca, defensa, VPCs privadas)**:
+   - **Raigal Cloud autohospedado**: Despliega el contenedor oficial en tu propia VPC sin salida a internet.
+   - **Licencia estática sin conexión**: Clave JWT con firma estática válida de 1 a 3 años, validada en local por la clave pública del binario sin realizar ninguna llamada exterior.

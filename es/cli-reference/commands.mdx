@@ -1,87 +1,87 @@
 ---
-title: "Comandos y opciones del CLI"
-description: "Referencia de comandos y opciones de la interfaz de linea de comandos de Raigal."
+title: "Comandos y opciones de la CLI"
+description: "Referencia completa de comandos y opciones de la interfaz de línea de comandos de Raigal."
 ---
 
-Raigal incluye comandos para analisis locales, correcciones automaticas, sesiones de reparacion con agentes y validacion en CI.
+Raigal incluye comandos para análisis locales, correcciones automáticas, sesiones de reparación con agentes y validación en CI.
 
-## Indice de comandos
+## Índice de comandos
 
-| Comando | Accion |
+| Comando | Acción |
 |---|---|
-| `raigal [dir]` | Menu interactivo en terminal o escaneo predeterminado |
-| `raigal scan [dir]` | Ejecuta el escaneo de calidad y devuelve la puntuacion |
-| `raigal fix [dir]` | Aplica correcciones automaticas deterministas o crea prompts para agentes |
-| `raigal ci [dir]` | Puerta de calidad con codigos de salida por umbral en CI/CD |
-| `raigal agent [dir]` | Sesiones de reparacion en worktrees aislados (Claude, Cursor, OpenCode) |
-| `raigal hook` | Gestiona hooks en tiempo real para agentes de IA |
-| `raigal report-pr-closed` | Sincroniza el ciclo de vida (cierre/fusion) de Pull Requests con Raigal Cloud |
-| `raigal telemetry` | Inspecciona el payload enviado al panel cloud y el estado de la cola de salida |
-| `raigal login` | Inicio de sesion interactivo via navegador OAuth o token API |
-| `raigal logout` | Elimina credenciales locales y concesiones offline en cache |
-| `raigal whoami` | Muestra credenciales activas, usuario, organizacion, estado de prueba/licencia y repositorios |
-| `raigal doctor` | Comprueba binarios del sistema, herramientas y motores |
-| `raigal rules` | Muestra el catalogo de reglas y pesos de puntuacion |
-| `raigal init` | Crea el archivo de configuracion y flujo opcional para CI |
-| `raigal mcp` | Ejecuta el servidor Model Context Protocol (MCP) mediante stdio |
+| `raigal [dir]` | Menú interactivo en terminal o escaneo predeterminado |
+| `raigal scan [dir]` | Ejecuta el escaneo de calidad y devuelve la puntuación |
+| `raigal fix [dir]` | Aplica correcciones automáticas seguras o genera prompts para agentes |
+| `raigal ci [dir]` | Control de calidad con códigos de salida en CI/CD |
+| `raigal agent [dir]` | Sesiones de reparación en worktrees aislados (Claude, Cursor, OpenCode) |
+| `raigal hook` | Gestiona hooks en tiempo real para asistentes de código |
+| `raigal report-pr-closed` | Notifica el cierre o fusión de pull requests a Raigal Cloud |
+| `raigal telemetry` | Inspecciona el paquete enviado al panel web y la cola de salida |
+| `raigal login` | Inicio de sesión mediante navegador OAuth o token de API |
+| `raigal logout` | Limpia credenciales locales y licencias sin conexión en caché |
+| `raigal whoami` | Muestra usuario, organización, estado del plan y repositorios autorizados |
+| `raigal doctor` | Comprueba las herramientas instaladas, linters y motores del sistema |
+| `raigal rules` | Muestra el catálogo de reglas y pesos de puntuación |
+| `raigal init` | Crea el archivo de configuración y el flujo de CI |
+| `raigal mcp` | Ejecuta el servidor Model Context Protocol (MCP) por stdio |
 
 ## Referencia de comandos
 
 ### `raigal scan`
 
-Evalua el directorio indicado y muestra el desglose de calidad.
+Analiza el directorio indicado y muestra el desglose de calidad y nota.
 
 ```bash
 raigal scan [opciones] [ruta]
 ```
 
 Opciones:
-- `--changes`: analiza unicamente los archivos modificados respecto a git `HEAD`.
-- `--staged`: analiza unicamente los archivos en el stage de git (ideal para pre-commit).
-- `--base <ref>`: compara el diff contra una referencia especifica (ej: `origin/main`).
-- `-d, --verbose`: muestra el desglose detallado de archivos por cada regla.
-- `--json`: emite el arbol completo de diagnosticos en formato JSON.
-- `--sarif`: genera diagnosticos en estandar OASIS SARIF 2.1.0.
-- `--exclude <patrones>`: lista de rutas separadas por comas o repetidas a excluir.
-- `--include <patrones>`: lista de rutas separadas por comas o repetidas a incluir.
-- `--fail-on <nivel>`: finaliza con codigo de salida 1 segun el nivel: `none`, `error` o `warning`.
+- `--changes`: analiza únicamente los archivos modificados respecto a git `HEAD`.
+- `--staged`: analiza únicamente los archivos preparados en git stage (ideal para pre-commit).
+- `--base <ref>`: compara contra una rama o referencia específica (ejemplo: `origin/main`).
+- `-d, --verbose`: muestra el desglose de archivos y líneas por regla.
+- `--json`: devuelve el árbol completo de diagnósticos en JSON.
+- `--sarif`: genera un informe en formato estándar OASIS SARIF 2.1.0.
+- `--exclude <patrones>`: lista de rutas a ignorar separadas por coma o repetidas.
+- `--include <patrones>`: lista de rutas a incluir expresamente.
+- `--fail-on <nivel>`: devuelve código 1 según la gravedad mínima: `none`, `error` o `warning`.
 
 ### `raigal ci`
 
-Ejecuta el control de calidad en entornos de CI y devuelve codigo de salida 1 si no se superan los requisitos.
+Ejecuta el control de calidad en runners de CI y devuelve código de salida 1 si no se cumplen los requisitos.
 
 ```bash
 raigal ci [opciones] [ruta]
 ```
 
-- Devuelve codigo de salida 1 si se detecta cualquier aviso de nivel `error` o si la puntuacion global es inferior a `ci.failBelow` (por defecto: 70).
-- `--changes`: valida unicamente los archivos modificados respecto a `--base` (o `HEAD`).
-- `--staged`: valida unicamente archivos en stage.
-- `--base <ref>`: referencia base para el diff de `--changes` (ej: `origin/main`).
-- `--human`: genera resumenes legibles en la salida de consola en lugar de JSON.
-- `--sarif`: emite informe SARIF 2.1.0 por stdout para anotaciones en GitHub Code Scanning (ej: `raigal ci --sarif > resultados.sarif`).
+- Devuelve código de salida 1 si se detecta cualquier `error` o si la puntuación es menor que `ci.failBelow` (por defecto: 70).
+- `--changes`: evalúa únicamente los archivos modificados respecto a `--base` (o `HEAD`).
+- `--staged`: evalúa únicamente los archivos en stage.
+- `--base <ref>`: referencia base para calcular el diff de `--changes` (ejemplo: `origin/main`).
+- `--human`: muestra un resumen legible en la consola de CI en lugar de JSON crudo.
+- `--sarif`: emite informe SARIF 2.1.0 por stdout para anotaciones en GitHub Code Scanning (ejemplo: `raigal ci --sarif > resultados.sarif`).
 - `--format <formato>`: formato de salida: `json` (por defecto) o `sarif`.
 
-*(Nota: El reporte al panel de Raigal Cloud se ejecuta automaticamente en entornos CI autenticados mediante OIDC o `RAIGAL_TOKEN`).*
+*(La sincronización con Raigal Cloud ocurre automáticamente en CI al estar autenticado con OIDC o `RAIGAL_TOKEN`).*
 
 ### `raigal fix`
 
-Aplica correcciones automaticas para formateo, importaciones no utilizadas y comentarios narrativos.
+Aplica correcciones automáticas para formato, importaciones no utilizadas y comentarios obvios.
 
 ```bash
 raigal fix [opciones] [ruta]
 ```
 
-- `--safe`: aplica unicamente cambios deterministas que preservan la semantica (por defecto).
-- `-f, --force`: ejecuta correcciones mas amplias, como auditorias de dependencias y limpieza de archivos muertos.
-- `--dry-run`: previsualiza las modificaciones sin escribir en disco.
-- `-p, --prompt`: convierte los problemas no corregibles en un prompt estructurado para su agente de programacion.
+- `--safe`: aplica únicamente cambios deterministas que no alteran el comportamiento del código (por defecto).
+- `-f, --force`: ejecuta correcciones más amplias, como actualización de dependencias y limpieza profunda.
+- `--dry-run`: previsualiza qué cambiaría sin tocar los archivos en disco.
+- `-p, --prompt`: convierte los problemas no corregibles automáticamente en un prompt para tu asistente de código.
 - `--changes` / `--staged`: limita las correcciones a archivos modificados o en stage.
-- `--base <ref>`: referencia base para `--changes`.
+- `--base <ref>`: referencia base para calcular los cambios.
 
 ### `raigal agent`
 
-Ejecuta sesiones de reparacion con herramientas de IA locales en un git worktree aislado.
+Inicia sesiones de reparación automática con herramientas de IA locales en un git worktree aislado.
 
 ```bash
 raigal agent [opciones] [ruta]
@@ -89,78 +89,78 @@ raigal agent [opciones] [ruta]
 
 Opciones principales:
 - `--provider <proveedor>`: proveedor a invocar (`auto`, `codex`, `claude`, `opencode`).
-- `--target <n>`: umbral de puntuacion objetivo a alcanzar (por defecto: 90).
-- `--max-turns <n>`: numero maximo de turnos del agente por intento de reparacion (por defecto: 5).
-- `--max-cost <usd>`: tope presupuestario en dolares que detiene la sesion si el consumo de tokens supera el limite.
-- `--limit <n>`: numero maximo de hallazgos entregados al agente (por defecto: 8).
-- `--in-place`: edita directamente en el arbol de trabajo actual en lugar de aislar en worktree.
-- `--apply`: aplica los cambios aceptados a la rama original al finalizar.
-- `-y, --yes`: omite confirmaciones interactivas para `--apply`.
-- `--dry-run`: muestra el proveedor seleccionado y el plan de ejecucion sin realizar cambios.
-- `--background`: inicia la ejecucion del agente en segundo plano y retorna de inmediato.
-- `--no-fix`: omite los arreglos automaticos seguros antes de invocar al agente.
-- `--commit`: genera un commit con los cambios verificados en una rama de reparacion.
+- `--target <n>`: nota mínima objetivo a alcanzar (por defecto: 90).
+- `--max-turns <n>`: número máximo de turnos del agente por intento (por defecto: 5).
+- `--max-cost <usd>`: tope de gasto en dólares que interrumpe la sesión si el consumo de tokens supera el límite.
+- `--limit <n>`: número máximo de incidencias que se envían al agente (por defecto: 8).
+- `--in-place`: modifica directamente el árbol de trabajo actual en lugar de crear un worktree aislado.
+- `--apply`: aplica los cambios aceptados a tu rama actual al terminar.
+- `-y, --yes`: omite preguntas de confirmación al usar `--apply`.
+- `--dry-run`: muestra el plan de ejecución y el proveedor seleccionado sin aplicar cambios.
+- `--background`: arranca el agente en segundo plano y devuelve el control al terminal de inmediato.
+- `--no-fix`: omite los arreglos automáticos seguros previos antes de llamar al agente.
+- `--commit`: crea un commit con los cambios verificados en una rama de reparación.
 - `--pr`: publica la rama y abre un pull request en GitHub.
 - `--branch <nombre>`: nombre de la rama para `--commit` o `--pr`.
-- `--base <rama>`: rama base de destino para `--pr`.
-- `--title <titulo>`: titulo del pull request para `--pr`.
-- `--commit-message <mensaje>`: mensaje de commit.
-- `--ready`: abre un pull request listo para revision en lugar de un borrador.
-- `--cleanup`: elimina el worktree generado aunque quede algun cambio pendiente.
+- `--base <rama>`: rama base de destino para el pull request.
+- `--title <titulo>`: título del pull request.
+- `--commit-message <mensaje>`: mensaje del commit.
+- `--ready`: abre el pull request como listo para revisión en lugar de borrador (draft).
+- `--cleanup`: elimina el worktree temporal incluso si quedan cambios sin guardar.
 
 Subcomandos:
-- `raigal agent plan [dir]`: previsualiza proveedor, worktree, hallazgos y acciones sin editar archivos.
-- `raigal agent connect [proveedor]`: conecta con un proveedor local mediante su propia autenticacion CLI.
-- `raigal agent providers`: lista proveedores detectados localmente y su estado.
-- `raigal agent use [proveedor]`: define o muestra el proveedor por defecto para este repositorio.
-- `raigal agent sessions [dir]`: lista sesiones de reparacion activas y anteriores.
-- `raigal agent show <session-id>`: inspecciona diff y metadatos de una sesion en particular.
-- `raigal agent apply <session-id>`: fusiona los cambios de una sesion en su rama de trabajo.
-- `raigal agent monitor [dir]`: supervisa cambios en git y realiza auditorias en segundo plano (use `--auto-fix` para permitir ediciones).
+- `raigal agent plan [dir]`: previsualiza proveedor, worktree y acciones sin modificar archivos.
+- `raigal agent connect [proveedor]`: conecta con un proveedor local mediante su propia sesión de terminal.
+- `raigal agent providers`: lista los proveedores de agentes detectados en el sistema y su estado.
+- `raigal agent use [proveedor]`: define o consulta el proveedor predeterminado para este proyecto.
+- `raigal agent sessions [dir]`: lista las sesiones de reparación activas y anteriores.
+- `raigal agent show <session-id>`: muestra los cambios y diagnósticos de una sesión concreta.
+- `raigal agent apply <session-id>`: fusiona los cambios de una sesión en tu rama de trabajo.
+- `raigal agent monitor [dir]`: vigila cambios en git y analiza el código en segundo plano (añade `--auto-fix` para permitir ediciones automáticas).
 
 ### `raigal hook`
 
-Gestiona hooks de intercepcion para Claude Code, Cursor, Gemini CLI y otras herramientas.
+Gestiona hooks en tiempo real para Claude Code, Cursor, Gemini CLI y otras herramientas.
 
 ```bash
 raigal hook <subcomando>
 ```
 
 Subcomandos:
-- `raigal hook install [agentes...]`: instala hooks de intercepcion (ej: `raigal hook install --claude`).
-- `raigal hook status`: inspecciona hooks registrados y la integridad de los centinelas SHA-256.
-- `raigal hook baseline`: guarda una instantanea de los hallazgos actuales en `.raigal/baseline.json`.
-- `raigal hook uninstall [agentes...]`: elimina hooks de forma segura preservando la configuracion del editor.
+- `raigal hook install [agentes...]`: instala los hooks de intercepción (ejemplo: `raigal hook install --claude`).
+- `raigal hook status`: comprueba los hooks instalados y la integridad de los centinelas SHA-256.
+- `raigal hook baseline`: captura la deuda técnica actual en `.raigal/baseline.json`.
+- `raigal hook uninstall [agentes...]`: desinstala los hooks limpiamente sin alterar la configuración del editor.
 
 ### `raigal report-pr-closed`
 
-Notifica el cierre o fusion de un pull request a Raigal Cloud para actualizar el tablero de remediacion.
+Notifica el cierre o fusión de un pull request a Raigal Cloud para actualizar el tablero de seguimiento.
 
 ```bash
 raigal report-pr-closed [--pr <numero>] [--merged]
 ```
 
-- `--pr <numero>`: numero del pull request (obtenido automaticamente de `GITHUB_EVENT_PATH` en GitHub Actions).
-- `--merged`: indica si el pull request se fusiono en la rama base.
+- `--pr <numero>`: número del pull request (se lee automáticamente de `GITHUB_EVENT_PATH` en GitHub Actions).
+- `--merged`: indica si el pull request se fusionó en la rama base.
 
 ### `raigal login` y `raigal logout`
 
-Gestionan las credenciales de Raigal Cloud y la autenticacion mediante licencias fuera de linea.
+Gestionan las credenciales de Raigal Cloud y las licencias temporales sin conexión.
 
 ```bash
-# Inicio de sesion interactivo via navegador OAuth
+# Inicio de sesión interactivo con navegador
 raigal login
 
-# Inicio de sesion automatizado via token recibido en stdin
+# Inicio de sesión pasando el token por stdin
 echo "rgl_live_..." | raigal login --with-token
 
-# Limpiar credenciales locales y cache offline
+# Cerrar sesión y limpiar credenciales locales
 raigal logout
 ```
 
 ### `raigal whoami`
 
-Muestra el usuario autenticado, organizacion, estado de prueba o licencia y repositorios de GitHub con acceso autorizado.
+Muestra el usuario autenticado, organización activa, estado de la prueba o licencia y repositorios de GitHub con acceso autorizado.
 
 ```bash
 raigal whoami
@@ -168,7 +168,7 @@ raigal whoami
 
 ### `raigal doctor`
 
-Verifica el entorno del sistema, formateadores, linters y binarios de agentes de programacion.
+Verifica las dependencias del sistema, formateadores, linters y ejecutables de asistentes de código.
 
 ```bash
 raigal doctor
@@ -176,7 +176,7 @@ raigal doctor
 
 ### `raigal rules`
 
-Muestra el catalogo de reglas registradas, niveles de severidad, disponibilidad de correccion automatica y niveles de impacto.
+Muestra el catálogo completo de reglas, severidades, disponibilidad de corrección automática y niveles de impacto.
 
 ```bash
 raigal rules

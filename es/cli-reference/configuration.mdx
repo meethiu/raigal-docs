@@ -1,37 +1,37 @@
 ---
 title: "Configuración"
-description: "Configuración de motores, umbrales de puntuación y rutas en .raigal/config.yml."
+description: "Referencia de .raigal/config.yml, anulación de reglas y validación de esquema."
 ---
 
-Raigal lee las preferencias de su proyecto del archivo `.raigal/config.yml` en la raíz del repositorio. El archivo sigue un esquema estricto validado mediante Zod; cualquier propiedad no reconocida o mal escrita produce un error de validación inmediato.
+Raigal lee las preferencias de tu proyecto desde `.raigal/config.yml` en la raíz del repositorio. El archivo sigue un esquema estricto validado con Zod; cualquier propiedad no reconocida o mal escrita produce un error inmediato de validación.
 
 ## Ejemplo completo de configuración
 
-A continuación se muestra un archivo `.raigal/config.yml` completo con el esquema válido:
+A continuación tienes un archivo `.raigal/config.yml` completo con todos los campos válidos:
 
 ```yaml
 version: 1
 
-# Supported engines
+# Motores de análisis
 engines:
   format: true          # Biome, Ruff, Gofmt, Cargo fmt, etc.
   lint: true            # Oxlint, Ruff, Clippy, Golangci-lint, Roslynator, etc.
-  code-quality: true    # Knip unused exports, dead code, complexity
-  ai-slop: true         # 26+ AI anti-pattern detection rules
-  architecture: false   # Dependency & boundary rules
-  security: true        # Secrets, prompt injections, unsafe deserialization
+  code-quality: true    # Exportaciones sin uso (Knip), código muerto, complejidad
+  ai-slop: true         # Más de 26 reglas contra patrones defectuosos de IA
+  architecture: false   # Reglas de límites de dependencias y módulos
+  security: true        # Secretos, inyecciones de prompt y llamadas inseguras
 
-# Quality and complexity limits
+# Límites de calidad y complejidad
 quality:
   maxFunctionLoc: 80
   maxFileLoc: 400
   maxNesting: 5
   maxParams: 6
 
-# Engine-specific lint settings
+# Opciones de linter por lenguaje
 lint:
-  typecheck: false      # Bundled tsc compiler diagnostics (slow in CI)
-  expoDoctor: false     # Expo React Native project hygiene checks
+  typecheck: false      # Diagnósticos de TypeScript con tsc (más lento en CI)
+  expoDoctor: false     # Comprobaciones de salud para proyectos Expo React Native
   csharp:
     projectEvaluation: false
     jb: true            # JetBrains InspectCode
@@ -42,12 +42,12 @@ lint:
     clangTidy: true
     cppcheckEnable: "warning,performance,portability"
 
-# CI gate configuration
+# Control de calidad en CI
 ci:
-  failBelow: 75         # Minimum passing score (defaults to 70 in standard config)
+  failBelow: 75         # Nota mínima para aprobar (por defecto 70)
   format: "json"
 
-# Score calculation tuning
+# Calibración del cálculo de notas
 scoring:
   thresholds:
     good: 75
@@ -55,28 +55,28 @@ scoring:
   smoothing: 5
   maxPerRule: 40
 
-# Baseline regression protection
+# Protección contra regresiones sobre la línea base
 baseline:
-  mode: strict          # "strict" (disables Stage 3 absorption) or "relaxed"
+  mode: strict          # "strict" o "relaxed"
 
-# Enterprise licensing lapse behavior
+# Comportamiento si expira la licencia
 licensing:
-  onLapse: "fail-closed" # "fail-closed" (exits 2 in CI) or "fail-open"
+  onLapse: "fail-closed" # "fail-closed" (código 2 en CI) o "fail-open"
 
-# Monorepo policy governance
+# Políticas para monorrepositorios
 workspace:
-  minimumFloor: 75      # Prevents child package configs from setting failBelow < 75
+  minimumFloor: 75      # Impide que subpaquetes fijen failBelow por debajo de 75
 
-# Outbound telemetry controls
+# Control de telemetría saliente
 telemetry:
-  enabled: true         # Set to false to disable all outbound telemetry queueing
+  enabled: true         # Fija false para desactivar la cola de telemetría
 
-# Rule severity overrides
+# Anulación de gravedad de reglas
 rules:
   ai-slop/trivial-comment: "off"
   ai-slop/unsafe-type-assertion: "error"
 
-# Path exclusions (NOT "ignore")
+# Rutas excluidas
 exclude:
   - "node_modules"
   - ".git"
@@ -86,39 +86,39 @@ exclude:
 include: []
 ```
 
-## Ubicación de archivos y prioridad
+## Ubicación de archivos y orden de prioridad
 
 Raigal busca el archivo de configuración recorriendo directorios hacia arriba hasta la raíz del repositorio:
 1. `.raigal/config.yml` o `.raigal/config.yaml`
 2. `.raigal/config.json`
-3. Archivos en raíz: `.raigal.yml`, `.raigal.yaml` o `.raigal.json`
-4. Directorios heredados de compatibilidad (`.aislop/config.yml`)
+3. Archivos en la raíz: `.raigal.yml`, `.raigal.yaml` o `.raigal.json`
+4. Rutas heredadas de compatibilidad (`.aislop/config.yml`)
 
 ## Referencia de opciones
 
 ### `engines`
 
-Habilita o deshabilita motores de análisis individuales:
+Activa o desactiva motores de análisis individuales:
 
 - `format` (booleano, por defecto: `true`): espacios en blanco, sangrado, ajuste de líneas y orden de importaciones.
-- `lint` (booleano, por defecto: `true`): reglas de análisis estático con Oxlint, Ruff, Clippy y herramientas del lenguaje.
-- `code-quality` (booleano, por defecto: `true`): exportaciones sin uso (Knip), código muerto y límites de complejidad. La clave es `code-quality`.
-- `ai-slop` (booleano, por defecto: `true`): reglas que detectan patrones defectuosos de IA, comentarios triviales y wrappers redundantes. La clave es `ai-slop`.
+- `lint` (booleano, por defecto: `true`): reglas de linters con Oxlint, Ruff, Clippy y herramientas nativas.
+- `code-quality` (booleano, por defecto: `true`): exportaciones sin uso (Knip), código muerto y límites de complejidad.
+- `ai-slop` (booleano, por defecto: `true`): reglas contra malos patrones generados por IA, comentarios obvios y funciones wrapper redundantes.
 - `architecture` (booleano, por defecto: `false`): límites arquitectónicos e importaciones cruzadas entre capas.
 - `security` (booleano, por defecto: `true`): secretos expuestos, inyecciones de código y llamadas a funciones peligrosas.
 
 ### `quality`
 
-Define límites estructurales evaluados por el motor `code-quality`:
+Define los límites estructurales evaluados por el motor `code-quality`:
 
-- `maxFunctionLoc` (numérico, por defecto: `80`): máximo de líneas físicas permitidas por función.
-- `maxFileLoc` (numérico, por defecto: `400`): máximo de líneas físicas permitidas por archivo.
-- `maxNesting` (numérico, por defecto: `5`): profundidad máxima de bloques de control anidados.
-- `maxParams` (numérico, por defecto: `6`): número máximo de parámetros permitidos por función.
+- `maxFunctionLoc` (número, por defecto: `80`): máximo de líneas físicas permitidas por función.
+- `maxFileLoc` (número, por defecto: `400`): máximo de líneas físicas permitidas por archivo.
+- `maxNesting` (número, por defecto: `5`): profundidad máxima de bloques anidados.
+- `maxParams` (número, por defecto: `6`): número máximo de parámetros permitidos por función.
 
 ### `lint`
 
-Configura herramientas de compilación y diagnóstico específicas del lenguaje:
+Configura herramientas de compilación y diagnóstico específicas por lenguaje:
 
 - `typecheck` (booleano, por defecto: `false`): ejecuta diagnósticos del compilador de TypeScript (`tsc`).
 - `expoDoctor` (booleano, por defecto: `false`): ejecuta comprobaciones de higiene en proyectos Expo React Native.
@@ -127,43 +127,43 @@ Configura herramientas de compilación y diagnóstico específicas del lenguaje:
 
 ### `ci`
 
-Configura el comportamiento del control de calidad en integración continua:
+Configura las comprobaciones en integración continua:
 
-- `failBelow` (numérico, por defecto: `70`): puntuación mínima para aprobar la comprobación. Si la puntuación es inferior a este valor o se detecta algún aviso de nivel `error`, `raigal ci` devuelve código de salida 1.
+- `failBelow` (número, por defecto: `70`): nota mínima para dar el paso por bueno. Si la nota es inferior o hay algún `error`, `raigal ci` devuelve código de salida 1.
 - `format` (`"json"`, por defecto: `"json"`): formato de salida en ejecuciones de CI.
 
 ### `baseline`
 
 Configura la comparación de regresiones contra `.raigal/baseline.json`:
 
-- `mode` (`"strict"` | `"relaxed"`, por defecto: `"relaxed"`): en modo `"strict"`, se desactiva la absorción de Stage 3 a nivel de archivo. Cualquier incidencia fuera de la ventana de 11 líneas se considera una regresión bloqueante.
+- `mode` (`"strict"` | `"relaxed"`, por defecto: `"relaxed"`): en modo `"strict"`, se desactiva la tolerancia de Stage 3 a nivel de archivo. Cualquier incidencia fuera de la ventana de 11 líneas se considera una regresión bloqueante.
 
 ### `licensing`
 
-Define el comportamiento en CI si vence la concesión de licencia:
+Define cómo actuar en CI si vence la licencia:
 
-- `onLapse` (`"fail-open"` | `"fail-closed"`, por defecto: `"fail-open"`): en modo `"fail-closed"`, el CI finaliza con código de salida 2 si no se puede validar la concesión tras expirar el periodo de gracia.
+- `onLapse` (`"fail-open"` | `"fail-closed"`, por defecto: `"fail-open"`): en modo `"fail-closed"`, el CI finaliza con código de salida 2 si no se puede validar la licencia tras el periodo de gracia.
 
 ### `workspace`
 
-Aplica estándares mínimos organizacionales en monorrepositorios:
+Aplica estándares mínimos en monorrepositorios:
 
-- `minimumFloor` (numérico, por defecto: `50`): establece un suelo estricto para `ci.failBelow` que las configuraciones de subpaquetes no pueden reducir.
+- `minimumFloor` (número, por defecto: `50`): suelo mínimo para `ci.failBelow` que las configuraciones de paquetes hijos no pueden rebajar.
 
 ### `scoring`
 
-Permite calibrar los parámetros del motor de puntuación:
+Calibra los parámetros del cálculo de notas:
 
-- `thresholds`: objeto que define las fronteras de estado en el CLI.
-  - `good` (numérico, por defecto: `75`): puntuación a partir de la cual el estado se etiqueta como `Healthy`.
-  - `ok` (numérico, por defecto: `50`): puntuación a partir de la cual se etiqueta como `Needs Work`. Por debajo se considera `Critical`.
-- `smoothing` (numérico, por defecto: `5`): constante de suavizado sumada al recuento de archivos para evitar caídas bruscas en repositorios pequeños.
-- `maxPerRule` (numérico, por defecto: `40`): límite base de deducción para cualquier regla antes de aplicar el multiplicador de escala del proyecto.
-- `weights`: ponderaciones personalizadas por categoría (por defecto: `security: 1.5`, `ai-slop: 1.0`, `architecture: 1.0`, `code-quality: 0.8`, `lint: 0.6`, `format: 0.3`).
+- `thresholds`: límites de estado en la CLI.
+  - `good` (número, por defecto: `75`): nota a partir de la cual el estado es `Healthy`.
+  - `ok` (número, por defecto: `50`): nota a partir de la cual el estado es `Needs Work`. Por debajo se considera `Critical`.
+- `smoothing` (número, por defecto: `5`): constante sumada al recuento de archivos para evitar caídas bruscas en repositorios pequeños.
+- `maxPerRule` (número, por defecto: `40`): límite base de deducción para cualquier regla antes de escalar por tamaño de repositorio.
+- `weights`: pesos personalizados por categoría (por defecto: `security: 1.5`, `ai-slop: 1.0`, `architecture: 1.0`, `code-quality: 0.8`, `lint: 0.6`, `format: 0.3`).
 
 ### `rules`
 
-Mapa de identificadores de reglas a modificaciones de severidad:
+Diccionario de reglas para cambiar su gravedad o desactivarlas:
 
 ```yaml
 rules:
@@ -171,18 +171,18 @@ rules:
   ai-slop/unsafe-type-assertion: "error"
 ```
 
-Los valores válidos de severidad son `"error"`, `"warning"` y `"off"`.
+Los valores válidos son `"error"`, `"warning"` y `"off"`.
 
 ### `exclude` e `include`
 
-Define el ámbito de archivos analizados en el sistema:
+Define qué carpetas y archivos analiza Raigal:
 
-- `exclude` (lista de cadenas): rutas y directorios que se omiten. Por defecto: `["node_modules", ".git", "dist", "build", "coverage"]`.
-- `include` (lista de cadenas): rutas explícitas a analizar. Cuando está vacía (`[]`), se analizan todos los archivos compatibles no excluidos.
+- `exclude` (lista de cadenas): rutas y directorios ignorados. Por defecto: `["node_modules", ".git", "dist", "build", "coverage"]`.
+- `include` (lista de cadenas): rutas explícitas a analizar. Si está vacía (`[]`), se analizan todos los archivos compatibles no excluidos.
 
 ### `overrides`
 
-Aplica límites de calidad o severidades específicas a patrones de archivos determinados:
+Aplica límites o severidades diferentes según patrones de archivos:
 
 ```yaml
 overrides:
@@ -195,11 +195,11 @@ overrides:
 
 ### `telemetry`
 
-Controla el envío de métricas anónimas a Raigal Cloud:
+Controla el envío de métricas a Raigal Cloud:
 
 ```yaml
 telemetry:
   enabled: true
 ```
 
-Establezca en `false` para desactivar el envío de telemetría saliente.
+Fija `false` para desactivar el envío de telemetría.

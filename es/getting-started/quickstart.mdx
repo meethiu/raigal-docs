@@ -1,63 +1,55 @@
 ---
-title: "Inicio rapido"
-description: "Autentiquese, inicialice su configuracion, ejecute un primer analisis y aplique correcciones automaticas en pocos minutos."
+title: "Inicio rápido"
+description: "Inicia sesión, genera la configuración, lanza un escaneo y aplica arreglos automáticos en pocos minutos."
 ---
 
-Evalúe un repositorio y revise su puntuacion de salud de codigo en cuatro sencillos pasos.
-
+Evalúa la salud de tu código y obtén una puntuación en cuatro pasos.
 
 <Steps>
+  <Step title="1. Inicia sesión en tu organización">
 
-
-  <Step title="1. Autenticarse con su organizacion">
-
-Inicie sesion para vincular su terminal local con su organizacion de Raigal:
+Conecta tu terminal local con Raigal Cloud:
 
 ```bash
 npx @methiu/raigal login
 ```
 
-Esto abrira su navegador para autorizar su equipo. Si trabaja en un entorno sin navegador, contenedor o runner de CI, exporte su clave de API de la organizacion:
+Esto abrirá el navegador para autorizar tu equipo. Si trabajas en un servidor sin entorno gráfico, contenedor Docker o runner de CI, exporta tu token directamente:
 
 ```bash
-export RAIGAL_TOKEN="rgl_live_su_token_aqui"
+export RAIGAL_TOKEN="rgl_live_tu_token_aqui"
 ```
 
-
 <Info>
-  Las nuevas organizaciones en [app.raigal.dev](https://app.raigal.dev) comienzan con un periodo de evaluacion completo de 14 dias con acceso a los seis motores de diagnostico.
+  Las organizaciones nuevas en [app.raigal.dev](https://app.raigal.dev) cuentan con 14 días de prueba con acceso total a los seis motores de análisis.
 </Info>
 
 </Step>
 
+  <Step title="2. Inicializa la configuración del proyecto">
 
-
-  <Step title="2. Inicializar la configuracion del proyecto">
-
-Cree una configuracion adaptada a su repositorio:
+Genera los archivos de configuración adaptados a tu repositorio:
 
 ```bash
 npx @methiu/raigal init
 ```
 
-El asistente interactivo examina las dependencias de su proyecto y genera automaticamente:
-- `.raigal/config.yml`: umbrales de puntuacion calibrados, activacion de motores y exclusiones de archivos.
-- `.raigal/rules.yml`: ajustes de severidad personalizados y reglas de arquitectura.
-- Plantilla de flujo de CI para GitHub Actions, GitLab CI o Bitbucket Pipelines.
+El asistente detecta tus dependencias y crea automáticamente:
+- `.raigal/config.yml`: umbrales de puntuación, motores activos y archivos excluidos.
+- `.raigal/rules.yml`: severidades personalizadas y reglas de arquitectura.
+- Plantilla de CI para GitHub Actions, GitLab CI o Bitbucket Pipelines.
 
 </Step>
 
+  <Step title="3. Ejecuta tu primer análisis">
 
-
-  <Step title="3. Ejecutar el primer analisis">
-
-Ejecute el comando de escaneo en la raiz de su repositorio:
+Lanza el escaneo desde la raíz del proyecto:
 
 ```bash
 npx @methiu/raigal scan .
 ```
 
-Raigal ejecuta los seis motores de diagnostico en paralelo (formato, linting, calidad de codigo, patrones de IA, arquitectura y seguridad) y muestra su puntuacion numerica (0-100):
+Raigal ejecuta en paralelo los motores de formato, linters, calidad, patrones de IA, arquitectura y seguridad, devolviendo una nota de 0 a 100:
 
 ```text
    94 / 100  Healthy       0 errors  ·  1 warning  ·  1 fixable
@@ -68,7 +60,7 @@ Raigal ejecuta los seis motores de diagnostico en paralelo (formato, linting, ca
    1  console.log leftover    ai-slop/console-leftover   warn [auto]
 ```
 
-Para ver el desglose detallado de archivos y lineas afectadas, incluya la opcion `-d` (verbose):
+Para ver la lista exacta de archivos y líneas afectadas, añade `-d`:
 
 ```bash
 npx @methiu/raigal scan . -d
@@ -76,26 +68,21 @@ npx @methiu/raigal scan . -d
 
 </Step>
 
+  <Step title="4. Aplica correcciones automáticas">
 
-
-  <Step title="4. Aplicar correcciones automaticas">
-
-Aplique correcciones seguras y deterministas para formato, importaciones no utilizadas y comentarios triviales:
+Corrige de forma segura problemas de formato, importaciones sin usar y comentarios redundantes:
 
 ```bash
 npx @methiu/raigal fix .
 ```
 
-Para previsualizar las modificaciones sin escribir en el disco, utilice `--dry-run`:
+Si prefieres ver qué cambiaría antes de tocar los archivos, usa `--dry-run`:
 
 ```bash
 npx @methiu/raigal fix . --dry-run
 ```
 
-Para incidencias estructurales que requieran refactorizacion semantica (como excepciones silenciadas o aserciones de tipos complejas), ejecute `npx @methiu/raigal agent .` para iniciar una sesion de reparacion aislada con Claude Code, Cursor u OpenCode.
+Para problemas complejos que requieran refactorización (como excepciones silenciadas o conversiones de tipo inseguras), ejecuta `npx @methiu/raigal agent .` para abrir una sesión de reparación aislada con Claude Code, Cursor u OpenCode.
 
 </Step>
-
-
 </Steps>
-

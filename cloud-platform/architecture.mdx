@@ -9,43 +9,43 @@ Raigal Cloud (`https://app.raigal.dev`) is the web application and coordination 
 
 ```mermaid
 graph TD
-    subgraph ClientCompute ["Client Compute Environments"]
-        Dev["Local Workstation: raigal scan / fix"]
-        Agent["Autonomous Agent: raigal agent --pr"]
-        CI["GitHub Actions / CI Runners"]
+    subgraph ClientCompute ["Client compute environments"]
+        Dev["Local workstation: raigal scan / fix"]
+        Agent["Autonomous agent: raigal agent --pr"]
+        CI["GitHub Actions / CI runners"]
     end
 
     subgraph GitHubCloud ["GitHub Cloud"]
         GHApp["Official GitHub App (raigal-cloud)"]
-        GHChecks["GitHub Checks API & Status"]
+        GHChecks["GitHub Checks API & status"]
     end
 
-    subgraph ControlPlane ["Raigal Cloud Control Plane (app.raigal.dev)"]
-        Gateway["REST API Gateway (HTTPS / TLS 1.3)"]
-        Auth["Clerk Identity & GitHub Organization Sync"]
-        OIDC["Zero-Token GitHub Actions OIDC Verifier"]
-        CheckManager["Check Run & Status Orchestrator"]
-        LeaseSigner["Ed25519 Cryptographic Lease Signer"]
-        Store[("Encrypted Multi-Tenant Metadata Store")]
+    subgraph ControlPlane ["Raigal Cloud control plane (app.raigal.dev)"]
+        Gateway["REST API gateway (HTTPS / TLS 1.3)"]
+        Auth["Clerk identity & GitHub organization sync"]
+        OIDC["Zero-token GitHub Actions OIDC verifier"]
+        CheckManager["Check run & status orchestrator"]
+        LeaseSigner["Ed25519 cryptographic lease signer"]
+        Store[("Encrypted multi-tenant metadata store")]
     end
 
-    subgraph CustomerUI ["Customer Management UI"]
-        Board["4-Stage Remediation Kanban"]
-        Drawers["Contextual Inspection Drawers"]
-        Telemetry["Execution History & Diff Audits"]
-        Settings["Token & Repository Governance"]
+    subgraph CustomerUI ["Customer management UI"]
+        Board["4-stage remediation kanban"]
+        Drawers["Contextual inspection drawers"]
+        Telemetry["Execution history & diff audits"]
+        Settings["Token & repository governance"]
     end
 
-    Dev -- "raigal login (OAuth Device Flow)" --> Auth
-    Dev -- "POST /v1/runs (Metadata & Score)" --> Gateway
-    Agent -- "raigal agent --pr (PR & Diff Stats)" --> Gateway
+    Dev -- "raigal login (OAuth device flow)" --> Auth
+    Dev -- "POST /v1/runs (metadata & score)" --> Gateway
+    Agent -- "raigal agent --pr (PR & diff stats)" --> Gateway
     CI -- "X-GitHub-OIDC or RAIGAL_TOKEN" --> Gateway
-    GHApp -- "Webhook (PR & Installation Events)" --> Gateway
+    GHApp -- "Webhook (PR & installation events)" --> Gateway
 
     Gateway --> Store
     Gateway --> LeaseSigner
     Gateway --> CheckManager
-    CheckManager -- "Create / Resolve Checks" --> GHChecks
+    CheckManager -- "Create / resolve checks" --> GHChecks
 
     Store --> Board
     Store --> Drawers
@@ -98,5 +98,6 @@ Raigal supports disconnected operation across two tiers:
 ## Repository management
 
 Administrators manage repository data in **Settings** > **Repositories**:
-- Tokens are hashed with SHA-256 before storage; raw tokens are never written to the database.
-- Deleting a repository cascades through the database, permanently removing associated historical runs, pull request cards, and findings.
+- View all synchronized repositories and active branches.
+- Adjust quality policy baselines per repository.
+- Regenerate or revoke CI access tokens.

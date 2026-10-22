@@ -1,97 +1,86 @@
 ---
-title: "Puerta de calidad en pull requests y tablero"
-description: "Comprobaciones en pull requests, integracion con GitHub App, proteccion de ramas y seguimiento en el tablero."
+title: "Control de calidad en pull requests y seguimiento en el panel"
+description: "Comprobaciones en pull requests, integración con GitHub App, protección de ramas y seguimiento en el tablero."
 ---
 
-Configure Raigal para evaluar pull requests en GitHub, aplicar proteccion de ramas y supervisar el estado de revision en el tablero de remediacion en [app.raigal.dev](https://app.raigal.dev).
+Configura Raigal para evaluar pull requests en GitHub, aplicar protección de ramas y supervisar el estado de cada cambio en el panel web de [app.raigal.dev](https://app.raigal.dev).
 
 ## Arquitectura: GitHub App y Actions
 
-Raigal combina la GitHub App oficial (`raigal-cloud`) con los flujos de trabajo de GitHub Actions:
+Raigal combina la GitHub App oficial (`raigal-cloud`) con tus flujos de trabajo de GitHub Actions:
 
 ```text
 ┌───────────────────────────────┐        ┌───────────────────────────────┐
 │     Repositorio de GitHub     │        │       Raigal Cloud            │
 │                               │        │                               │
-│  El desarrollador abre un PR  │───────►│ 1. GitHub App recibe evento   │
+│  Un desarrollador abre un PR  │───────►│ 1. GitHub App recibe evento   │
 │  (Head SHA: 3b2a1c...)        │        │    (pull_request.opened)      │
 │                               │        │                               │
 │  El runner de Actions inicia  │        │                               │
 │  (ejecuta npx raigal ci)      │        │                               │
 │          │                    │        │                               │
 │          ▼ (POST /v1/runs)    │        │ 2. Crea check pendiente       │
-│   Ingesta de metricas y SHA   │───────►│    "Raigal Quality Gate"      │
+│   Ingesta de métricas y SHA   │───────►│    "Raigal Quality Gate"      │
 │                               │        │                               │
 │                               │        ▼                               │
-│                               │◄─────── Resuelve el check run          │
-│                               │         (Exito / Fallo + Resumen)      │
+│                               │◄─────── Actualiza el check run         │
+│                               │         (Éxito / Fallo + Resumen)      │
 │                               │        │                               │
-│  Proteccion de rama aplicada  │        │                               │
+│  Protección de ramas aplicada │        │                               │
 │  Tarjeta actualizada en vivo  │        │                               │
 └───────────────────────────────┘        └───────────────────────────────┘
 ```
 
 Funcionamiento de este modelo:
-- **Analisis AST en local**: La evaluacion de reglas se ejecuta integramente en el runner de CI. Raigal Cloud no clona ni almacena su codigo fuente.
-- **Comprobacion pendiente inmediata**: Al abrir o actualizar un PR, la aplicacion registra un check `"Raigal Quality Gate"` en estado `in_progress` en el commit correspondiente.
-- **Resolucion del check run**: Cuando el runner envia los resultados a `/v1/runs`, Raigal Cloud empareja el commit SHA y publica un informe markdown completo.
-- **Proteccion de ramas nativa**: La comprobacion `"Raigal Quality Gate"` puede marcarse como obligatoria en las reglas de proteccion de ramas de GitHub.
-- **Actualizacion automatica al fusionar o cerrar**: GitHub envia los eventos directamente a la app, actualizando el tablero sin scripts adicionales.
-- **Tiempo limite de seguridad**: Si un trabajo de CI se cancela o falla antes de ejecutar `raigal ci`, Raigal Cloud limpia automaticamente los checks pendientes tras 20 minutos para no bloquear pull requests indefinidamente.
+- **Análisis de código en local**: La evaluación de reglas se ejecuta íntegramente en el runner de CI. Raigal Cloud no clona ni almacena tu código.
+- **Comprobación pendiente de inmediato**: Al abrir o actualizar un PR, la app registra una comprobación `"Raigal Quality Gate"` en estado `in_progress` en el commit correspondiente.
+- **Actualización con resumen**: Cuando el runner envía los resultados a `/v1/runs`, Raigal Cloud empareja el commit SHA y publica un informe markdown completo.
+- **Protección de ramas**: Puedes marcar `"Raigal Quality Gate"` como requisito obligatorio en las reglas de ramas de GitHub.
+- **Actualización automática al fusionar o cerrar**: GitHub envía los eventos directamente a la app, actualizando el tablero sin scripts adicionales.
+- **Tiempo límite de seguridad**: Si un trabajo de CI se cancela o falla antes de ejecutar `raigal ci`, Raigal Cloud limpia automáticamente las comprobaciones pendientes tras 20 minutos para no bloquear pull requests.
 
-## Configuracion: GitHub App y Actions
-
+## Configuración: GitHub App y Actions
 
 <Steps>
+  <Step title="1. Instala la GitHub App de Raigal">
 
-
-
-  <Step title="1. Instalar la GitHub App oficial">
-
-1. Abra la [GitHub App oficial de Raigal](https://github.com/apps/raigal-cloud).
-2. Pulse **Install**.
-3. Elija su organizacion o cuenta personal de GitHub.
-4. Seleccione todos los repositorios o elija especificamente los que desea proteger.
-5. Confirme con **Install & Authorize**.
+1. Abre la [GitHub App oficial de Raigal](https://github.com/apps/raigal-cloud).
+2. Pulsa en **Install**.
+3. Elige tu organización o cuenta personal de GitHub.
+4. Selecciona todos los repositorios o los que quieras proteger.
+5. Confirma con **Install & authorize**.
 
   </Step>
 
+  <Step title="2. Obtén el token de la organización">
 
-
-  <Step title="2. Obtener el token de la organizacion">
-
-1. Inicie sesion en su panel en [app.raigal.dev](https://app.raigal.dev).
-2. Abra **Settings**.
-3. En **API Tokens**, pulse **Create New Token**.
-4. Asigne un nombre al token (ej: `ci-runner`) y copie la clave generada (`rgl_live_...`).
+1. Entra en tu panel en [app.raigal.dev](https://app.raigal.dev).
+2. Abre **Settings**.
+3. En **API Tokens**, pulsa en **Create new token**.
+4. Asigna un nombre al token (por ejemplo: `ci-runner`) y copia la clave generada (`rgl_live_...`).
 
   </Step>
 
+  <Step title="3. Guarda el secreto en el repositorio">
 
-
-  <Step title="3. Guardar el secreto en el repositorio">
-
-1. En su repositorio de GitHub, vaya a **Settings** > **Secrets and variables** > **Actions**.
-2. Pulse **New repository secret**.
+1. En tu repositorio de GitHub, ve a **Settings** > **Secrets and variables** > **Actions**.
+2. Pulsa en **New repository secret**.
 3. Nombre: `RAIGAL_TOKEN`.
-4. Valor: pegue la clave `rgl_live_...`.
-5. Guarde con **Add secret**.
-
+4. Valor: pega la clave `rgl_live_...`.
+5. Guarda con **Add secret**.
 
 <Info>
-  Si no desea gestionar claves estaticas, configure `permissions: id-token: write` en su flujo. Raigal Cloud autenticara al runner mediante OIDC criptografico de GitHub.
+  Si no deseas gestionar claves estáticas, configura `permissions: id-token: write` en tu flujo. Raigal Cloud autenticará al runner mediante OIDC criptográfico de GitHub.
 </Info>
 
   </Step>
 
+  <Step title="4. Añade el flujo de GitHub Actions">
 
-
-  <Step title="4. Añadir el flujo de GitHub Actions">
-
-Cree el archivo `.github/workflows/raigal.yml` en su repositorio:
+Crea el archivo `.github/workflows/raigal.yml` en tu repositorio:
 
 ```yaml
-name: Puerta de Calidad Raigal
+name: Raigal quality gate
 
 on:
   pull_request:
@@ -102,7 +91,7 @@ on:
 
 jobs:
   quality-gate:
-    name: Code Quality & Slop Gate
+    name: Code quality gate
     runs-on: ubuntu-latest
     permissions:
       contents: read
@@ -110,7 +99,7 @@ jobs:
       pull-requests: write
 
     steps:
-      - name: Descargar Codigo
+      - name: Descargar código
         uses: actions/checkout@v4
         with:
           fetch-depth: 0 # Historial completo necesario para diffs
@@ -120,7 +109,7 @@ jobs:
         with:
           node-version: 22
 
-      - name: Ejecutar Puerta de Calidad Raigal
+      - name: Ejecutar control de calidad
         env:
           RAIGAL_TOKEN: ${{ secrets.RAIGAL_TOKEN }}
           # RAIGAL_ORG_ID: ${{ vars.RAIGAL_ORG_ID }} # Requerido solo si el propietario pertenece a varias organizaciones
@@ -133,71 +122,55 @@ jobs:
           fi
 ```
 
-
 <Info>
-  Al recibir los webhooks de cierre directamente a traves de la GitHub App, no se requieren flujos adicionales para reportar cuando un PR se cierra o se fusiona.
+  Como la GitHub App recibe los eventos de cierre directamente, no necesitas ningún flujo extra para notificar a Raigal cuando se cierra un PR.
 </Info>
 
   </Step>
 
+  <Step title="5. Activa el estado obligatorio en la protección de ramas">
 
-
-  <Step title="5. Exigir la comprobacion en la proteccion de ramas">
-
-1. En GitHub, abra **Settings** > **Branches** (o **Rules > Rulesets**).
-2. En las reglas de proteccion, edite la regla para su rama principal (`main`).
-3. Marque **Require status checks to pass before merging**.
-4. Busque y seleccione **Raigal Quality Gate**.
-5. Guarde los cambios.
+1. En tu repositorio de GitHub, entra en **Settings** > **Branches** (o **Rules > Rulesets**).
+2. En las reglas de tu rama principal (`main`), activa **Require status checks to pass before merging**.
+3. Busca y marca **Raigal Quality Gate**.
+4. Guarda los cambios.
 
   </Step>
-
-
-
 </Steps>
 
+## Veredictos del control de calidad (3 estados)
 
-## Veredictos de calidad en tres estados
+Las comprobaciones en pull requests devuelven tres estados claros:
 
-Los Check Runs de GitHub y las tarjetas de pull request evaluan los resultados en tres estados claros:
-
-| Veredicto de estado | Criterios | Resultado del Check Run |
+| Veredicto de estado | Criterio | Resultado en GitHub |
 |---|---|---|
-| **PASSED** | Puntuacion >= umbral (por defecto 70), 0 errores, 0 advertencias | `success` (Marca verde) |
-| **PASSED (WITH WARNINGS)** | Puntuacion >= umbral (por defecto 70), 0 errores, advertencias presentes | `neutral` (Aprobado con avisos, no bloquea el merge) |
-| **FAILED / BLOCKED** | Puntuacion < umbral (por defecto 70), codigo de salida != 0, o errores presentes | `failure` (Cruz roja, bloquea el merge) |
+| **PASSED** | Nota >= umbral (por defecto 70), 0 errores, 0 advertencias | `success` (Aprobado limpio) |
+| **PASSED (WITH WARNINGS)** | Nota >= umbral (por defecto 70), 0 errores, advertencias presentes | `neutral` (Aprobado informativo, no bloquea el merge) |
+| **FAILED / BLOCKED** | Nota < umbral (por defecto 70), código distinto de 0 o errores presentes | `failure` (Bloquea la fusión) |
 
 ## Modo CI independiente (sin GitHub App)
 
-Si las politicas de seguridad de su empresa impiden instalar GitHub Apps, puede usar Raigal unicamente con GitHub Actions:
-
+Si las políticas de tu empresa impiden instalar aplicaciones de GitHub de terceros, puedes usar Raigal únicamente con GitHub Actions:
 
 <Steps>
+  <Step title="1. Configura el secreto">
 
-
-
-  <Step title="1. Configurar secreto">
-
-En GitHub **Settings** > **Secrets and variables** > **Actions**, añada `RAIGAL_TOKEN`.
+En **Settings** > **Secrets and variables** > **Actions**, añade `RAIGAL_TOKEN`.
 
   </Step>
 
+  <Step title="2. Añade el flujo de trabajo">
 
-
-  <Step title="2. Añadir flujo de CI">
-
-Añada `.github/workflows/raigal.yml` con el contenido anterior. En modo autonomo, el control se reflejara como un estado de trabajo normal en GitHub Actions.
+Crea `.github/workflows/raigal.yml` con el archivo YAML anterior. En modo independiente, el resultado se notifica como un paso habitual de Actions.
 
   </Step>
 
+  <Step title="3. Añade la sincronización de cierre (opcional)">
 
-
-  <Step title="3. Sincronizar cierre de PRs (opcional)">
-
-Para actualizar el tablero al cerrar o fusionar PRs sin la app, añada este flujo complementario:
+Para actualizar el tablero al cerrar ramas sin la GitHub App, añade este flujo:
 
 ```yaml
-name: Sincronizacion Ciclo de Vida PR
+name: Sincronización de PRs
 
 on:
   pull_request:
@@ -205,7 +178,7 @@ on:
 
 jobs:
   sync-pr-closed:
-    name: Sync Closed PR Status
+    name: Sincronizar estado de PR cerrada
     runs-on: ubuntu-latest
     steps:
       - uses: actions/checkout@v4
@@ -213,7 +186,7 @@ jobs:
         with:
           node-version: 22
 
-      - name: Notificar Cierre a Raigal Cloud
+      - name: Notificar cierre a Raigal Cloud
         env:
           RAIGAL_TOKEN: ${{ secrets.RAIGAL_TOKEN }}
           RAIGAL_API_URL: ${{ secrets.RAIGAL_API_URL || 'https://app.raigal.dev' }}
@@ -224,33 +197,29 @@ jobs:
 ```
 
   </Step>
-
-
-
 </Steps>
 
+## Seguimiento de PRs en el panel web
 
-## Seguimiento de PRs en el tablero
-
-En [Raigal Cloud](https://app.raigal.dev), abra el tablero de su repositorio:
+En [Raigal Cloud](https://app.raigal.dev), abre el panel de tu proyecto:
 
 1. **Columna de pull requests**:
-   - Aprobado: muestra la puntuacion (ej: `94/100`), autor, rama de origen y rama de destino.
-   - Bloqueado: muestra el recuento de infracciones bloqueantes y categorias con alertas.
-2. **Panel lateral de inspeccion**:
-   - Pulse cualquier tarjeta para desplegar el panel de detalles.
-   - Revise los hallazgos bloqueantes con identificador de regla, ruta y linea.
-   - Compruebe las estadisticas de cambios y la vista previa del diff unificado.
-   - Copie el comando `git checkout` para revisar la rama localmente o pulse **Open on GitHub** para abrir el PR.
+   - Aprobados: muestra la nota obtenida (por ejemplo: `94/100`), autor, rama origen y rama destino.
+   - Bloqueados: muestra el número de problemas críticos y categorías de reglas que han fallado.
+2. **Panel de inspección lateral**:
+   - Pulsa sobre una tarjeta para abrir su vista detallada.
+   - Revisa las reglas incumplidas, archivos y líneas exactas.
+   - Revisa las estadísticas del diff y la previsualización del parche unificado.
+   - Copia el comando `git checkout` para revisar los cambios en local o pulsa **Open on GitHub** para ir directo al pull request.
 
-## Resolucion de incidencias
+## Resolución de incidencias
 
-| Sintoma | Causa probable | Solucion concreta |
+| Síntoma | Causa probable | Solución |
 |---|---|---|
-| `ambiguous_organization` (HTTP 400) | La cuenta propietaria del repositorio pertenece a multiples organizaciones de Raigal | En su flujo de CI, defina `RAIGAL_ORG_ID: ${{ vars.RAIGAL_ORG_ID }}` con el ID de su organizacion (`org_...`) desde [Settings](https://app.raigal.dev/settings). |
-| La comprobacion permanece pendiente | El flujo de CI no se ejecuto o fallo antes de `raigal ci` | Compruebe que el flujo finalizo correctamente para el commit `head_sha`. Raigal Cloud descarta comprobaciones huerfanas tras 20 minutos. |
-| No aparece el check run en el PR | La GitHub App no esta instalada en el repositorio | Compruebe que la [GitHub App raigal-cloud](https://github.com/apps/raigal-cloud) esta conectada a la cuenta u organizacion del repositorio. |
-| Error HTTP 401 o token invalido en CI | Clave `RAIGAL_TOKEN` ausente o no valida | Verifique que `RAIGAL_TOKEN` este configurado en los secretos del repositorio y coincida con un token activo en [Configuracion](https://app.raigal.dev/settings). |
-| Error HTTP 403 `owner_not_allowed` en CI | El propietario del repositorio no figura en la lista permitida | Vaya a **Configuracion > Propietarios Permitidos** en Raigal Cloud y pulse **Sincronizar GitHub**. |
-| La vista previa del diff muestra 0 archivos cambiados | Checkout superficial (`fetch-depth: 1`) | Añada `fetch-depth: 0` al paso `actions/checkout@v4` para disponer del historial git completo respecto a la rama base. |
-| La tarjeta del PR no se actualiza al fusionar | Modo autonomo sin flujo de sincronizacion | Si no utiliza la GitHub App, añada el flujo de sincronizacion con `report-pr-closed`. |
+| `ambiguous_organization` (HTTP 400) | La cuenta propietaria del repositorio pertenece a varias organizaciones | En el flujo de CI, añade `RAIGAL_ORG_ID: ${{ vars.RAIGAL_ORG_ID }}` con tu ID de organización (`org_...`) de [Settings](https://app.raigal.dev/settings). |
+| La comprobación se queda en estado pendiente | El flujo de CI no se ejecutó o falló antes de lanzar `raigal ci` | Comprueba que el trabajo de Actions se ejecutó para el commit head. Raigal Cloud descarta comprobaciones pendientes huérfanas tras 20 minutos. |
+| La comprobación no aparece en el PR | La GitHub App no está instalada en el repositorio | Comprueba que la [GitHub App raigal-cloud](https://github.com/apps/raigal-cloud) esté instalada en la cuenta u organización correspondiente. |
+| Error HTTP 401 Unauthorized en CI | Falta el secreto `RAIGAL_TOKEN` o ha expirado | Comprueba que `RAIGAL_TOKEN` esté guardado en los secretos de GitHub y coincida con un token activo de [Settings](https://app.raigal.dev/settings). |
+| Error HTTP 403 `owner_not_allowed` en CI | El propietario del repositorio no está vinculado en Raigal | Ve a **Settings > Allowed Owners** en Raigal Cloud y pulsa **Sync GitHub**. |
+| La vista previa del diff muestra 0 archivos | Clonado superficial (`fetch-depth: 1`) | Añade `fetch-depth: 0` en `actions/checkout@v4` para disponer del historial git completo. |
+| La tarjeta del PR no se actualiza al fusionar | Modo independiente sin flujo de sincronización | Si trabajas sin la GitHub App, añade el flujo de trabajo `report-pr-closed`. |

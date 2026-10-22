@@ -1,53 +1,45 @@
 ---
 title: "Quickstart"
-description: "Authenticate, initialize your configuration, run an initial scan, and apply automated fixes in minutes."
+description: "Authenticate, configure, scan, and apply automated fixes in minutes."
 ---
 
-Evaluate a repository and review your code health score in four simple steps.
-
+Evaluate a repository and review your code health score in four steps.
 
 <Steps>
-
-
   <Step title="1. Authenticate with your organization">
 
-Log in to connect your local terminal session with your Raigal organization:
+Log in to connect your local terminal with Raigal Cloud:
 
 ```bash
 npx @methiu/raigal login
 ```
 
-This opens your browser to authorize your machine. If you are running in a headless environment, container, or CI runner, export your organization API key instead:
+This opens your browser to approve the session. For headless environments, containers, or CI runners, export your API key instead:
 
 ```bash
 export RAIGAL_TOKEN="rgl_live_your_token_here"
 ```
 
-
 <Info>
-  New organizations on [app.raigal.dev](https://app.raigal.dev) start with a full 14-day evaluation trial with access to all six diagnostic engines.
+  New organizations at [app.raigal.dev](https://app.raigal.dev) include a 14-day evaluation trial with access to all six analysis engines.
 </Info>
 
 </Step>
 
-
-
   <Step title="2. Initialize project configuration">
 
-Create a tailored configuration for your repository:
+Generate a configuration tailored to your repository:
 
 ```bash
 npx @methiu/raigal init
 ```
 
-The interactive wizard inspects your project dependencies and automatically creates:
-- `.raigal/config.yml`: calibrated score thresholds, engine toggles, and file exclusions.
+The wizard inspects your dependencies and creates:
+- `.raigal/config.yml`: score thresholds, engine toggles, and file exclusions.
 - `.raigal/rules.yml`: custom severity overrides and architecture rules.
-- CI workflow template for GitHub Actions, GitLab CI, or Bitbucket Pipelines.
+- A CI workflow template for GitHub Actions, GitLab CI, or Bitbucket Pipelines.
 
 </Step>
-
-
 
   <Step title="3. Run your first scan">
 
@@ -57,7 +49,7 @@ Run the scan command from your repository root:
 npx @methiu/raigal scan .
 ```
 
-Raigal executes all six diagnostic engines in parallel (formatting, linting, code quality, AI patterns, architecture, and security) and displays your numeric score (0-100):
+Raigal runs formatting, linting, code quality, AI pattern, architecture, and security checks in parallel and returns a score from 0 to 100:
 
 ```text
    94 / 100  Healthy       0 errors  ·  1 warning  ·  1 fixable
@@ -68,7 +60,7 @@ Raigal executes all six diagnostic engines in parallel (formatting, linting, cod
    1  console.log leftover    ai-slop/console-leftover   warn [auto]
 ```
 
-To view individual file locations and line numbers, pass the `-d` (verbose) flag:
+To see individual file locations and line numbers, add `-d`:
 
 ```bash
 npx @methiu/raigal scan . -d
@@ -76,17 +68,15 @@ npx @methiu/raigal scan . -d
 
 </Step>
 
-
-
   <Step title="4. Apply automated fixes">
 
-Apply safe, deterministic fixes for formatting, unused imports, and trivial comments:
+Apply safe fixes for formatting, unused imports, and trivial comments:
 
 ```bash
 npx @methiu/raigal fix .
 ```
 
-To review proposed changes before modifying any files, use `--dry-run`:
+To preview changes before writing them to disk, pass `--dry-run`:
 
 ```bash
 npx @methiu/raigal fix . --dry-run
@@ -95,7 +85,4 @@ npx @methiu/raigal fix . --dry-run
 For structural issues that require generative refactoring (such as swallowed exceptions or complex type assertions), run `npx @methiu/raigal agent .` to launch an isolated repair session with Claude Code, Cursor, or OpenCode.
 
 </Step>
-
-
 </Steps>
-

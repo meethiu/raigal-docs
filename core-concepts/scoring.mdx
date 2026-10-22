@@ -1,5 +1,5 @@
 ---
-title: "Scoring Engine"
+title: "Scoring engine"
 description: "Calibrated 0-100 quality score, density normalization, and status bands."
 ---
 
@@ -10,15 +10,15 @@ Raigal assigns each repository a calibrated quality score between 0 and 100. The
 Raigal evaluates findings across six diagnostic engines using density-normalized logarithmic scaling:
 
 ```text
-Deduction Density = (Sum of Capped Deductions) / (Effective Source Files + S)
+Deduction density = (Sum of capped deductions) / (Effective source files + S)
 ```
 
 ```text
-Score = max(0, round(100 - (100 * ln(1 + 5 * Deduction Density)) / ln(101 + 5 * Deduction Density)))
+Score = max(0, round(100 - (100 * ln(1 + 5 * Deduction density)) / ln(101 + 5 * Deduction density)))
 ```
 
 Where:
-* **Smoothing constant (`S`)**: Defaults to `5` in configuration (internal fallback `10`). Prevents a single warning on a small two-file project from collapsing the score.
+* **Smoothing constant (`S`)**: Defaults to `5` in configuration (internal fallback `10`). Prevents a single warning on a small project from collapsing the score.
 * **Density scale**: Multiplier of `5.0` applied to deduction density.
 * **Effective source files**: Count of non-excluded source and test files in the workspace (or modified files during incremental PR scans).
 
@@ -27,7 +27,7 @@ Where:
 Each diagnostic finding generates a raw penalty based on its severity and parent engine:
 
 ```text
-Raw Deduction = Severity Multiplier * Engine Weight * Tier Multiplier
+Raw deduction = Severity multiplier * Engine weight * Tier multiplier
 ```
 
 ### Severity multipliers
@@ -60,11 +60,11 @@ To ensure widespread style issues (such as 500 missing trailing commas) do not d
 The effective cap scales with repository size:
 
 ```text
-Cap Scale = max(1, Effective Source Files / 10)
+Cap scale = max(1, Effective source files / 10)
 ```
 
 ```text
-Effective Cap = min(maxPerRule, Tier Cap) * Cap Scale
+Effective cap = min(maxPerRule, Tier cap) * Cap scale
 ```
 
 ## Worked examples
@@ -75,7 +75,7 @@ Effective Cap = min(maxPerRule, Tier Cap) * Cap Scale
 ```text
 Deduction = 1.0
 Density = 1.0 / (10 + 5) = 1.0 / 15 ≈ 0.0667
-Scaled Density = 0.0667 * 5.0 = 0.3333
+Scaled density = 0.0667 * 5.0 = 0.3333
 Score = 100 - (100 * ln(1.3333) / ln(101.3333)) ≈ 100 - 6.23 = 94 (Healthy)
 ```
 
@@ -83,18 +83,18 @@ Score = 100 - (100 * ln(1.3333) / ln(101.3333)) ≈ 100 - 6.23 = 94 (Healthy)
 * **Findings**: 500 missing trailing commas (`format/trailing-comma`, `info` `0.25`, engine `0.3`, tier *style* `0.5`, cap `8`).
 * **Calculation**:
 ```text
-Raw Deductions = 500 * 0.25 * 0.3 * 0.5 = 18.75
-Cap Scale = 200 / 10 = 20
-Effective Cap = 8 * 20 = 160
-Capped Deductions = min(18.75, 160) = 18.75
+Raw deductions = 500 * 0.25 * 0.3 * 0.5 = 18.75
+Cap scale = 200 / 10 = 20
+Effective cap = 8 * 20 = 160
+Capped deductions = min(18.75, 160) = 18.75
 Density = 18.75 / (200 + 5) = 18.75 / 205 ≈ 0.0915
-Scaled Density = 0.0915 * 5.0 = 0.4573
+Scaled density = 0.0915 * 5.0 = 0.4573
 Score = 100 - (100 * ln(1.4573) / ln(101.4573)) ≈ 100 - 8.15 = 92 (Healthy)
 ```
 
 ## Score thresholds and status bands
 
-Raigal relies exclusively on numeric 0 - 100 scores. Letter grades (A - F) are not used.
+Raigal relies exclusively on numeric 0-100 scores. Letter grades (A-F) are not used.
 
 ### CLI status labels
 When running `raigal scan` or `raigal ci`, status labels correspond to score boundaries:

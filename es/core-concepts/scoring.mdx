@@ -1,128 +1,127 @@
 ---
 title: "Motor de puntuación"
-description: "Puntuación de calidad calibrada de 0 a 100, normalización por densidad y bandas de estado."
+description: "Puntuación de calidad de 0 a 100, normalización por densidad y bandas de estado."
 ---
 
-Raigal asigna a cada repositorio una puntuación de calidad calibrada entre 0 y 100. La métrica evalúa la densidad de incidencias en lugar del recuento bruto de avisos, evitando que proyectos con bases de código grandes suspendan únicamente por su volumen de archivos.
+Raigal asigna a cada repositorio una nota de calidad de 0 a 100. En lugar de limitarse a contar problemas brutos, mide la densidad de incidencias respecto al volumen de archivos. Así se evita que un proyecto grande suspenda únicamente por tener más código.
 
 ## Fórmula de puntuación
 
-Raigal evalúa las incidencias detectadas por sus seis motores de diagnóstico mediante un escalado logarítmico normalizado por densidad:
+Raigal evalúa las incidencias detectadas por sus seis motores mediante una escala logarítmica normalizada por densidad:
 
 ```text
-Densidad de Deducción = (Suma de Deducciones Acotadas) / (Archivos Fuente Efectivos + S)
+Densidad de deducción = (Suma de deducciones acotadas) / (Archivos fuente efectivos + S)
 ```
 
 ```text
-Puntuación = max(0, redondear(100 - (100 * ln(1 + 5 * Densidad de Deducción)) / ln(101 + 5 * Densidad de Deducción)))
+Puntuación = max(0, redondear(100 - (100 * ln(1 + 5 * Densidad de deducción)) / ln(101 + 5 * Densidad de deducción)))
 ```
 
 Donde:
-* **Constante de suavizado (`S`)**: Por defecto es `5` en la configuración (con reserva interna de `10`). Evita que un aviso aislado en un proyecto pequeño de dos archivos hunda la puntuación.
+* **Constante de suavizado (`S`)**: Por defecto vale `5` en la configuración (con reserva interna de `10`). Evita que un aviso puntual en un proyecto de dos archivos hunda la nota.
 * **Escala de densidad**: Multiplicador de `5.0` aplicado sobre la densidad de deducción.
-* **Archivos fuente efectivos**: Recuento de archivos de código y pruebas no excluidos en el espacio de trabajo (o archivos modificados durante escaneos incrementales de pull requests).
+* **Archivos fuente efectivos**: Recuento de archivos de código y pruebas analizados (o archivos cambiados en escaneos de pull requests).
 
-## Multiplicadores de severidad y ponderación de motores
+## Multiplicadores de severidad y peso de motores
 
-Cada aviso de diagnóstico genera una penalización base según su severidad y el motor que lo detectó:
+Cada aviso detectado genera una penalización base según su severidad y el motor de procedencia:
 
 ```text
-Deducción Base = Multiplicador de Severidad * Peso del Motor * Multiplicador de Nivel
+Deducción base = Multiplicador de severidad * Peso del motor * Multiplicador de nivel
 ```
 
 ### Multiplicadores de severidad
-* `error`: `3.0` (además activa código de salida 1 de inmediato en CI)
+* `error`: `3.0` (provoca código de salida 1 de inmediato en CI)
 * `warning`: `1.0`
 * `info`: `0.25`
 
-### Ponderación de motores
-* `security`: `1.5` (secretos en código, inyecciones, APIs inseguras, dependencias vulnerables)
-* `architecture`: `1.0` (cruce indebido de capas, importaciones circulares)
-* `ai-slop`: `1.0` (excepciones silenciadas, comentarios triviales, aserciones de tipo laxas)
-* `code-quality`: `0.8` (código muerto, complejidad ciclomática excesiva, exceso de parámetros)
+### Peso de los motores
+* `security`: `1.5` (secretos en código, inyecciones, llamadas inseguras, dependencias vulnerables)
+* `architecture`: `1.0` (acoplamiento entre capas, importaciones circulares)
+* `ai-slop`: `1.0` (excepciones silenciadas, comentarios obvios, aserciones de tipo laxas)
+* `code-quality`: `0.8` (código muerto, funciones demasiado complejas, exceso de parámetros)
 * `lint`: `0.6` (Oxlint, Ruff, Clippy, Roslynator)
-* `format`: `0.3` (espacios en blanco, indentación, orden de importaciones)
+* `format`: `0.3` (espacios en blanco, sangrado, orden de importaciones)
 
 ## Topes dinámicos por regla
 
-Para evitar que problemas de estilo muy repetidos (como 500 comas finales omitidas) oculten vulnerabilidades de seguridad o hundan proyectos grandes, las reglas pertenecen a niveles de impacto con topes base dinámicos:
+Para evitar que problemas menores repetidos (como 500 comas finales) oculten fallos de seguridad o suspendan un proyecto grande, las reglas se dividen en niveles con topes automáticos:
 
-| Nivel de impacto | Multiplicador | Tope base | Hallazgos habituales |
+| Nivel de impacto | Multiplicador | Tope base | Ejemplos habituales |
 |---|---|---|---|
-| `strict` | `1.0x` | Sin tope (`maxPerRule`) | Errores de sintaxis, secretos filtrados, promesas no controladas |
-| `standard` | `1.0x` | Sin tope (`maxPerRule`) | Diagnósticos estándar de linter, advertencias de compilador |
-| `maintainability` | `0.75x` | 24 | Complejidad ciclomática alta, funciones excesivamente largas |
-| `mechanical` | `0.5x` | 16 | Importaciones no utilizadas, variables locales sin referencia |
-| `style` | `0.5x` | 8 | Variaciones de formato, discrepancias de espaciado |
+| `strict` | `1.0x` | Sin tope (`maxPerRule`) | Errores de sintaxis, secretos expuestos, promesas sin gestionar |
+| `standard` | `1.0x` | Sin tope (`maxPerRule`) | Reglas estándar de linter y avisos de compilador |
+| `maintainability` | `0.75x` | 24 | Complejidad ciclomática, funciones demasiado largas |
+| `mechanical` | `0.5x` | 16 | Importaciones huérfanas, variables sin referencia |
+| `style` | `0.5x` | 8 | Discrepancias de formato y espaciado |
 | `advisory` | `0.25x` | 8 | Avisos informativos, documentación faltante |
 
 ### Escalado según el tamaño del repositorio
-El tope efectivo de cada regla escala proporcionalmente con el número de archivos:
+El tope máximo de penalización de cada regla escala con el número de archivos:
 
 ```text
-Escala de Tope = max(1, Archivos Fuente Efectivos / 10)
+Escala de tope = max(1, Archivos fuente efectivos / 10)
 ```
 
 ```text
-Tope Efectivo = min(maxPerRule, Tope del Nivel) * Escala de Tope
+Tope efectivo = min(maxPerRule, Tope del nivel) * Escala de tope
 ```
 
 ## Ejemplos prácticos
 
 ### Ejemplo 1: Microservicio (10 archivos, 1 advertencia)
-* **Hallazgo**: 1 `ai-slop/swallowed-exception` (`warning`, severidad `1.0`, motor `1.0`, nivel *strict* `1.0`).
+* **Incidencia**: 1 `ai-slop/swallowed-exception` (`warning`, severidad `1.0`, motor `1.0`, nivel *strict* `1.0`).
 * **Cálculo**:
 ```text
 Deducción = 1.0
 Densidad = 1.0 / (10 + 5) = 1.0 / 15 ≈ 0.0667
-Densidad Escalada = 0.0667 * 5.0 = 0.3333
+Densidad escalada = 0.0667 * 5.0 = 0.3333
 Puntuación = 100 - (100 * ln(1.3333) / ln(101.3333)) ≈ 100 - 6.23 = 94 (Healthy)
 ```
 
 ### Ejemplo 2: Monolito (200 archivos, 500 avisos de formato)
-* **Hallazgos**: 500 comas finales omitidas (`format/trailing-comma`, `info` `0.25`, motor `0.3`, nivel *style* `0.5`, tope `8`).
+* **Incidencias**: 500 comas finales omitidas (`format/trailing-comma`, `info` `0.25`, motor `0.3`, nivel *style* `0.5`, tope `8`).
 * **Cálculo**:
 ```text
-Deducciones Brutas = 500 * 0.25 * 0.3 * 0.5 = 18.75
-Escala de Tope = 200 / 10 = 20
-Tope Efectivo = 8 * 20 = 160
-Deducciones Acotadas = min(18.75, 160) = 18.75
+Deducciones brutas = 500 * 0.25 * 0.3 * 0.5 = 18.75
+Escala de tope = 200 / 10 = 20
+Tope efectivo = 8 * 20 = 160
+Deducciones acotadas = min(18.75, 160) = 18.75
 Densidad = 18.75 / (200 + 5) = 18.75 / 205 ≈ 0.0915
-Densidad Escalada = 0.0915 * 5.0 = 0.4573
+Densidad escalada = 0.0915 * 5.0 = 0.4573
 Puntuación = 100 - (100 * ln(1.4573) / ln(101.4573)) ≈ 100 - 8.15 = 92 (Healthy)
 ```
 
+## Umbrales y bandas de estado
 
-## Umbrales de puntuación y bandas de estado
+Raigal utiliza exclusivamente notas numéricas de 0 a 100. No se emplean letras (A - F).
 
-Raigal utiliza exclusivamente puntuaciones numéricas de 0 a 100. No se emplean calificaciones por letras (A - F).
+### Etiquetas en la CLI
+Al ejecutar `raigal scan` o `raigal ci`, la terminal muestra el estado según los límites configurados:
 
-### Etiquetas de estado en el CLI
-Al ejecutar `raigal scan` o `raigal ci`, las etiquetas de la terminal corresponden a los límites de puntuación configurados:
-
-| Rango de puntuación | Etiqueta en CLI | Código de salida en CI |
+| Rango de nota | Etiqueta en CLI | Salida en CI |
 |---|---|---|
 | `75 - 100` | `Healthy` | `0` (Aprobado) |
-| `50 - 74` | `Needs Work` | `0` (o `1` si se incumple `ci.failBelow`) |
+| `50 - 74` | `Needs Work` | `0` (o `1` si cae por debajo de `ci.failBelow`) |
 | `< 50` | `Critical` | `1` (Falla el control de calidad) |
 
-En entornos de integración continua, `raigal ci` devuelve código de salida 1 si la puntuación es inferior a `ci.failBelow` (por defecto: 70) o si se detecta algún aviso con severidad `error`.
+En CI, `raigal ci` devuelve código de salida 1 si la nota es menor que `ci.failBelow` (por defecto: 70) o si se detecta algún `error`.
 
 ### Bandas de salud en el panel web
-La interfaz de Raigal Cloud (`app.raigal.dev`) agrupa los repositorios en cuatro bandas de salud calibradas:
+La interfaz de Raigal Cloud (`app.raigal.dev`) agrupa los proyectos en cuatro bandas visuales:
 
-| Rango de puntuación | Banda en panel web | Color identificativo |
+| Rango de nota | Banda en el panel | Color |
 |---|---|---|
 | `90 - 100` | `Excellent` | Verde lima |
 | `75 - 89` | `Good / Healthy` | Verde esmeralda |
 | `50 - 74` | `Needs Work` | Ámbar / amarillo |
 | `< 50` | `Critical` | Rojo |
 
-### Veredictos de calidad (3 estados)
-Las puertas de CI y revisiones de PR evalúan las solicitudes en tres estados distintos:
+### Veredictos del control de calidad (3 estados)
+Las comprobaciones en pull requests devuelven uno de tres veredictos:
 
-| Veredicto | Criterios | Resultado del Check Run |
+| Veredicto | Criterio | Resultado en GitHub |
 |---|---|---|
-| `PASSED` | Puntuación >= 70 (o `ci.failBelow`), 0 errores, 0 advertencias | `success` (Aprobado sin advertencias) |
-| `PASSED (WITH WARNINGS)` | Puntuación >= 70, 0 errores, advertencias presentes | `neutral` (Paso consultivo, no bloquea el merge) |
-| `FAILED / BLOCKED` | Puntuación < 70, código de salida != 0, o errores presentes | `failure` (Bloquea el merge) |
+| `PASSED` | Nota >= 70 (o `ci.failBelow`), 0 errores, 0 advertencias | `success` (Aprobado limpio) |
+| `PASSED (WITH WARNINGS)` | Nota >= 70, 0 errores, advertencias presentes | `neutral` (Aprobado informativo, no bloquea el merge) |
+| `FAILED / BLOCKED` | Nota < 70, código de salida distinto de 0 o errores presentes | `failure` (Bloquea la fusión) |

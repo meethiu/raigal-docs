@@ -1,27 +1,27 @@
 ---
-title: "Raigal Overview"
-description: "Code quality and AI-generated pattern detection for engineering teams."
+title: "Raigal overview"
+description: "Code quality and AI pattern detection for engineering teams."
 ---
 
-Raigal checks code for patterns introduced by AI coding tools, including verbose comments, unnecessary type assertions, swallowed errors, and insecure calls. It combines formatting, linting, complexity checks, security rules, and pattern detection into one CLI command that returns a calibrated score from 0 to 100.
+Raigal catches the sloppy patterns AI coding tools leave behind: redundant comments, swallowed errors, unsafe type casts, and insecure calls. It packages linting, formatting, security checks, and pattern detection into one CLI command with a calibrated score from 0 to 100.
 
-Used with the [Raigal Cloud Platform](https://app.raigal.dev) and the official [Raigal GitHub App](https://github.com/apps/raigal-cloud), it evaluates pull requests, updates status checks for branch protection, tracks issues on a 4-stage remediation board, and coordinates repair sessions with local coding agents.
+Connected to [Raigal Cloud](https://app.raigal.dev) and the official [Raigal GitHub App](https://github.com/apps/raigal-cloud), it evaluates pull requests, protects main branches, tracks issues on a 4-stage board, and coordinates automated fixes with local coding agents.
 
 <Info>
-  Raigal runs AST parsing, linting, and pattern checks locally inside your runner. Full source code is never uploaded to Raigal servers. During pull request CI evaluations, an in-memory secret-masked git patch diff preview (up to 20 KB) is sent to render the PR dashboard. Autonomous repair sessions (`raigal agent`) communicate with your configured local LLM provider.
+  Raigal runs AST parsing, linting, and pattern checks locally inside your runner. Your source code is never uploaded to Raigal servers. During pull request checks, an in-memory secret-masked patch diff (under 20 KB) is sent to display changes in the dashboard.
 </Info>
 
 ## What Raigal catches
 
-Coding assistants such as Claude Code, Cursor, Copilot, and OpenCode speed up feature delivery, but frequently leave behind structural defects:
+AI assistants like Claude Code, Cursor, Copilot, and OpenCode speed up development, but frequently leave behind structural defects:
 
-* Narrative comments that repeat function signatures or obvious statements.
-* Swallowed exceptions in `catch` blocks that hide runtime failures.
-* Unsafe type assertions (`as any`, `as unknown as T`) introduced to bypass compiler checks.
-* Leftover debugging statements, console calls, and unreachable branches.
-* Unsanitized SQL interpolations, dynamic `eval()` calls, and unsandboxed agent tools.
+* Narrative comments that repeat function names or obvious code.
+* Empty `catch` blocks that hide runtime failures.
+* Unsafe type assertions (`as any`, `as unknown as T`) that bypass the compiler.
+* Leftover debugging statements, console logs, and unreachable branches.
+* Unsanitized SQL, dynamic `eval()`, and unsandboxed agent tools.
 
-Raigal runs through local agent hooks, in CI pipelines on every pull request, and during manual terminal audits.
+Raigal runs through local agent hooks, in CI on every pull request, and during terminal audits.
 
 ## Components
 
@@ -36,38 +36,38 @@ Raigal runs through local agent hooks, in CI pipelines on every pull request, an
   <tbody>
     <tr>
       <td><strong>Raigal Cloud</strong></td>
-      <td>Web dashboard at <code>app.raigal.dev</code> with a 4-stage remediation board, score tracking, and team audit history.</td>
-      <td><a href="/cloud-platform/dashboard">Cloud Dashboard</a></td>
+      <td>Web dashboard at <code>app.raigal.dev</code> with issue tracking, score history, and team metrics.</td>
+      <td><a href="/cloud-platform/dashboard">Cloud dashboard</a></td>
     </tr>
     <tr>
       <td><strong>GitHub App</strong></td>
-      <td>PR checks, commit status reporting, and branch protection enforcement.</td>
-      <td><a href="/automation-and-ci-cd/pull-requests">GitHub App Setup</a></td>
+      <td>Pull request checks, commit statuses, and branch protection enforcement.</td>
+      <td><a href="/automation-and-ci-cd/pull-requests">GitHub App setup</a></td>
     </tr>
     <tr>
       <td><strong>Scoring engine (0-100)</strong></td>
-      <td>Density-weighted score normalized by source file count, dynamic rule caps, and logarithmic scaling.</td>
-      <td><a href="/core-concepts/scoring">Scoring Engine</a></td>
+      <td>Density-weighted score normalized by file count, with dynamic caps and logarithmic scaling.</td>
+      <td><a href="/core-concepts/scoring">Scoring engine</a></td>
     </tr>
     <tr>
       <td><strong>CLI and agent hooks</strong></td>
       <td>Pre-commit checks, safe autofixes (<code>raigal fix</code>), and real-time interception for coding agents.</td>
-      <td><a href="/cli-reference/commands">CLI Reference</a></td>
+      <td><a href="/cli-reference/commands">CLI reference</a></td>
     </tr>
     <tr>
       <td><strong>Agent repairs</strong></td>
-      <td>Isolated git worktrees where local coding agents fix issues and generate pull requests.</td>
-      <td><a href="/automation-and-ci-cd/agent-repairs">Agent Repairs</a></td>
+      <td>Isolated git worktrees where local agents fix issues and open pull requests.</td>
+      <td><a href="/automation-and-ci-cd/agent-repairs">Agent repairs</a></td>
     </tr>
     <tr>
       <td><strong>GitHub Actions OIDC</strong></td>
-      <td>Tokenless authentication for CI runners using cryptographic GitHub OIDC tokens instead of static secrets.</td>
-      <td><a href="/core-concepts/security">Security Model</a></td>
+      <td>Tokenless authentication for CI runners using cryptographic GitHub OIDC tokens.</td>
+      <td><a href="/core-concepts/security">Security model</a></td>
     </tr>
     <tr>
       <td><strong>Raigal MCP</strong></td>
-      <td>Model Context Protocol server connecting Raigal tools to Claude Code, Cursor, Windsurf, Cline, and Antigravity.</td>
-      <td><a href="/automation-and-ci-cd/mcp-server">MCP Server</a></td>
+      <td>Model Context Protocol server connecting Raigal to Claude Code, Cursor, Windsurf, Cline, and Antigravity.</td>
+      <td><a href="/automation-and-ci-cd/mcp-server">MCP server</a></td>
     </tr>
   </tbody>
 </table>
@@ -77,25 +77,25 @@ Raigal runs through local agent hooks, in CI pipelines on every pull request, an
 <Steps>
   <Step title="1. Sign in to Raigal Cloud">
 
-Create an organization workspace at [app.raigal.dev](https://app.raigal.dev) with a 14-day evaluation trial and invite your team. [Organization Onboarding Guide](/getting-started/first-client-setup)
+Create a workspace at [app.raigal.dev](https://app.raigal.dev) with a 14-day evaluation trial and invite your team. [Organization onboarding guide](/getting-started/first-client-setup)
 
   </Step>
 
   <Step title="2. Install the Raigal GitHub App">
 
-Connect your repositories through the [Raigal GitHub App](https://github.com/apps/raigal-cloud) to run status checks on pull requests. [Pull Request Quality Gate](/automation-and-ci-cd/pull-requests)
+Connect your repositories with the [Raigal GitHub App](https://github.com/apps/raigal-cloud) to run checks on pull requests. [Pull request checks](/automation-and-ci-cd/pull-requests)
 
   </Step>
 
   <Step title="3. Add the CI workflow">
 
-Add a pinned GitHub Actions workflow to check pull requests and send scores to your dashboard. [CI/CD Pipelines & GitHub Actions](/automation-and-ci-cd/ci-cd)
+Add a GitHub Actions workflow to check pull requests and send scores to your dashboard. [CI/CD pipelines](/automation-and-ci-cd/ci-cd)
 
   </Step>
 
   <Step title="4. Set up local tools and hooks">
 
-Install the CLI (`raigal scan`, `raigal fix`) and set up interception hooks for Claude Code or Cursor. [Quickstart Guide](/getting-started/quickstart)
+Install the CLI (`raigal scan`, `raigal fix`) and set up interception hooks for Claude Code or Cursor. [Quickstart guide](/getting-started/quickstart)
 
   </Step>
 </Steps>

@@ -1,42 +1,42 @@
 ---
 title: "Hooks de intercepción para agentes"
-description: "Hooks de intercepción para Claude Code, Cursor y OpenCode."
+description: "Hooks de intercepción en tiempo real para Claude Code, Cursor y OpenCode."
 ---
 
-Raigal puede analizar los cambios propuestos por asistentes y agentes de programación antes de que se consoliden en disco.
+Raigal puede interceptar y revisar los cambios de código propuestos por asistentes de IA antes de que se guarden en disco.
 
-## Funcionamiento de los hooks
+## Cómo funcionan los hooks
 
-Cuando un agente modifica un archivo:
-1. El hook ejecuta un análisis AST acotado sobre los archivos modificados mediante `runScopedScan`.
-2. Las tareas pesadas (auditorías de red, chequeo de tipos con `tsc` y formateadores) se desactivan para mantener baja la latencia del turno.
-3. Si la edición introduce infracciones de patrones (como excepciones silenciadas o aserciones de tipo inseguras), el hook devuelve información estructurada en el turno del agente.
-4. El agente lee el diagnóstico e intenta autocorregirse en el mismo turno.
+Cuando un agente de programación modifica un archivo:
+1. El hook ejecuta un análisis AST rápido en memoria sobre los archivos cambiados (`runScopedScan`).
+2. Las tareas lentas (auditorías de red, chequeo de tipos con `tsc` o formateadores pesados) se omiten para mantener la respuesta casi instantánea.
+3. Si el cambio introduce defectos (como excepciones silenciadas o conversiones `as any`), el hook devuelve el diagnóstico en el turno del propio agente.
+4. El asistente lee la respuesta estructurada y se autocorrige en el mismo turno antes de que tú veas el fallo.
 
 ```mermaid
 sequenceDiagram
     autonumber
     actor Desarrollador
     participant Agente as Claude / Cursor
-    participant Hook as Hook Raigal
-    participant Codigo as Archivo del Repositorio
+    participant Hook as Hook de Raigal
+    participant Codigo as Archivo en disco
     Desarrollador->>Agente: Petición: "Añadir validación a perfil"
     Agente->>Hook: Propone edición con 'as any' innecesario
     Hook->>Hook: Análisis AST en memoria
     Hook-->>Agente: Diagnóstico: ai-slop/unsafe-type-assertion en línea 42
     Agente->>Agente: Se autocorrige con esquema Zod estricto
-    Agente->>Codigo: Escribe código limpio y verificado
+    Agente->>Codigo: Guarda código limpio y verificado
 ```
 
 ## Instalación de hooks
 
-Instale los hooks para todas las herramientas detectadas en el sistema:
+Instala los hooks para todos los asistentes detectados en tu máquina:
 
 ```bash
 raigal hook install
 ```
 
-O configure herramientas específicas:
+O instala solo para herramientas específicas:
 
 ```bash
 raigal hook install --claude
@@ -44,35 +44,33 @@ raigal hook install --cursor
 raigal hook install --gemini
 ```
 
-Añada `--project` para limitar los hooks únicamente al repositorio actual en lugar de la configuración global de usuario.
+Añade `--project` para limitar los hooks exclusivamente al repositorio actual en lugar de aplicarlos a nivel global.
 
-## Estado, línea base y seguridad
+## Estado, líneas base y seguridad
 
-### Estado e integridad de centinelas
-Compruebe los hooks activos y sus hashes SHA-256 de integridad:
+### Comprobar estado e integridad
+Revisa los hooks activos y sus firmas de integridad SHA-256:
 
 ```bash
 raigal hook status
 ```
 
-### Captura de líneas base (Baseline)
-Registre la deuda técnica previa antes de realizar comprobaciones incrementales:
+### Capturar la línea base (baseline)
+Registra la deuda técnica actual antes de activar comprobaciones incrementales:
 
 ```bash
 raigal hook baseline
 ```
 
-Esto genera una instantánea en `.raigal/baseline.json`. Las ediciones posteriores del agente se comparan mediante correspondencia en 3 etapas, asegurando que la deuda preexistente no se marque como regresión.
+Esto guarda una instantánea en `.raigal/baseline.json`. Las ediciones posteriores del asistente se comparan contra esta base para evitar falsas alertas por código heredado.
 
-### Desinstalación segura
-Elimine los hooks limpiamente sin alterar configuraciones manuales del editor:
+### Desinstalación limpia
+Elimina los hooks sin modificar tus configuraciones personalizadas del editor:
 
 ```bash
 raigal hook uninstall
 ```
 
-
 <Info>
-  Para conectar las herramientas de Raigal directamente al flujo de llamadas de herramientas del agente en lugar de usar hooks de archivos, consulte el [Servidor MCP de Raigal](/es/automation-and-ci-cd/mcp-server).
+  Para conectar las herramientas de Raigal directamente al flujo de llamadas de herramientas del agente en lugar de usar hooks de archivos, consulta el [Servidor MCP](/es/automation-and-ci-cd/mcp-server).
 </Info>
-

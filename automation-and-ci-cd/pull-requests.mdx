@@ -39,33 +39,25 @@ How this setup works:
 
 ## Setup: GitHub App and Actions
 
-
 <Steps>
-
-
-
   <Step title="1. Install the GitHub App">
 
 1. Open the [Raigal Cloud GitHub App](https://github.com/apps/raigal-cloud).
 2. Click **Install**.
 3. Choose your organization or personal account.
 4. Select all repositories or choose specific ones.
-5. Click **Install & Authorize**.
+5. Click **Install & authorize**.
 
   </Step>
-
-
 
   <Step title="2. Copy your organization token">
 
 1. Sign in to your dashboard at [app.raigal.dev](https://app.raigal.dev).
 2. Open **Settings**.
-3. Under **API Tokens**, select **Create New Token**.
+3. Under **API Tokens**, select **Create new token**.
 4. Name the token (e.g., `ci-runner`) and copy the generated key (`rgl_live_...`).
 
   </Step>
-
-
 
   <Step title="3. Add token to GitHub repository">
 
@@ -74,21 +66,18 @@ How this setup works:
 3. Set the name to `RAIGAL_TOKEN` and paste your key.
 4. Click **Add secret**.
 
-
 <Info>
   If you prefer not to manage static tokens, add `permissions: id-token: write` to your workflow. Raigal Cloud validates the runner using GitHub OIDC directly.
 </Info>
 
   </Step>
 
-
-
   <Step title="4. Add the GitHub Actions workflow">
 
 Create `.github/workflows/raigal.yml` in your repository:
 
 ```yaml
-name: Raigal Quality Gate
+name: Raigal quality gate
 
 on:
   pull_request:
@@ -99,7 +88,7 @@ on:
 
 jobs:
   quality-gate:
-    name: Code Quality & Slop Gate
+    name: Code quality gate
     runs-on: ubuntu-latest
     permissions:
       contents: read
@@ -107,17 +96,17 @@ jobs:
       pull-requests: write
 
     steps:
-      - name: Checkout Code
+      - name: Checkout code
         uses: actions/checkout@v4
         with:
           fetch-depth: 0 # Full history required for diffs
 
-      - name: Setup Node.js
+      - name: Set up Node.js
         uses: actions/setup-node@v4
         with:
           node-version: 22
 
-      - name: Run Raigal Quality Gate
+      - name: Run Raigal quality gate
         env:
           RAIGAL_TOKEN: ${{ secrets.RAIGAL_TOKEN }}
           # RAIGAL_ORG_ID: ${{ vars.RAIGAL_ORG_ID }} # Required only if owner belongs to multiple orgs
@@ -130,14 +119,11 @@ jobs:
           fi
 ```
 
-
 <Info>
   Because the GitHub App receives `pull_request.closed` events directly, you do not need an additional workflow to notify Raigal when PRs close.
 </Info>
 
   </Step>
-
-
 
   <Step title="5. Require status check in branch protection">
 
@@ -148,11 +134,7 @@ jobs:
 5. Save changes.
 
   </Step>
-
-
-
 </Steps>
-
 
 ## Three-state quality gate verdicts
 
@@ -168,18 +150,12 @@ GitHub Check Runs and pull request cards evaluate results into three clear state
 
 If your organization policies prevent installing third-party GitHub Apps, you can run Raigal using GitHub Actions alone:
 
-
 <Steps>
-
-
-
   <Step title="1. Configure secret">
 
 In **Settings** > **Secrets and variables** > **Actions**, add `RAIGAL_TOKEN`.
 
   </Step>
-
-
 
   <Step title="2. Add workflow">
 
@@ -187,14 +163,12 @@ Add `.github/workflows/raigal.yml` using the workflow above. In standalone mode,
 
   </Step>
 
-
-
   <Step title="3. Add close sync workflow (optional)">
 
 To update the board when PRs close without the GitHub App, add a lifecycle sync workflow:
 
 ```yaml
-name: Raigal PR Lifecycle
+name: Raigal PR lifecycle
 
 on:
   pull_request:
@@ -202,7 +176,7 @@ on:
 
 jobs:
   sync-pr-closed:
-    name: Sync Closed PR Status
+    name: Sync closed PR status
     runs-on: ubuntu-latest
     steps:
       - uses: actions/checkout@v4
@@ -210,7 +184,7 @@ jobs:
         with:
           node-version: 22
 
-      - name: Report PR Closure to Raigal Cloud
+      - name: Report PR closure to Raigal Cloud
         env:
           RAIGAL_TOKEN: ${{ secrets.RAIGAL_TOKEN }}
           RAIGAL_API_URL: ${{ secrets.RAIGAL_API_URL || 'https://app.raigal.dev' }}
@@ -221,11 +195,7 @@ jobs:
 ```
 
   </Step>
-
-
-
 </Steps>
-
 
 ## Tracking PRs on the board
 
@@ -242,10 +212,10 @@ In [Raigal Cloud](https://app.raigal.dev), open your repository board:
 
 ## Troubleshooting
 
-| Symptom | Probable Cause | Actionable Fix |
+| Symptom | Probable cause | Actionable fix |
 |---|---|---|
 | `ambiguous_organization` (HTTP 400) | Repository owner account belongs to multiple Raigal organizations | In your workflow, set `RAIGAL_ORG_ID: ${{ vars.RAIGAL_ORG_ID }}` with your organization ID (`org_...`) from [Settings](https://app.raigal.dev/settings). |
-| Check run remains pending | CI workflow did not run or failed before executing `raigal ci` | Check that your GitHub Actions job completed for the commit `head_sha`. Raigal Cloud automatically clears orphaned pending checks after 20 minutes. |
+| Check run remains pending | CI workflow did not run or failed before executing `raigal ci` | Check that your GitHub Actions job completed for the commit `head_sha`. Raigal Cloud cleans up orphaned pending checks after 20 minutes. |
 | Check run does not appear on PR | GitHub App not installed on the repository | Ensure the [raigal-cloud GitHub App](https://github.com/apps/raigal-cloud) is installed on the organization or user owning the repository. |
 | HTTP 401 Unauthorized in CI | Missing or expired `RAIGAL_TOKEN` | Confirm that `RAIGAL_TOKEN` is set in GitHub repository secrets and matches an active token in [Settings](https://app.raigal.dev/settings). |
 | HTTP 403 `owner_not_allowed` in CI | Repository owner is not linked to your Raigal organization | Go to **Settings > Allowed Owners** in Raigal Cloud and click **Sync GitHub**. |

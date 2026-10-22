@@ -1,32 +1,32 @@
 ---
-title: "Pipelines CI/CD y puertas de calidad automatizadas"
-description: "Integre Raigal en GitHub Actions, GitLab CI y Bitbucket Pipelines."
+title: "Pipelines de CI/CD y control de calidad automatizado"
+description: "Integra Raigal en GitHub Actions, GitLab CI y Bitbucket Pipelines."
 ---
 
-Configure Raigal para evaluar pull requests en CI, aplicar puertas de calidad y enviar metricas en tiempo real a su panel de remediacion en [app.raigal.dev](https://app.raigal.dev).
+Configura Raigal para evaluar pull requests en CI, aplicar reglas de calidad y enviar métricas en tiempo real a tu panel en [app.raigal.dev](https://app.raigal.dev).
 
-Al ejecutar `raigal init`, el CLI detecta automaticamente su proveedor de CI y genera el flujo adecuado sin conjeturas.
+Al ejecutar `raigal init`, la CLI detecta tu proveedor de CI y genera el flujo adecuado automáticamente.
 
 ## Variables de entorno
 
-Proporcione estas variables en su entorno de ejecucion de CI:
+Configura estas variables en tu entorno de CI:
 
-| Variable | Requerida | Descripcion | Ejemplo |
+| Variable | Requerida | Descripción | Ejemplo |
 |---|---|---|---|
-| `RAIGAL_TOKEN` | Recomendada* | Clave de API de la organizacion (`rgl_live_...`) | `rgl_live_8f3a9b...` |
-| `RAIGAL_ORG_ID` | Condicional | ID de organizacion (`org_...`), requerido si el propietario del repositorio pertenece a multiples organizaciones | `org_2tQ...` |
+| `RAIGAL_TOKEN` | Recomendada* | Clave de API de la organización (`rgl_live_...`) | `rgl_live_8f3a9b...` |
+| `RAIGAL_ORG_ID` | Condicional | ID de la organización (`org_...`), obligatorio si la cuenta pertenece a varias organizaciones | `org_2tQ...` |
 | `RAIGAL_API_URL` | Opcional | URL del backend (por defecto `https://app.raigal.dev`) | `https://app.raigal.dev` |
 
-*Nota: En GitHub Actions configurado con `permissions: id-token: write`, los tokens estaticos pueden omitirse porque Raigal valida el runner mediante OIDC criptografico de GitHub sin clave fija. Sin embargo, configurar `RAIGAL_TOKEN` como secreto en el repositorio es recomendable para maxima consistencia multiplataforma.*
+*Nota: En GitHub Actions configurado con `permissions: id-token: write`, los tokens estáticos pueden omitirse porque Raigal valida el runner mediante OIDC criptográfico de GitHub. Aun así, guardar `RAIGAL_TOKEN` como secreto en el repositorio es recomendable para tener la misma configuración en todas las plataformas.*
 
 ## GitHub Actions
 
-### 1. Control de calidad de pull requests
+### 1. Control de calidad en pull requests
 
-Cree `.github/workflows/raigal.yml` para evaluar pull requests, notificar al dashboard y generar anotaciones SARIF opcionales:
+Crea `.github/workflows/raigal.yml` para evaluar pull requests, notificar al panel web y generar informes SARIF opcionales:
 
 ```yaml
-name: Puerta de Calidad Raigal
+name: Raigal quality gate
 
 on:
   push:
@@ -36,16 +36,16 @@ on:
 
 permissions:
   contents: read
-  id-token: write        # Habilita autenticacion OIDC criptografica sin token
-  security-events: write # Requerido si se suben informes SARIF a GitHub Code Scanning
+  id-token: write        # Autenticación OIDC criptográfica sin secretos fijos
+  security-events: write # Requerido si se exportan informes SARIF a GitHub Code Scanning
 
 jobs:
   quality-gate:
-    name: Code Quality & Slop Gate
+    name: Code quality gate
     runs-on: ubuntu-latest
 
     steps:
-      - name: Descargar Codigo
+      - name: Descargar código
         uses: actions/checkout@v4
         with:
           fetch-depth: 0 # Historial completo necesario para calcular diffs con la rama base
@@ -55,10 +55,10 @@ jobs:
         with:
           node-version: 22
 
-      - name: Ejecutar Puerta de Calidad Raigal
+      - name: Ejecutar control de calidad
         env:
           RAIGAL_TOKEN: ${{ secrets.RAIGAL_TOKEN }}
-          # RAIGAL_ORG_ID: ${{ vars.RAIGAL_ORG_ID }} # Requerido solo si el propietario pertenece a varias organizaciones
+          # RAIGAL_ORG_ID: ${{ vars.RAIGAL_ORG_ID }} # Necesario solo si el propietario pertenece a varias organizaciones
         run: |
           if [ "${{ github.event_name }}" = "pull_request" ]; then
             git fetch origin ${{ github.base_ref }} --depth=1
@@ -67,11 +67,11 @@ jobs:
             npx --yes @methiu/raigal@latest ci .
           fi
 
-      - name: Generar Informe de Seguridad SARIF (Opcional)
+      - name: Generar informe de seguridad SARIF (opcional)
         if: always()
         run: npx --yes @methiu/raigal@latest scan . --sarif > raigal-results.sarif
 
-      - name: Subir SARIF a GitHub Code Scanning (Opcional)
+      - name: Subir SARIF a GitHub Code Scanning (opcional)
         if: always() && github.event.pull_request.head.repo.full_name == github.repository
         uses: github/codeql-action/upload-sarif@v3
         continue-on-error: true
@@ -80,24 +80,20 @@ jobs:
           category: raigal
 ```
 
-
 <Info>
-  Subir informes SARIF a GitHub Code Scanning en repositorios privados requiere GitHub Advanced Security (GHAS) en su cuenta de GitHub. En repositorios publicos, GitHub Code Scanning se incluye sin coste adicional por parte de GitHub.
+  Subir informes SARIF a GitHub Code Scanning en repositorios privados requiere GitHub Advanced Security (GHAS) en tu cuenta. En repositorios públicos, GitHub ofrece Code Scanning sin coste adicional.
 </Info>
 
-
-### 2. Sincronizacion al fusionar o cerrar PRs
-
+### 2. Sincronización al fusionar o cerrar pull requests
 
 <Info>
-  Si utiliza la **GitHub App oficial de Raigal**, este paso es innecesario. La aplicacion recibe los webhooks de GitHub y actualiza el estado automaticamente.
+  Si utilizas la **GitHub App oficial de Raigal**, este paso no es necesario. La app recibe los webhooks de GitHub y actualiza el panel automáticamente.
 </Info>
 
-
-Para entornos sin la GitHub App, sincronice el estado al fusionar o cerrar pull requests:
+Para entornos de CI sin la GitHub App, sincroniza el estado al fusionar o cerrar ramas:
 
 ```yaml
-name: Sincronizacion Ciclo de Vida PR
+name: Sincronización de PRs
 
 on:
   pull_request:
@@ -116,32 +112,32 @@ jobs:
         env:
           RAIGAL_TOKEN: ${{ secrets.RAIGAL_TOKEN }}
         run: |
-          npx --yes @methiu/raigal@latest report-pr-closed --pr `{{ github.event.pull_request.number  `{{ github.event.pull_request.merged && '--merged' || '' }}
+          npx --yes @methiu/raigal@latest report-pr-closed --pr ${{ github.event.pull_request.number }} ${{ github.event.pull_request.merged && '--merged' || '' }}
 ```
 
 ## GitLab CI
 
-En `.gitlab-ci.yml` (autogenerado por `raigal init`):
+En `.gitlab-ci.yml` (autogenerado con `raigal init`):
 
 ```yaml
 raigal_quality_gate:
   image: node:22
   stage: test
   script:
-    - if [ -n "`CI_MERGE_REQUEST_IID" ]; then npx --yes @methiu/raigal@latest ci --changes --base "`CI_MERGE_REQUEST_DIFF_BASE_SHA"; else npx --yes @methiu/raigal@latest ci .; fi
+    - if [ -n "$CI_MERGE_REQUEST_IID" ]; then npx --yes @methiu/raigal@latest ci --changes --base "$CI_MERGE_REQUEST_DIFF_BASE_SHA"; else npx --yes @methiu/raigal@latest ci .; fi
   variables:
     RAIGAL_TOKEN: $RAIGAL_TOKEN
-    # RAIGAL_ORG_ID: $RAIGAL_ORG_ID # Requerido solo si el propietario pertenece a varias organizaciones
+    # RAIGAL_ORG_ID: $RAIGAL_ORG_ID
   rules:
     - if: $CI_PIPELINE_SOURCE == "merge_request_event"
-    - if: `CI_COMMIT_BRANCH == `CI_DEFAULT_BRANCH
+    - if: $CI_COMMIT_BRANCH == $CI_DEFAULT_BRANCH
 ```
 
-Configure `RAIGAL_TOKEN` en GitLab en **Settings > CI/CD > Variables**.
+Configura `RAIGAL_TOKEN` en GitLab en **Settings > CI/CD > Variables**.
 
 ## Bitbucket Pipelines
 
-En `bitbucket-pipelines.yml` (autogenerado por `raigal init`):
+En `bitbucket-pipelines.yml` (autogenerado con `raigal init`):
 
 ```yaml
 pipelines:
@@ -169,12 +165,12 @@ pipelines:
             # - RAIGAL_ORG_ID
 ```
 
-Configure `RAIGAL_TOKEN` en Bitbucket en **Repository settings > Repository variables**.
+Configura `RAIGAL_TOKEN` en Bitbucket en **Repository settings > Repository variables**.
 
-## Codigos de salida y umbrales de calidad
+## Códigos de salida y control de calidad
 
-En todos los proveedores de CI, `raigal ci` actua de forma determinista:
+En todos los proveedores de CI, `raigal ci` responde de forma consistente:
 
-- **Codigo de salida 0 (Aprobado)**: La puntuacion global es igual o superior a `ci.failBelow` (por defecto: 70) y no se detectan hallazgos con severidad `error`.
-- **Codigo de salida 1 (Bloqueado)**: La puntuacion cayo por debajo de `ci.failBelow` o se detecto al menos un hallazgo de severidad `error` (riesgos de seguridad, errores de sintaxis o inyeccion en prompts).
-- **Codigo de salida 2 (Vencimiento de licencia)**: Se produce unicamente si `licensing.onLapse` se configuro como `"fail-closed"` y la concesion offline vencio sin conexion a la red.
+- **Código de salida 0 (Aprobado)**: La nota del repositorio es igual o superior a `ci.failBelow` (por defecto: 70) y no hay ninguna incidencia con severidad `error`.
+- **Código de salida 1 (Bloqueado)**: La nota cayó por debajo de `ci.failBelow` o se detectó al menos un hallazgo de severidad `error` (riesgos de seguridad, errores de sintaxis o inyecciones en prompts).
+- **Código de salida 2 (Vencimiento de licencia)**: Ocurre solo si `licensing.onLapse` está configurado como `"fail-closed"` y la licencia temporal venció sin conexión exterior.

@@ -22,7 +22,7 @@
         "language": "en",
         "groups": [
           {
-            "group": "Getting Started",
+            "group": "Getting started",
             "pages": [
               "index",
               "getting-started/installation",
@@ -31,7 +31,7 @@
             ]
           },
           {
-            "group": "Core Concepts",
+            "group": "Core concepts",
             "pages": [
               "core-concepts/scoring",
               "core-concepts/rules",
@@ -39,7 +39,7 @@
             ]
           },
           {
-            "group": "CLI Reference",
+            "group": "CLI reference",
             "pages": [
               "cli-reference/commands",
               "cli-reference/configuration",
@@ -56,7 +56,7 @@
             ]
           },
           {
-            "group": "Cloud Platform",
+            "group": "Cloud platform",
             "pages": [
               "cloud-platform/architecture",
               "cloud-platform/dashboard",
@@ -69,7 +69,7 @@
         "language": "es",
         "groups": [
           {
-            "group": "Primer Contacto",
+            "group": "Primeros pasos",
             "pages": [
               "es/index",
               "es/getting-started/installation",
@@ -78,7 +78,7 @@
             ]
           },
           {
-            "group": "Conceptos Clave",
+            "group": "Conceptos clave",
             "pages": [
               "es/core-concepts/scoring",
               "es/core-concepts/rules",
@@ -86,7 +86,7 @@
             ]
           },
           {
-            "group": "Referencia CLI",
+            "group": "Referencia de la CLI",
             "pages": [
               "es/cli-reference/commands",
               "es/cli-reference/configuration",
@@ -103,7 +103,7 @@
             ]
           },
           {
-            "group": "Plataforma Cloud",
+            "group": "Plataforma cloud",
             "pages": [
               "es/cloud-platform/architecture",
               "es/cloud-platform/dashboard",
