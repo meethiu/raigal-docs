@@ -37,37 +37,37 @@ Raigal runs through local agent hooks, in CI pipelines on every pull request, an
     <tr>
       <td><strong>Raigal Cloud</strong></td>
       <td>Web dashboard at <code>app.raigal.dev</code> with a 4-stage remediation board, score tracking, and team audit history.</td>
-      <td><a href="/en/cloud-platform/dashboard">Cloud Dashboard</a></td>
+      <td><a href="/cloud-platform/dashboard">Cloud Dashboard</a></td>
     </tr>
     <tr>
       <td><strong>GitHub App</strong></td>
       <td>PR checks, commit status reporting, and branch protection enforcement.</td>
-      <td><a href="/en/automation-and-ci-cd/pull-requests">GitHub App Setup</a></td>
+      <td><a href="/automation-and-ci-cd/pull-requests">GitHub App Setup</a></td>
     </tr>
     <tr>
       <td><strong>Scoring engine (0-100)</strong></td>
       <td>Density-weighted score normalized by source file count, dynamic rule caps, and logarithmic scaling.</td>
-      <td><a href="/en/core-concepts/scoring">Scoring Engine</a></td>
+      <td><a href="/core-concepts/scoring">Scoring Engine</a></td>
     </tr>
     <tr>
       <td><strong>CLI and agent hooks</strong></td>
       <td>Pre-commit checks, safe autofixes (<code>raigal fix</code>), and real-time interception for coding agents.</td>
-      <td><a href="/en/cli-reference/commands">CLI Reference</a></td>
+      <td><a href="/cli-reference/commands">CLI Reference</a></td>
     </tr>
     <tr>
       <td><strong>Agent repairs</strong></td>
       <td>Isolated git worktrees where local coding agents fix issues and generate pull requests.</td>
-      <td><a href="/en/automation-and-ci-cd/agent-repairs">Agent Repairs</a></td>
+      <td><a href="/automation-and-ci-cd/agent-repairs">Agent Repairs</a></td>
     </tr>
     <tr>
       <td><strong>GitHub Actions OIDC</strong></td>
       <td>Tokenless authentication for CI runners using cryptographic GitHub OIDC tokens instead of static secrets.</td>
-      <td><a href="/en/core-concepts/security">Security Model</a></td>
+      <td><a href="/core-concepts/security">Security Model</a></td>
     </tr>
     <tr>
       <td><strong>Raigal MCP</strong></td>
       <td>Model Context Protocol server connecting Raigal tools to Claude Code, Cursor, Windsurf, Cline, and Antigravity.</td>
-      <td><a href="/en/automation-and-ci-cd/mcp-server">MCP Server</a></td>
+      <td><a href="/automation-and-ci-cd/mcp-server">MCP Server</a></td>
     </tr>
   </tbody>
 </table>
@@ -77,25 +77,25 @@ Raigal runs through local agent hooks, in CI pipelines on every pull request, an
 <Steps>
   <Step title="1. Sign in to Raigal Cloud">
 
-Create an organization workspace at [app.raigal.dev](https://app.raigal.dev) with a 14-day evaluation trial and invite your team. [Organization Onboarding Guide](/en/getting-started/first-client-setup)
+Create an organization workspace at [app.raigal.dev](https://app.raigal.dev) with a 14-day evaluation trial and invite your team. [Organization Onboarding Guide](/getting-started/first-client-setup)
 
   </Step>
 
   <Step title="2. Install the Raigal GitHub App">
 
-Connect your repositories through the [Raigal GitHub App](https://github.com/apps/raigal-cloud) to run status checks on pull requests. [Pull Request Quality Gate](/en/automation-and-ci-cd/pull-requests)
+Connect your repositories through the [Raigal GitHub App](https://github.com/apps/raigal-cloud) to run status checks on pull requests. [Pull Request Quality Gate](/automation-and-ci-cd/pull-requests)
 
   </Step>
 
   <Step title="3. Add the CI workflow">
 
-Add a pinned GitHub Actions workflow to check pull requests and send scores to your dashboard. [CI/CD Pipelines & GitHub Actions](/en/automation-and-ci-cd/ci-cd)
+Add a pinned GitHub Actions workflow to check pull requests and send scores to your dashboard. [CI/CD Pipelines & GitHub Actions](/automation-and-ci-cd/ci-cd)
 
   </Step>
 
   <Step title="4. Set up local tools and hooks">
 
-Install the CLI (`raigal scan`, `raigal fix`) and set up interception hooks for Claude Code or Cursor. [Quickstart Guide](/en/getting-started/quickstart)
+Install the CLI (`raigal scan`, `raigal fix`) and set up interception hooks for Claude Code or Cursor. [Quickstart Guide](/getting-started/quickstart)
 
   </Step>
 </Steps>

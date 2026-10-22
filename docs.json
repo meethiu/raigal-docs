@@ -24,43 +24,43 @@
           {
             "group": "Getting Started",
             "pages": [
-              "en/index",
-              "en/getting-started/installation",
-              "en/getting-started/quickstart",
-              "en/getting-started/first-client-setup"
+              "index",
+              "getting-started/installation",
+              "getting-started/quickstart",
+              "getting-started/first-client-setup"
             ]
           },
           {
             "group": "Core Concepts",
             "pages": [
-              "en/core-concepts/scoring",
-              "en/core-concepts/rules",
-              "en/core-concepts/security"
+              "core-concepts/scoring",
+              "core-concepts/rules",
+              "core-concepts/security"
             ]
           },
           {
             "group": "CLI Reference",
             "pages": [
-              "en/cli-reference/commands",
-              "en/cli-reference/configuration",
-              "en/cli-reference/hooks"
+              "cli-reference/commands",
+              "cli-reference/configuration",
+              "cli-reference/hooks"
             ]
           },
           {
             "group": "Automation & CI/CD",
             "pages": [
-              "en/automation-and-ci-cd/ci-cd",
-              "en/automation-and-ci-cd/pull-requests",
-              "en/automation-and-ci-cd/agent-repairs",
-              "en/automation-and-ci-cd/mcp-server"
+              "automation-and-ci-cd/ci-cd",
+              "automation-and-ci-cd/pull-requests",
+              "automation-and-ci-cd/agent-repairs",
+              "automation-and-ci-cd/mcp-server"
             ]
           },
           {
             "group": "Cloud Platform",
             "pages": [
-              "en/cloud-platform/architecture",
-              "en/cloud-platform/dashboard",
-              "en/cloud-platform/admin-api"
+              "cloud-platform/architecture",
+              "cloud-platform/dashboard",
+              "cloud-platform/admin-api"
             ]
           }
         ]
@@ -72,42 +72,42 @@
             "group": "Primer Contacto",
             "pages": [
               "es/index",
-              "es/primer-contacto/instalacion",
-              "es/primer-contacto/inicio-rapido",
-              "es/primer-contacto/configuracion-cliente"
+              "es/getting-started/installation",
+              "es/getting-started/quickstart",
+              "es/getting-started/first-client-setup"
             ]
           },
           {
             "group": "Conceptos Clave",
             "pages": [
-              "es/conceptos-clave/puntuacion",
-              "es/conceptos-clave/reglas",
-              "es/conceptos-clave/seguridad"
+              "es/core-concepts/scoring",
+              "es/core-concepts/rules",
+              "es/core-concepts/security"
             ]
           },
           {
             "group": "Referencia CLI",
             "pages": [
-              "es/referencia-cli/comandos",
-              "es/referencia-cli/configuracion",
-              "es/referencia-cli/hooks"
+              "es/cli-reference/commands",
+              "es/cli-reference/configuration",
+              "es/cli-reference/hooks"
             ]
           },
           {
             "group": "Automatización y CI/CD",
             "pages": [
-              "es/automatizacion-y-ci-cd/ci-cd",
-              "es/automatizacion-y-ci-cd/pull-requests",
-              "es/automatizacion-y-ci-cd/reparacion-agentes",
-              "es/automatizacion-y-ci-cd/servidor-mcp"
+              "es/automation-and-ci-cd/ci-cd",
+              "es/automation-and-ci-cd/pull-requests",
+              "es/automation-and-ci-cd/agent-repairs",
+              "es/automation-and-ci-cd/mcp-server"
             ]
           },
           {
             "group": "Plataforma Cloud",
             "pages": [
-              "es/plataforma-cloud/arquitectura",
-              "es/plataforma-cloud/tablero",
-              "es/plataforma-cloud/api-admin"
+              "es/cloud-platform/architecture",
+              "es/cloud-platform/dashboard",
+              "es/cloud-platform/admin-api"
             ]
           }
         ]

@@ -37,37 +37,37 @@ Raigal evalúa el código en local mediante hooks de agente, en CI con cada comm
     <tr>
       <td><strong>Raigal Cloud</strong></td>
       <td>Panel web en <code>app.raigal.dev</code> con tablero de remediación en 4 etapas e historial de escaneos.</td>
-      <td><a href="/es/plataforma-cloud/tablero">Tablero Cloud</a></td>
+      <td><a href="/es/cloud-platform/dashboard">Tablero Cloud</a></td>
     </tr>
     <tr>
       <td><strong>GitHub App</strong></td>
       <td>Comprobaciones en pull requests y cumplimiento de protección de ramas.</td>
-      <td><a href="/es/automatizacion-y-ci-cd/pull-requests">Configurar GitHub App</a></td>
+      <td><a href="/es/automation-and-ci-cd/pull-requests">Configurar GitHub App</a></td>
     </tr>
     <tr>
       <td><strong>Motor de puntuación (0-100)</strong></td>
       <td>Puntuación ponderada normalizada por recuento de archivos fuente, topes dinámicos por regla y compresión logarítmica.</td>
-      <td><a href="/es/conceptos-clave/puntuacion">Motor de Puntuación</a></td>
+      <td><a href="/es/core-concepts/scoring">Motor de Puntuación</a></td>
     </tr>
     <tr>
       <td><strong>CLI y hooks de agente</strong></td>
       <td>Verificación pre-commit, correcciones automáticas seguras (<code>raigal fix</code>) e intercepción en tiempo real para agentes.</td>
-      <td><a href="/es/referencia-cli/comandos">Referencia del CLI</a></td>
+      <td><a href="/es/cli-reference/commands">Referencia del CLI</a></td>
     </tr>
     <tr>
       <td><strong>Reparación con agentes</strong></td>
       <td>Entornos git aislados donde agentes locales corrigen problemas y generan pull requests.</td>
-      <td><a href="/es/automatizacion-y-ci-cd/reparacion-agentes">Reparación con Agentes</a></td>
+      <td><a href="/es/automation-and-ci-cd/agent-repairs">Reparación con Agentes</a></td>
     </tr>
     <tr>
       <td><strong>OIDC en GitHub Actions</strong></td>
       <td>Autenticación sin contraseñas fijas para runners de CI mediante tokens OIDC de GitHub.</td>
-      <td><a href="/es/conceptos-clave/seguridad">Modelo de Seguridad</a></td>
+      <td><a href="/es/core-concepts/security">Modelo de Seguridad</a></td>
     </tr>
     <tr>
       <td><strong>Raigal MCP</strong></td>
       <td>Servidor Model Context Protocol que conecta las herramientas de Raigal con Claude Code, Cursor, Windsurf, Cline y Antigravity.</td>
-      <td><a href="/es/automatizacion-y-ci-cd/servidor-mcp">Servidor MCP</a></td>
+      <td><a href="/es/automation-and-ci-cd/mcp-server">Servidor MCP</a></td>
     </tr>
   </tbody>
 </table>
@@ -77,25 +77,25 @@ Raigal evalúa el código en local mediante hooks de agente, en CI con cada comm
 <Steps>
   <Step title="1. Crear cuenta en Raigal Cloud">
 
-Cree el espacio de trabajo de su organización en [app.raigal.dev](https://app.raigal.dev) con una prueba de evaluación de 14 días e invite a su equipo. [Guía de Configuración de la Organización](/es/primer-contacto/configuracion-cliente)
+Cree el espacio de trabajo de su organización en [app.raigal.dev](https://app.raigal.dev) con una prueba de evaluación de 14 días e invite a su equipo. [Guía de Configuración de la Organización](/es/getting-started/first-client-setup)
 
   </Step>
 
   <Step title="2. Instalar la GitHub App de Raigal">
 
-Conecte sus repositorios con la [GitHub App oficial de Raigal](https://github.com/apps/raigal-cloud) para habilitar comprobaciones automáticas en pull requests. [Puerta de Calidad en Pull Requests](/es/automatizacion-y-ci-cd/pull-requests)
+Conecte sus repositorios con la [GitHub App oficial de Raigal](https://github.com/apps/raigal-cloud) para habilitar comprobaciones automáticas en pull requests. [Puerta de Calidad en Pull Requests](/es/automation-and-ci-cd/pull-requests)
 
   </Step>
 
   <Step title="3. Configurar el flujo de CI">
 
-Añada un flujo de GitHub Actions para evaluar los pull requests y enviar las puntuaciones al tablero. [Pipelines de CI/CD y GitHub Actions](/es/automatizacion-y-ci-cd/ci-cd)
+Añada un flujo de GitHub Actions para evaluar los pull requests y enviar las puntuaciones al tablero. [Pipelines de CI/CD y GitHub Actions](/es/automation-and-ci-cd/ci-cd)
 
   </Step>
 
   <Step title="4. Configurar herramientas locales y hooks">
 
-Instale el CLI (`raigal scan`, `raigal fix`) y active los hooks de intercepción para Claude Code o Cursor. [Guía de Inicio Rápido](/es/primer-contacto/inicio-rapido)
+Instale el CLI (`raigal scan`, `raigal fix`) y active los hooks de intercepción para Claude Code o Cursor. [Guía de Inicio Rápido](/es/getting-started/quickstart)
 
   </Step>
 </Steps>
