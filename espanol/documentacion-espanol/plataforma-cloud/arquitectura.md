@@ -1,19 +1,19 @@
 ---
-description: "Arquitectura, tratamiento de datos, integración con GitHub App y controles de seguridad en Raigal Cloud."
+description: "Arquitectura, tratamiento de datos, integracion con GitHub App y controles de seguridad en Raigal Cloud."
 icon: network-wired
 ---
 
 # Arquitectura y seguridad de la plataforma
 
-Raigal Cloud (`https://app.raigal.dev`) es la aplicación web y servicio de coordinación de Raigal. Gestiona comprobaciones de pull requests, organiza incidencias en tableros de remediación, autentica a los usuarios y firma licencias fuera de línea.
+Raigal Cloud (`https://app.raigal.dev`) es la aplicacion web y servicio de coordinacion de Raigal. Gestiona comprobaciones de pull requests, organiza incidencias en tableros de remediacion, autentica a los usuarios y firma licencias fuera de linea.
 
-## Topología del sistema
+## Topologia del sistema
 
 ```mermaid
 graph TD
-    subgraph Entornos de Cómputo del Cliente
+    subgraph Entornos de Computo del Cliente
         Dev["Puesto Local: raigal scan / fix"]
-        Agent["Agente Autónomo: raigal agent --pr"]
+        Agent["Agente Autonomo: raigal agent --pr"]
         CI["GitHub Actions / Runners de CI"]
     end
 
@@ -24,25 +24,25 @@ graph TD
 
     subgraph Plano de Control Raigal Cloud (app.raigal.dev)
         Gateway["Pasarela de API REST (HTTPS / TLS 1.3)"]
-        Auth["Identidad Clerk y Sincronización de Organizaciones"]
+        Auth["Identidad Clerk y Sincronizacion de Organizaciones"]
         OIDC["Verificador OIDC de GitHub Actions"]
         CheckManager["Orquestador de Check Runs y Estados"]
-        LeaseSigner["Firmador Criptográfico Ed25519"]
-        Store[("Almacén de Metadatos Multi-Inquilino Cifrado")]
+        LeaseSigner["Firmador Criptografico Ed25519"]
+        Store[("Almacen de Metadatos Multi-Inquilino Cifrado")]
     end
 
-    subgraph Interfaz de Gestión del Cliente
-        Board["Tablero Kanban de Remediación en 4 Etapas"]
-        Drawers["Paneles Laterales de Inspección Contextual"]
-        Telemetry["Historial de Ejecuciones y Auditoría de Diffs"]
+    subgraph Interfaz de Gestion del Cliente
+        Board["Tablero Kanban de Remediacion en 4 Etapas"]
+        Drawers["Paneles Laterales de Inspeccion Contextual"]
+        Telemetry["Historial de Ejecuciones y Auditoria de Diffs"]
         Settings["Gobernanza de Tokens y Repositorios"]
     end
 
     Dev -- "raigal login (Flujo OAuth Device)" --> Auth
-    Dev -- "POST /v1/runs (Metadatos y Puntuación)" --> Gateway
-    Agent -- "raigal agent --pr (PR y Estadísticas de Diff)" --> Gateway
+    Dev -- "POST /v1/runs (Metadatos y Puntuacion)" --> Gateway
+    Agent -- "raigal agent --pr (PR y Estadisticas de Diff)" --> Gateway
     CI -- "X-GitHub-OIDC o RAIGAL_TOKEN" --> Gateway
-    GHApp -- "Webhook (Eventos de PR e Instalación)" --> Gateway
+    GHApp -- "Webhook (Eventos de PR e Instalacion)" --> Gateway
 
     Gateway --> Store
     Gateway --> LeaseSigner
@@ -55,50 +55,50 @@ graph TD
     Auth --> Settings
 ```
 
-## Tratamiento del código fuente
+## Tratamiento del codigo fuente y privacidad
 
-Los archivos de código fuente completos del cliente nunca se envían, procesan ni almacenan en los servidores de Raigal Cloud.
+Los archivos de codigo fuente completos del cliente nunca se envian, procesan ni almacenan en los servidores de Raigal Cloud.
 
-Separación entre cómputo local y servicios en la nube:
-1. Ejecución local y en runners: el análisis sintáctico (AST), linters (oxlint, ruff, biome), análisis de complejidad y detección de patrones se ejecutan íntegramente en su máquina o runner de CI.
-2. Informes de diagnóstico: al terminar el escaneo, solo se transmiten resúmenes diagnósticos:
-   - Puntuación final (0-100) y desglose por categorías
+Separacion entre computo local y servicios en la nube:
+1. **Ejecucion local y en runners**: El analisis sintactico (AST), linters (oxlint, ruff, biome), analisis de complejidad y deteccion de patrones se ejecutan integramente en su maquina o runner de CI.
+2. **Informes de diagnostico**: Al terminar el escaneo, solo se transmiten resumenes diagnosticos:
+   - Puntuacion final (0-100) y desglose por categorias
    - Identificadores de reglas (como `ai-slop/trivial-comment` o `security/eval`)
-   - Rutas relativas de archivos y coordenadas de línea
-   - Métricas de diff (archivos modificados, líneas añadidas y eliminadas)
-3. Vistas previas de diff en pull requests: durante la evaluación de pull requests en CI, se envía una vista previa del parche unificado (limitada a 20 KB) para visualizar las líneas modificadas en el tablero de pull requests. Antes de transmitirse, este diff pasa por `maskSecrets`, que elimina cabeceras de autorización, tokens Bearer, claves privadas y patrones de credenciales habituales.
+   - Rutas relativas de archivos y coordenadas de linea
+   - Metricas de diff (archivos modificados, lineas añadidas y eliminadas)
+3. **Vistas previas de diff en pull requests**: Durante la evaluacion de pull requests en CI, se envia una vista previa del parche unificado (limitada a 20 KB) para visualizar las lineas modificadas en el tablero de pull requests. Antes de transmitirse, este diff pasa por `maskSecrets`, que elimina cabeceras de autorizacion, tokens Bearer, claves privadas y patrones de credenciales habituales.
 
-## Integración con la GitHub App
+## Integracion con la GitHub App
 
 Raigal se conecta con GitHub mediante la app oficial `raigal-cloud`:
 
-- Comprobaciones basadas en eventos: al abrir o actualizar un pull request, GitHub notifica a Raigal Cloud, que crea un check pendiente "Raigal Quality Gate" en el commit head.
-- Resolución de comprobaciones: tras la evaluación en CI, el runner envía la puntuación a Raigal Cloud. Raigal marca el check como aprobado o rechazado, resolviendo las reglas de protección de rama.
-- Eventos de ciclo de vida: las fusiones y cierres se reciben mediante webhooks de GitHub, manteniendo el tablero actualizado sin scripts adicionales.
-- Limpieza de comprobaciones pendientes: si un trabajo de CI se cancela o interrumpe, Raigal Cloud elimina comprobaciones huérfanas tras 20 minutos para no bloquear pull requests.
+- **Comprobaciones basadas en eventos**: Al abrir o actualizar un pull request, GitHub notifica a Raigal Cloud, que crea un check pendiente "Raigal Quality Gate" en el commit head.
+- **Resolucion de comprobaciones**: Tras la evaluacion en CI, el runner envia la puntuacion a Raigal Cloud. Raigal marca el check como aprobado o rechazado, resolviendo las reglas de proteccion de rama.
+- **Eventos de ciclo de vida**: Las fusiones y cierres se reciben mediante webhooks de GitHub, manteniendo el tablero actualizado sin scripts adicionales.
+- **Tiempo limite de seguridad**: Si un trabajo de CI se cancela o interrumpe, Raigal Cloud elimina comprobaciones huerfanas tras 20 minutos para no bloquear pull requests.
 
-## Autenticación y control de accesos
+## Autenticacion y control de accesos
 
 ### Aislamiento multi-inquilino
-Raigal Cloud aísla los datos de cada organización mediante Clerk. Repositorios, ejecuciones, hallazgos y tokens de API se particionan por identificador de organización.
+Raigal Cloud aisla los datos de cada organizacion mediante Clerk. Repositorios, ejecuciones, hallazgos y tokens de API se particionan por identificador de organizacion. Las organizaciones operan bajo un periodo de prueba de evaluacion de 14 dias durante pilotos, o con licencias empresariales.
 
 ### OIDC en GitHub Actions
-Para flujos de CI, los runners se autentican con tokens efímeros:
+Para flujos de CI, los runners se autentican con tokens efimeros:
 - El runner solicita un token OIDC a `token.actions.githubusercontent.com`.
-- El runner envía el token en la cabecera `X-GitHub-OIDC`.
-- Raigal verifica la firma y valida que el repositorio pertenece a su organización.
-- Tras la validación, se concede permiso temporal para registrar esa ejecución concreta.
+- El runner envia el token en la cabecera `X-GitHub-OIDC` a `/v1/runs`.
+- Raigal verifica la firma y valida que el repositorio pertenece a su organizacion.
+- Tras la validacion, se concede permiso temporal para registrar esa ejecucion concreta.
 
-### Autenticación del CLI (RFC 8628)
-Los desarrolladores inician sesión con `raigal login`. El comando utiliza el flujo OAuth 2.0 Device Authorization (RFC 8628), abriendo una ventana del navegador para autorizar el equipo.
+### Autenticacion del CLI (RFC 8628)
+Los desarrolladores inician sesion con `raigal login`. El comando utiliza el flujo OAuth 2.0 Device Authorization (RFC 8628), abriendo una ventana del navegador para autorizar el equipo.
 
-### Tolerancia sin conexión y entornos aislados (Air-Gap)
-Raigal admite dos niveles de operación sin conexión continua:
-- Licencias temporales fuera de línea (72 horas): para desarrollo local y desplazamientos, los equipos autenticados guardan una licencia firmada con Ed25519 válida durante 72 horas. El CLI valida la firma en local con una clave pública incrustada en el binario.
-- Licencias estáticas para redes aisladas: para redes completamente desconectadas o runners en VPCs sin salida a internet, Raigal admite tokens de licencia estáticos (válidos de 1 a 3 años) sin necesidad de conexión externa, así como despliegues del plano de control en infraestructura propia.
+### Tolerancia sin conexion y entornos aislados (Air-Gap)
+Raigal admite dos niveles de operacion sin conexion continua:
+- **Licencias temporales fuera de linea (72 horas)**: Para desarrollo local y desplazamientos, los equipos autenticados guardan una licencia firmada con Ed25519 valida durante 72 horas. El CLI valida la firma en local con una clave publica incrustada en el binario.
+- **Licencias estaticas para redes aisladas**: Para redes completamente desconectadas o runners en VPCs sin salida a internet, Raigal admite tokens de licencia estaticos (validos de 1 a 3 años) sin necesidad de conexion externa, asi como despliegues del plano de control en infraestructura propia.
 
-## Gestión de repositorios
+## Gestion de repositorios
 
-Los administradores gestionan los repositorios desde **Configuración** > **Repositorios**:
+Los administradores gestionan los repositorios desde **Settings** > **Repositories**:
 - Las claves de API se almacenan con hash SHA-256; los valores en texto plano nunca se guardan en la base de datos.
-- Al eliminar un repositorio, se borran en cascada todos sus registros históricos de ejecuciones, tarjetas de pull request y hallazgos.
+- Al eliminar un repositorio, se borran en cascada todos sus registros historicos de ejecuciones, tarjetas de pull request y hallazgos.

@@ -1,43 +1,44 @@
 ---
-description: "Security model, credential storage, environment variables, and offline leases."
+description: "Security model, credential storage, environment variables, secret redaction, and offline leases."
 icon: lock
 ---
 
 # Security model and credentials
 
-Raigal stores local credentials securely, scrubs secrets before sending metrics, and supports tokenless authentication through GitHub Actions OIDC.
+Raigal stores local credentials securely, scrubs sensitive tokens before transmitting metrics, and supports tokenless authentication through GitHub Actions OIDC.
 
 ## Credential storage
 
-On local machines, credentials and offline leases are stored in your home directory:
+On developer workstations, credentials and offline leases are stored securely in the user's home directory:
 
 - Path: `~/.raigal/credentials.json`
-- Permissions: `0600` (read and write for the file owner only)
-- File format:
+- Permissions: `0600` (read and write permissions restricted strictly to the file owner)
+- File structure:
   ```json
   {
     "token": "rgl_sess_...",
     "org": { "id": "org_123", "name": "Acme Corp" },
     "user": { "id": "user_456", "email": "dev@acme.com" },
-    "created_at": "2026-09-23T12:00:00.000Z"
+    "created_at": "2026-10-21T12:00:00.000Z"
   }
   ```
 
 ## Setting `RAIGAL_TOKEN` and `RAIGAL_API_URL`
 
-In CI pipelines, Docker containers, or scripts, pass authentication using environment variables:
+In continuous integration pipelines, Docker containers, or deployment scripts, configure authentication using environment variables:
 
-- `RAIGAL_TOKEN`: your organization's API token (`rgl_live_...`). This overrides `~/.raigal/credentials.json`.
-- `RAIGAL_API_URL`: custom backend URL (defaults to `https://app.raigal.dev`).
+- `RAIGAL_TOKEN`: your organization's API token (`rgl_live_...`). This overrides local credentials stored in `~/.raigal/credentials.json`.
+- `RAIGAL_ORG_ID`: organization ID (`org_...`), required if your repository owner account belongs to multiple Raigal organizations.
+- `RAIGAL_API_URL`: custom backend control plane URL (defaults to `https://app.raigal.dev`).
 
 {% tabs %}
 {% tab title="GitHub Actions" %}
 ```yaml
-- name: Run Raigal Scan
+- name: Run Raigal Quality Gate
   env:
     RAIGAL_TOKEN: ${{ secrets.RAIGAL_TOKEN }}
     RAIGAL_API_URL: ${{ secrets.RAIGAL_API_URL || 'https://app.raigal.dev' }}
-  run: npx -y @methiu/raigal@latest ci --changes --base origin/${{ github.base_ref || 'main' }}
+  run: npx --yes @methiu/raigal@latest ci --changes --base origin/${{ github.base_ref || 'main' }}
 ```
 {% endtab %}
 
@@ -45,7 +46,7 @@ In CI pipelines, Docker containers, or scripts, pass authentication using enviro
 ```bash
 export RAIGAL_TOKEN="rgl_live_your_token_here"
 export RAIGAL_API_URL="https://app.raigal.dev"
-raigal whoami
+npx @methiu/raigal whoami
 ```
 {% endtab %}
 
@@ -53,33 +54,33 @@ raigal whoami
 ```powershell
 $env:RAIGAL_TOKEN="rgl_live_your_token_here"
 $env:RAIGAL_API_URL="https://app.raigal.dev"
-raigal whoami
+npx @methiu/raigal whoami
 ```
 {% endtab %}
 {% endtabs %}
 
 ## Metric scrubbing and data handling
 
-Before telemetry or PR summaries are sent to the cloud:
-1. Local scans execute 100% in-process. Source code files are never uploaded to Raigal Cloud.
-2. `maskSecrets` automatically replaces high-entropy credentials, private keys, database URLs, and API tokens with redaction placeholders (`[REDACTED_SECRET]`).
-3. During pull request CI evaluations, a git patch diff preview (up to 20 KB) is transmitted after in-memory secret masking to populate the dashboard diff viewer. Diff uploads can be disabled organization-wide.
-4. Autonomous repair (`raigal agent`) passes relevant source snippets to the customer's configured LLM provider CLI (Claude Code, OpenCode, Codex).
+Before telemetry or PR summaries are transmitted to Raigal Cloud:
+1. **In-process execution**: AST parsing, linting, complexity analysis, and pattern rules execute 100% locally in your machine or CI runner. Source code files are never uploaded to Raigal Cloud.
+2. **Secret redaction (`maskSecrets`)**: High-entropy strings, API keys, database connection strings, bearer tokens, and private keys are scrubbed automatically and replaced with `[REDACTED_SECRET]` placeholders.
+3. **Pull request diff previews**: During pull request CI evaluations, an in-memory secret-masked git patch diff preview (capped at 20 KB) is transmitted to display line changes in the PR dashboard. Full files are never transmitted.
+4. **Autonomous repairs (`raigal agent`)**: Local repair sessions execute in isolated git worktrees and communicate directly with the customer's configured local LLM provider (Claude Code, Cursor, or OpenCode).
 
 ## GitHub Actions OIDC authentication
 
 To run in GitHub Actions without static repository secrets:
 
 1. Add `permissions: id-token: write` to your workflow job.
-2. The GitHub runner mints a short-lived OIDC token signed by GitHub.
-3. Raigal passes this token in the `X-GitHub-OIDC` header to `/api/v1/telemetry/runs`.
-4. Raigal Cloud validates the signature against `https://token.actions.githubusercontent.com` and confirms that the repository owner is registered to your organization.
+2. The GitHub runner mints a short-lived OIDC token cryptographically signed by GitHub.
+3. Raigal passes this token in the `X-GitHub-OIDC` header to `/v1/runs`.
+4. Raigal Cloud verifies the token signature against `https://token.actions.githubusercontent.com` and confirms that the repository owner is registered to your organization.
 
-## Offline operation and air-gap options
+## Offline tolerance and air-gapped environments
 
-Raigal does not contact the server on every scan:
+Raigal does not contact the network on every scan:
 
-1. **Offline-Tolerant SaaS (72-hour lease)**: When you authenticate, Raigal Cloud issues a signed Ed25519 lease token. The CLI verifies this signature offline using a public key bundled in the binary. Scans run without network access for up to 72 hours.
-2. **True Air-Gapped Environments (Banking / Defense)**:
-   - **Self-Hosted Raigal Cloud**: Deploy the official Docker container in your private VPC with zero public internet egress.
+1. **Offline-Tolerant SaaS (72-hour lease)**: When you authenticate with `raigal login` or configure `RAIGAL_TOKEN`, Raigal Cloud issues a signed Ed25519 lease token. The CLI verifies this signature offline using a public key bundled inside the binary. Scans execute without network access for up to 72 hours.
+2. **True Air-Gapped Environments (Banking, Defense, Sovereign VPCs)**:
+   - **Self-Hosted Raigal Cloud**: Deploy the official Raigal Cloud container in your private VPC with zero public internet egress.
    - **Static Offline License Key**: Statically signed JWT valid for 1 to 3 years, verified locally against the public key with no outbound network calls.

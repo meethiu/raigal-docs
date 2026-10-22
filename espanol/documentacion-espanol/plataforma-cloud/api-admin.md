@@ -1,28 +1,28 @@
 ---
-description: "Endpoints de la API para gestión de tokens, métricas de repositorios, inspección de políticas e ingesta de ejecuciones."
+description: "Endpoints de la API para gestion de tokens, metricas de repositorios, inspeccion de politicas e ingesta de ejecuciones."
 icon: key
 ---
 
-# API de organización y gestión de tokens
+# API de organizacion y gestion de tokens
 
-Raigal Cloud proporciona una API REST para consultar puntuaciones, inspeccionar políticas activas, gestionar tokens e ingerir resultados del CLI.
+Raigal Cloud proporciona una API REST para consultar puntuaciones, inspeccionar politicas activas, gestionar tokens e ingerir resultados del CLI.
 
-## Autenticación
+## Autenticacion
 
-Todas las solicitudes deben incluir un token Bearer válido en el encabezado `Authorization`:
+Todas las solicitudes deben incluir un token Bearer valido en el encabezado `Authorization`:
 
 ```http
 Authorization: Bearer rgl_live_su_clave_api_aqui
 ```
 
 {% hint style="info" %}
-Genere claves de API en [app.raigal.dev/settings](https://app.raigal.dev/settings) en la sección **API Tokens**.
+Genere claves de API en [app.raigal.dev/settings](https://app.raigal.dev/settings) en la seccion **API Tokens**.
 {% endhint %}
 
 ## Endpoints
 
-### 1. Verificación de identidad
-Verifica el token activo y devuelve el usuario, la organización y los propietarios de repositorios permitidos.
+### 1. Verificacion de identidad
+Verifica el token activo y devuelve el usuario, la organizacion, el estado de prueba de evaluacion o licencia, y los propietarios de repositorios permitidos.
 
 ```http
 GET /v1/whoami
@@ -52,8 +52,8 @@ Respuesta:
 }
 ```
 
-### 2. Política de calidad de la organización
-Recupera los umbrales de calidad y las reglas bloqueadas para la organización o un repositorio específico.
+### 2. Politica de calidad de la organizacion
+Recupera los umbrales de calidad y las reglas bloqueadas para la organizacion o un repositorio especifico.
 
 ```http
 GET /v1/policy?repo=acme%2Fbackend-api
@@ -81,7 +81,7 @@ Respuesta:
 ```
 
 ### 3. Ingesta de ejecuciones del CLI
-Envía un informe de ejecución generado por el CLI (`raigal ci` o `raigal scan`):
+Envia un informe de ejecucion generado por el CLI (`raigal ci` o `raigal scan`):
 
 ```http
 POST /v1/runs
@@ -133,7 +133,7 @@ Respuesta:
 }
 ```
 
-## Gestión de tokens
+## Gestion de tokens
 
 Los tokens pueden crearse en el panel web o mediante la API de tokens:
 
@@ -143,7 +143,7 @@ POST /api/tokens
 Content-Type: application/json
 
 {
-  "name": "Runner de Producción"
+  "name": "Runner de Produccion"
 }
 ```
 
@@ -152,7 +152,7 @@ Respuesta:
 {
   "token": "rgl_live_8f3a9b1c7e2d...",
   "prefix": "rgl_live_8f3a",
-  "name": "Runner de Producción",
+  "name": "Runner de Produccion",
   "id": "key_9b2e...",
   "created_at": "2026-10-21T10:00:00.000Z"
 }
@@ -162,6 +162,6 @@ Respuesta:
 Guarde su token al crearlo. La cadena completa se muestra una sola vez. Raigal Cloud almacena un hash SHA-256 y no puede recuperar tokens perdidos.
 {% endhint %}
 
-### Gestión del dashboard y repositorios
+### Gestion del dashboard y repositorios
 
-La gestión de repositorios, seguimiento de ramas y revocación de tokens está disponible a través de la interfaz web en [app.raigal.dev/settings](https://app.raigal.dev/settings) utilizando su sesión autenticada de navegador.
+La gestion de repositorios, seguimiento de ramas y revocacion de tokens esta disponible a traves de la interfaz web en [app.raigal.dev/settings](https://app.raigal.dev/settings) utilizando su sesion autenticada de navegador.

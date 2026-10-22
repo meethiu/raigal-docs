@@ -21,7 +21,7 @@ Raigal provides commands for local code checks, automatic fixes, agent repair se
 | `raigal telemetry` | Inspect recorded cloud run payloads and outbox status |
 | `raigal login` | Sign in via browser OAuth or API token |
 | `raigal logout` | Clear local credentials and cached offline leases |
-| `raigal whoami` | Inspect active credentials, user, organization, and allowed GitHub repos |
+| `raigal whoami` | Inspect active credentials, user, organization, trial/license status, and allowed repos |
 | `raigal doctor` | Check system binaries, tools, and engine status |
 | `raigal rules` | Display rule explanations and impact weights |
 | `raigal init` | Create configuration file and optional CI workflow |
@@ -162,7 +162,7 @@ raigal logout
 
 ### `raigal whoami`
 
-Displays active user, organization, plan tier, and authorized GitHub repositories.
+Displays active user, organization, evaluation trial or license status, and authorized GitHub repositories.
 
 ```bash
 raigal whoami

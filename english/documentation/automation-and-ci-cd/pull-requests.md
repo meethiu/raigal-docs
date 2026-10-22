@@ -1,11 +1,11 @@
 ---
-description: "Pull request checks, GitHub App integration, and branch protection."
+description: "Pull request checks, GitHub App integration, branch protection, and remediation board tracking."
 icon: git-pull-request
 ---
 
 # Pull request checks and GitHub App
 
-Raigal connects to GitHub to create pending checks when pull requests open, evaluate code changes, and update branch protection status.
+Raigal connects to GitHub to create status checks when pull requests open, evaluate code changes with six diagnostic engines, and enforce branch protection.
 
 ## Architecture
 
@@ -32,10 +32,12 @@ Raigal connects to GitHub to create pending checks when pull requests open, eval
 ```
 
 How this setup works:
-- Local processing: AST parsing and rule evaluation run inside your runner. Raigal Cloud does not clone or store your codebase.
-- Immediate pending check: when a pull request opens or receives new commits, the GitHub App creates a `"Raigal Quality Gate"` check in `in_progress` status on the head commit and adds a card to your board.
-- Branch protection: the `"Raigal Quality Gate"` check can be selected as a required status check in GitHub repository rules.
-- Automatic updates on merge or close: GitHub sends merge and close webhook events directly to the app, updating board cards without extra CI steps.
+- **Local AST processing**: Rule evaluation and AST analysis run entirely inside your CI runner. Raigal Cloud does not clone or store your codebase.
+- **Immediate pending check**: When a pull request opens or receives new commits, the GitHub App instantly registers a `"Raigal Quality Gate"` check in `in_progress` status on the head commit.
+- **Check run resolution**: Once the CI runner posts scan metrics to `/v1/runs`, Raigal Cloud matches the commit SHA and updates the check run with a detailed markdown summary.
+- **Branch protection enforcement**: The `"Raigal Quality Gate"` check can be selected as a required status check in GitHub branch protection rules.
+- **Automatic updates on merge or close**: GitHub sends merge and close webhook events directly to the app, updating board cards without extra CI steps.
+- **Safety timeout**: If a CI job is cancelled or fails before running `raigal ci`, Raigal Cloud automatically cleans up orphaned pending check runs after 20 minutes to prevent PRs from being blocked indefinitely.
 
 ## Setup: GitHub App and Actions
 
@@ -44,10 +46,10 @@ How this setup works:
 {% step %}
 ### 1. Install the GitHub App
 1. Open the [Raigal Cloud GitHub App](https://github.com/apps/raigal-cloud).
-2. Select **Install**.
+2. Click **Install**.
 3. Choose your organization or personal account.
 4. Select all repositories or choose specific ones.
-5. Select **Install & Authorize**.
+5. Click **Install & Authorize**.
 {% endstep %}
 
 {% step %}
@@ -55,15 +57,15 @@ How this setup works:
 1. Sign in to your dashboard at [app.raigal.dev](https://app.raigal.dev).
 2. Open **Settings**.
 3. Under **API Tokens**, select **Create New Token**.
-4. Name the token and copy the generated key (`rgl_live_...`).
+4. Name the token (e.g., `ci-runner`) and copy the generated key (`rgl_live_...`).
 {% endstep %}
 
 {% step %}
 ### 3. Add token to GitHub repository
 1. In your GitHub repository, open **Settings** > **Secrets and variables** > **Actions**.
-2. Select **New repository secret**.
+2. Click **New repository secret**.
 3. Set the name to `RAIGAL_TOKEN` and paste your key.
-4. Select **Add secret**.
+4. Click **Add secret**.
 
 {% hint style="tip" %}
 If you prefer not to manage static tokens, add `permissions: id-token: write` to your workflow. Raigal Cloud validates the runner using GitHub OIDC directly.
@@ -80,12 +82,12 @@ name: Raigal Quality Gate
 on:
   pull_request:
     types: [opened, synchronize, reopened]
-    branches: [main, develop]
+    branches: [main, master, develop]
   push:
-    branches: [main]
+    branches: [main, master, develop]
 
 jobs:
-  gate:
+  quality-gate:
     name: Code Quality & Slop Gate
     runs-on: ubuntu-latest
     permissions:
@@ -97,22 +99,20 @@ jobs:
       - name: Checkout Code
         uses: actions/checkout@v4
         with:
-          fetch-depth: 0
+          fetch-depth: 0 # Full history required for diffs
 
       - name: Setup Node.js
         uses: actions/setup-node@v4
         with:
           node-version: 22
 
-      - name: Fetch Base Branch for Diff Analysis
-        run: git fetch origin ${{ github.base_ref }} --depth=1
-
       - name: Run Raigal Quality Gate
         env:
           RAIGAL_TOKEN: ${{ secrets.RAIGAL_TOKEN }}
-          # RAIGAL_ORG_ID: ${{ vars.RAIGAL_ORG_ID }} # Required if owner belongs to multiple orgs
+          # RAIGAL_ORG_ID: ${{ vars.RAIGAL_ORG_ID }} # Required only if owner belongs to multiple orgs
         run: |
           if [ "${{ github.event_name }}" = "pull_request" ]; then
+            git fetch origin ${{ github.base_ref }} --depth=1
             npx --yes @methiu/raigal@latest ci --changes --base origin/${{ github.base_ref }}
           else
             npx --yes @methiu/raigal@latest ci .
@@ -127,7 +127,7 @@ Because the GitHub App receives `pull_request.closed` events directly, you do no
 {% step %}
 ### 5. Require status check in branch protection
 1. In your GitHub repository, open **Settings** > **Branches** (or **Rules > Rulesets**).
-2. Under **Branch protection rules**, edit the rule for your default branch.
+2. Under **Branch protection rules**, edit the rule for your default branch (`main`).
 3. Check **Require status checks to pass before merging**.
 4. Search for and select **Raigal Quality Gate**.
 5. Save changes.
@@ -142,12 +142,12 @@ GitHub Check Runs and pull request cards evaluate results into three clear state
 | Status verdict | Criteria | Check run outcome |
 |---|---|---|
 | **PASSED** | Score >= threshold (default 70), 0 errors, 0 warnings | `success` (Green check) |
-| **PASSED (WITH WARNINGS)** | Score >= threshold (default 70), 0 errors, warnings present | `neutral` (Advisory pass, does not block merge) |
-| **FAILED / BLOCKED** | Score < threshold (default 70), exit code != 0, or errors present | `failure` (Red cross, blocks merge) |
+| **PASSED (WITH WARNINGS)** | Score >= threshold (default 70), 0 errors, non-blocking warnings present | `neutral` (Advisory pass, does not block merge) |
+| **FAILED / BLOCKED** | Score < threshold (default 70), exit code != 0, or blocker errors present | `failure` (Red cross, blocks merge) |
 
 ## Standalone CI mode (without GitHub App)
 
-If your organization does not allow GitHub App installations, you can run Raigal using GitHub Actions alone:
+If your organization policies prevent installing third-party GitHub Apps, you can run Raigal using GitHub Actions alone:
 
 {% stepper %}
 
@@ -187,7 +187,7 @@ jobs:
           RAIGAL_TOKEN: ${{ secrets.RAIGAL_TOKEN }}
           RAIGAL_API_URL: ${{ secrets.RAIGAL_API_URL || 'https://app.raigal.dev' }}
         run: |
-          npx -y @methiu/raigal@latest report-pr-closed \
+          npx --yes @methiu/raigal@latest report-pr-closed \
             --pr ${{ github.event.pull_request.number }} \
             ${{ github.event.pull_request.merged && '--merged' || '' }}
 ```
@@ -199,22 +199,23 @@ jobs:
 
 In [Raigal Cloud](https://app.raigal.dev), open your repository board:
 
-1. Pull requests column:
+1. **Pull requests column**:
    - Passed: shows the quality score (e.g. `94/100`), author, source branch, and target branch.
    - Blocked: shows blocker counts and failing rule categories.
-2. Inspection drawer:
+2. **Inspection drawer**:
    - Click a card to open its detail panel.
    - Review blocking findings with rule IDs, file paths, and line numbers.
    - Inspect diff statistics and unified diff preview.
-   - Copy the `git checkout` command to inspect changes locally, or select **Open on GitHub** to jump to the PR.
+   - Copy the `git checkout` command to inspect changes locally, or select **Open on GitHub** to jump directly to the pull request.
 
 ## Troubleshooting
 
-| Symptom | Cause | Solution |
-| :--- | :--- | :--- |
-| Check remains pending | CI workflow did not run or timed out | Check that the workflow completed for the commit `head_sha`. Raigal Cloud clears orphaned pending checks after 20 minutes. |
-| Check run does not appear on PR | GitHub App not installed on repository | Ensure the [raigal-cloud GitHub App](https://github.com/apps/raigal-cloud) is installed on the repository. |
-| HTTP 401 or invalid token in CI | Missing or expired `RAIGAL_TOKEN` | Confirm that `RAIGAL_TOKEN` is set in GitHub repository secrets and matches an active token in [Settings](https://app.raigal.dev/settings). |
-| HTTP 403 `owner_not_allowed` in CI | Repository owner not in allowlist | Go to **Settings > Allowed Owners** in Raigal Cloud and select **Sync GitHub**. |
-| Diff preview shows 0 files changed | Shallow checkout (`fetch-depth: 1`) | Set `fetch-depth: 0` in `actions/checkout@v4` so full git history is available for comparison against the base branch. |
+| Symptom | Probable Cause | Actionable Fix |
+|---|---|---|
+| `ambiguous_organization` (HTTP 400) | Repository owner account belongs to multiple Raigal organizations | In your workflow, set `RAIGAL_ORG_ID: ${{ vars.RAIGAL_ORG_ID }}` with your organization ID (`org_...`) from [Settings](https://app.raigal.dev/settings). |
+| Check run remains pending | CI workflow did not run or failed before executing `raigal ci` | Check that your GitHub Actions job completed for the commit `head_sha`. Raigal Cloud automatically clears orphaned pending checks after 20 minutes. |
+| Check run does not appear on PR | GitHub App not installed on the repository | Ensure the [raigal-cloud GitHub App](https://github.com/apps/raigal-cloud) is installed on the organization or user owning the repository. |
+| HTTP 401 Unauthorized in CI | Missing or expired `RAIGAL_TOKEN` | Confirm that `RAIGAL_TOKEN` is set in GitHub repository secrets and matches an active token in [Settings](https://app.raigal.dev/settings). |
+| HTTP 403 `owner_not_allowed` in CI | Repository owner is not linked to your Raigal organization | Go to **Settings > Allowed Owners** in Raigal Cloud and click **Sync GitHub**. |
+| Diff preview shows 0 files changed | Shallow checkout (`fetch-depth: 1`) | Set `fetch-depth: 0` in `actions/checkout@v4` so full git commit history is available to compare against the base branch. |
 | PR card does not update on merge | Standalone mode without sync workflow | If running without the GitHub App, add the `report-pr-closed` workflow. |

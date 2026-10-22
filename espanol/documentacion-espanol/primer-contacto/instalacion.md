@@ -1,29 +1,35 @@
 ---
-description: "Cómo instalar Raigal CLI mediante npm, npx o dependencias locales en macOS, Linux y Windows."
+description: "Como instalar Raigal CLI mediante npm, npx, pnpm, yarn o bun en macOS, Linux y Windows."
 icon: download
 ---
 
-# Instalación
+# Instalacion
 
-Puede ejecutar Raigal directamente con `npx` o instalarlo de forma global o como dependencia del proyecto.
+Puede ejecutar Raigal directamente sin instalacion permanente mediante `npx`, instalarlo de forma global en su equipo o añadirlo como dependencia de su proyecto.
 
-## Requisitos
+## Requisitos del sistema
 
-- Node.js 20.12 o superior (se recomienda Node 22 LTS)
-- `npm`, `pnpm`, `yarn` o `bun`
-- macOS, Linux o Windows (PowerShell y cmd.exe)
+- **Node.js**: version 20.12 o superior (se recomienda Node 22 LTS)
+- **Gestor de paquetes**: `npm`, `pnpm`, `yarn` o `bun`
+- **Sistemas operativos**: macOS, Linux o Windows (PowerShell y cmd.exe)
 
-## Ejecutar con `npx`
+## Ejecutar directamente con `npx`
 
-Para realizar un análisis sin instalar el paquete de forma permanente:
+Para realizar un analisis inmediato sin instalar ningun paquete:
 
 ```bash
-npx @methiu/raigal scan .
+npx --yes @methiu/raigal@latest scan .
 ```
 
-## Instalación global
+Para ejecutar el asistente interactivo de configuracion:
 
-Para disponer del comando `raigal` en cualquier terminal:
+```bash
+npx --yes @methiu/raigal@latest init
+```
+
+## Instalacion global
+
+Instale Raigal de forma global para disponer del comando `raigal` en cualquier terminal:
 
 {% tabs %}
 {% tab title="npm" %}
@@ -43,30 +49,60 @@ pnpm add -g @methiu/raigal
 yarn global add @methiu/raigal
 ```
 {% endtab %}
+
+{% tab title="bun" %}
+```bash
+bun add -g @methiu/raigal
+```
+{% endtab %}
 {% endtabs %}
 
-Compruebe la instalación:
+Compruebe que el CLI se instalo correctamente:
 
 ```bash
-raigal version
-# Salida: @methiu/raigal v1.0.0 (o versión activa)
+raigal --version
 ```
 
 ## Dependencia del proyecto
 
-Para incluir Raigal entre las dependencias de desarrollo de su equipo:
+Para fijar Raigal como dependencia de desarrollo en su repositorio:
 
+{% tabs %}
+{% tab title="npm" %}
+```bash
+npm install -D @methiu/raigal
+```
+{% endtab %}
+
+{% tab title="pnpm" %}
 ```bash
 pnpm add -D @methiu/raigal
 ```
+{% endtab %}
 
-Añada los scripts correspondientes a `package.json`:
+{% tab title="yarn" %}
+```bash
+yarn add -D @methiu/raigal
+```
+{% endtab %}
+
+{% tab title="bun" %}
+```bash
+bun add -d @methiu/raigal
+```
+{% endtab %}
+{% endtabs %}
+
+Añada los scripts correspondientes a su `package.json` para facilitar el uso a su equipo:
 
 ```json
 {
   "scripts": {
     "scan": "raigal scan .",
-    "gate": "raigal ci ."
+    "gate": "raigal ci .",
+    "fix": "raigal fix ."
   }
 }
 ```
+
+De esta forma, cualquier miembro del equipo puede ejecutar `pnpm scan` o `npm run gate` utilizando la configuracion del proyecto.

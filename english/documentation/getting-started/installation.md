@@ -1,35 +1,35 @@
 ---
-description: "How to install the Raigal CLI via npm, npx, or local dependencies on macOS, Linux, and Windows."
+description: "How to install the Raigal CLI via npm, npx, pnpm, yarn, or bun on macOS, Linux, and Windows."
 icon: download
 ---
 
 # Installation
 
-You can run Raigal directly with `npx` or install it globally or as a project dependency.
+You can run Raigal directly without installation using `npx`, install it globally across your system, or add it as a project dependency.
 
-## Requirements
+## System requirements
 
-- Node.js 20.12 or higher (Node 22 LTS recommended)
-- `npm`, `pnpm`, `yarn`, or `bun`
-- macOS, Linux, or Windows (PowerShell and cmd.exe)
+- **Node.js**: version 20.12 or higher (Node 22 LTS recommended)
+- **Package manager**: `npm`, `pnpm`, `yarn`, or `bun`
+- **Operating systems**: macOS, Linux, or Windows (PowerShell and cmd.exe)
 
-## Run with `npx`
+## Run directly with `npx`
 
-To run a scan without installing the package globally:
+To run a scan immediately without installing anything permanently:
 
 ```bash
-npx @methiu/raigal scan .
+npx --yes @methiu/raigal@latest scan .
 ```
 
-To pin a specific release in CI or local scripts:
+To run the interactive project setup wizard:
 
 ```bash
-npx -y @methiu/raigal@latest scan .
+npx --yes @methiu/raigal@latest init
 ```
 
 ## Global installation
 
-To keep the `raigal` command available in your terminal:
+Install Raigal globally to make the `raigal` command available in any terminal window:
 
 {% tabs %}
 {% tab title="npm" %}
@@ -49,9 +49,15 @@ pnpm add -g @methiu/raigal
 yarn global add @methiu/raigal
 ```
 {% endtab %}
+
+{% tab title="bun" %}
+```bash
+bun add -g @methiu/raigal
+```
+{% endtab %}
 {% endtabs %}
 
-Verify that the CLI is installed:
+Verify that the CLI is installed correctly:
 
 ```bash
 raigal --version
@@ -59,19 +65,44 @@ raigal --version
 
 ## Project dependency
 
-To pin Raigal as a development dependency for your project:
+To pin Raigal as a development dependency for your repository:
 
+{% tabs %}
+{% tab title="npm" %}
+```bash
+npm install -D @methiu/raigal
+```
+{% endtab %}
+
+{% tab title="pnpm" %}
 ```bash
 pnpm add -D @methiu/raigal
 ```
+{% endtab %}
 
-Add scripts to `package.json`:
+{% tab title="yarn" %}
+```bash
+yarn add -D @methiu/raigal
+```
+{% endtab %}
+
+{% tab title="bun" %}
+```bash
+bun add -d @methiu/raigal
+```
+{% endtab %}
+{% endtabs %}
+
+Add scripts to your `package.json` for team convenience:
 
 ```json
 {
   "scripts": {
     "scan": "raigal scan .",
-    "gate": "raigal ci ."
+    "gate": "raigal ci .",
+    "fix": "raigal fix ."
   }
 }
 ```
+
+Now any team member can run `pnpm scan` or `npm run gate` with consistent project configuration.

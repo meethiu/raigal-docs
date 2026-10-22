@@ -1,5 +1,5 @@
 ---
-description: Code quality and AI-generated pattern detection for engineering teams.
+description: "Code quality and AI-generated pattern detection for engineering teams."
 icon: shield-check
 layout:
   width: default
@@ -27,7 +27,7 @@ layout:
 
 Raigal checks code for patterns introduced by AI coding tools, including verbose comments, unnecessary type assertions, swallowed errors, and insecure calls. It combines formatting, linting, complexity checks, security rules, and pattern detection into one CLI command that returns a calibrated score from 0 to 100.
 
-Used with the [Raigal Cloud Platform](https://app.raigal.dev) and the [Raigal GitHub App](https://github.com/apps/raigal-cloud), it evaluates pull requests, updates status checks for branch protection, tracks issues on a remediation board, and coordinates repair sessions with local coding agents.
+Used with the [Raigal Cloud Platform](https://app.raigal.dev) and the official [Raigal GitHub App](https://github.com/apps/raigal-cloud), it evaluates pull requests, updates status checks for branch protection, tracks issues on a 4-stage remediation board, and coordinates repair sessions with local coding agents.
 
 {% hint style="success" %}
 Raigal runs AST parsing, linting, and pattern checks locally inside your runner. Full source code is never uploaded to Raigal servers. During pull request CI evaluations, an in-memory secret-masked git patch diff preview (up to 20 KB) is sent to render the PR dashboard. Autonomous repair sessions (`raigal agent`) communicate with your configured local LLM provider.
@@ -58,7 +58,7 @@ Raigal runs through local agent hooks, in CI pipelines on every pull request, an
   <tbody>
     <tr>
       <td><strong>Raigal Cloud</strong></td>
-      <td>Web dashboard at <code>app.raigal.dev</code> with a remediation board, score tracking, and team audit history.</td>
+      <td>Web dashboard at <code>app.raigal.dev</code> with a 4-stage remediation board, score tracking, and team audit history.</td>
       <td><a href="cloud-platform/dashboard.md">Cloud Dashboard</a></td>
     </tr>
     <tr>
@@ -100,7 +100,7 @@ Raigal runs through local agent hooks, in CI pipelines on every pull request, an
 {% step %}
 ### 1. Sign in to Raigal Cloud
 
-Create an organization workspace at [app.raigal.dev](https://app.raigal.dev) and invite your team. [Organization Onboarding Guide](getting-started/first-client-setup.md)
+Create an organization workspace at [app.raigal.dev](https://app.raigal.dev) with a 14-day evaluation trial and invite your team. [Organization Onboarding Guide](getting-started/first-client-setup.md)
 {% endstep %}
 
 {% step %}

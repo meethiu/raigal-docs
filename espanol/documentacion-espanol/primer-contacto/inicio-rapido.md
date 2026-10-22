@@ -1,54 +1,58 @@
 ---
-description: "Autentíquese, inicialice su configuración, ejecute un primer análisis y aplique correcciones automáticas."
+description: "Autentiquese, inicialice su configuracion, ejecute un primer analisis y aplique correcciones automaticas en pocos minutos."
 icon: bolt
 ---
 
-# Inicio rápido
+# Inicio rapido
 
-Analice un repositorio y revise los resultados en cuatro pasos.
+Evalúe un repositorio y revise su puntuacion de salud de codigo en cuatro sencillos pasos.
 
 {% stepper %}
 {% step %}
-### 1. Autenticarse con su organización
+### 1. Autenticarse con su organizacion
 
-Inicie sesión para vincular su terminal local con su organización de Raigal:
+Inicie sesion para vincular su terminal local con su organizacion de Raigal:
 
 ```bash
-raigal login
+npx @methiu/raigal login
 ```
 
-O exporte el token de API de su organización:
+Esto abrira su navegador para autorizar su equipo. Si trabaja en un entorno sin navegador, contenedor o runner de CI, exporte su clave de API de la organizacion:
 
 ```bash
 export RAIGAL_TOKEN="rgl_live_su_token_aqui"
 ```
+
+{% hint style="info" %}
+Las nuevas organizaciones en [app.raigal.dev](https://app.raigal.dev) comienzan con un periodo de evaluacion completo de 14 dias con acceso a los seis motores de diagnostico.
+{% endhint %}
 {% endstep %}
 
 {% step %}
-### 2. Inicializar la configuración
+### 2. Inicializar la configuracion del proyecto
 
-Cree su configuración y elija su pipeline de CI:
+Cree una configuracion adaptada a su repositorio:
 
 ```bash
-raigal init
+npx @methiu/raigal init
 ```
 
-Este asistente interactivo detecta su entorno y genera:
-- `.raigal/config.yml`: umbrales de puntuación, activación de motores y rutas excluidas (`exclude`).
-- `.raigal/rules.yml`: reglas de arquitectura y ajustes de severidad.
-- Flujo de CI (GitHub Actions, GitLab CI o Bitbucket Pipelines).
+El asistente interactivo examina las dependencias de su proyecto y genera automaticamente:
+- `.raigal/config.yml`: umbrales de puntuacion calibrados, activacion de motores y exclusiones de archivos.
+- `.raigal/rules.yml`: ajustes de severidad personalizados y reglas de arquitectura.
+- Plantilla de flujo de CI para GitHub Actions, GitLab CI o Bitbucket Pipelines.
 {% endstep %}
 
 {% step %}
-### 3. Ejecutar el análisis
+### 3. Ejecutar el primer analisis
 
-Ejecute el comando de escaneo en la raíz de su repositorio:
+Ejecute el comando de escaneo en la raiz de su repositorio:
 
 ```bash
-raigal scan .
+npx @methiu/raigal scan .
 ```
 
-Raigal ejecuta en paralelo los motores de formateo, linting, calidad de código, patrones de IA y seguridad, mostrando la puntuación obtenida (0-100):
+Raigal ejecuta los seis motores de diagnostico en paralelo (formato, linting, calidad de codigo, patrones de IA, arquitectura y seguridad) y muestra su puntuacion numerica (0-100):
 
 ```text
    94 / 100  Healthy       0 errors  ·  1 warning  ·  1 fixable
@@ -58,17 +62,29 @@ Raigal ejecuta en paralelo los motores de formateo, linting, calidad de código,
    #  Finding                 Rule                       Status
    1  console.log leftover    ai-slop/console-leftover   warn [auto]
 ```
+
+Para ver el desglose detallado de archivos y lineas afectadas, incluya la opcion `-d` (verbose):
+
+```bash
+npx @methiu/raigal scan . -d
+```
 {% endstep %}
 
 {% step %}
-### 4. Aplicar correcciones
+### 4. Aplicar correcciones automaticas
 
-Aplique correcciones automáticas seguras para problemas de formato, comentarios triviales e importaciones sin uso:
+Aplique correcciones seguras y deterministas para formato, importaciones no utilizadas y comentarios triviales:
 
 ```bash
-raigal fix .
+npx @methiu/raigal fix .
 ```
 
-Para cambios estructurales que requieran edición semántica, ejecute `raigal agent .` para iniciar una sesión de reparación en un worktree aislado con Claude Code, Cursor u OpenCode.
+Para previsualizar las modificaciones sin escribir en el disco, utilice `--dry-run`:
+
+```bash
+npx @methiu/raigal fix . --dry-run
+```
+
+Para incidencias estructurales que requieran refactorizacion semantica (como excepciones silenciadas o aserciones de tipos complejas), ejecute `npx @methiu/raigal agent .` para iniciar una sesion de reparacion aislada con Claude Code, Cursor u OpenCode.
 {% endstep %}
 {% endstepper %}

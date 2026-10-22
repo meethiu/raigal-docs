@@ -22,7 +22,7 @@ Generate API keys at [app.raigal.dev/settings](https://app.raigal.dev/settings) 
 ## Endpoints
 
 ### 1. Identity check
-Verify the active token and return user, organization, and allowed repository owners.
+Verify the active token and return the authenticated user, organization, evaluation trial or license plan status, and allowed repository owners.
 
 ```http
 GET /v1/whoami
