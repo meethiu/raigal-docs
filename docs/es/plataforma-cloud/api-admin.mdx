@@ -1,0 +1,169 @@
+---
+title: "API de organizacion y gestion de tokens"
+description: "Endpoints de la API para gestion de tokens, metricas de repositorios, inspeccion de politicas e ingesta de ejecuciones."
+---
+
+Raigal Cloud proporciona una API REST para consultar puntuaciones, inspeccionar politicas activas, gestionar tokens e ingerir resultados del CLI.
+
+## Autenticacion
+
+Todas las solicitudes deben incluir un token Bearer valido en el encabezado `Authorization`:
+
+```http
+Authorization: Bearer rgl_live_su_clave_api_aqui
+```
+
+
+<Info>
+  Genere claves de API en [app.raigal.dev/settings](https://app.raigal.dev/settings) en la seccion **API Tokens**.
+</Info>
+
+
+## Endpoints
+
+### 1. Verificacion de identidad
+Verifica el token activo y devuelve el usuario, la organizacion, el estado de prueba de evaluacion o licencia, y los propietarios de repositorios permitidos.
+
+```http
+GET /v1/whoami
+```
+
+Respuesta:
+```json
+{
+  "user": {
+    "id": "user_2tQ...",
+    "email": "dev@acme.com"
+  },
+  "org": {
+    "id": "org_2tQ...",
+    "name": "Acme Engineering",
+    "status": "active"
+  },
+  "plan": "active",
+  "trial_started_at": null,
+  "trial_ends_at": null,
+  "allowed_owners": [
+    {
+      "id": 1234567,
+      "login": "acme"
+    }
+  ]
+}
+```
+
+### 2. Politica de calidad de la organizacion
+Recupera los umbrales de calidad y las reglas bloqueadas para la organizacion o un repositorio especifico.
+
+```http
+GET /v1/policy?repo=acme%2Fbackend-api
+```
+
+Respuesta:
+```json
+{
+  "version": 1,
+  "hash": "7b8f9a2e...",
+  "config": {
+    "ci": {
+      "failBelow": 80
+    },
+    "rules": {
+      "ai-slop/swallowed-exception": "error"
+    },
+    "exclude": []
+  },
+  "locked": [
+    "ci.failBelow",
+    "rules.ai-slop/swallowed-exception"
+  ]
+}
+```
+
+### 3. Ingesta de ejecuciones del CLI
+Envia un informe de ejecucion generado por el CLI (`raigal ci` o `raigal scan`):
+
+```http
+POST /v1/runs
+Content-Type: application/json
+```
+
+Cuerpo de la solicitud (esquema estricto del contrato `Run`):
+```json
+{
+  "run_id": "c9bf9e57-1685-4c89-bafb-ff5af830be8a",
+  "command": "ci",
+  "repo": {
+    "provider": "github",
+    "slug": "acme/backend-api"
+  },
+  "owner_verified": true,
+  "git": {
+    "branch": "main",
+    "head_sha": "e4f5a6b7c8d9e0f1a2b3c4d5e6f7a8b9c0d1e2f3",
+    "base_ref": "main"
+  },
+  "ci": {
+    "provider": "github-actions",
+    "run_url": "https://github.com/acme/backend-api/actions/runs/123456"
+  },
+  "flags": ["changes"],
+  "cli_version": "0.2.5",
+  "started_at": "2026-10-21T10:00:00.000Z",
+  "ended_at": "2026-10-21T10:00:12.000Z",
+  "exit_code": 0,
+  "steps": [
+    { "seq": 0, "name": "engine:ai-slop", "ok": true, "ms": 45 },
+    { "seq": 1, "name": "engine:security", "ok": true, "ms": 32 }
+  ],
+  "report": {
+    "score": 92,
+    "scoreable": true,
+    "files_scanned": 12,
+    "findings": []
+  }
+}
+```
+
+Respuesta:
+```json
+{
+  "ok": true,
+  "run_id": "c9bf9e57-1685-4c89-bafb-ff5af830be8a"
+}
+```
+
+## Gestion de tokens
+
+Los tokens pueden crearse en el panel web o mediante la API de tokens:
+
+### Crear token de API
+```http
+POST /api/tokens
+Content-Type: application/json
+
+{
+  "name": "Runner de Produccion"
+}
+```
+
+Respuesta:
+```json
+{
+  "token": "rgl_live_8f3a9b1c7e2d...",
+  "prefix": "rgl_live_8f3a",
+  "name": "Runner de Produccion",
+  "id": "key_9b2e...",
+  "created_at": "2026-10-21T10:00:00.000Z"
+}
+```
+
+
+<Warning>
+  Guarde su token al crearlo. La cadena completa se muestra una sola vez. Raigal Cloud almacena un hash SHA-256 y no puede recuperar tokens perdidos.
+</Warning>
+
+
+### Gestion del dashboard y repositorios
+
+La gestion de repositorios, seguimiento de ramas y revocacion de tokens esta disponible a traves de la interfaz web en [app.raigal.dev/settings](https://app.raigal.dev/settings) utilizando su sesion autenticada de navegador.
