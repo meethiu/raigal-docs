@@ -18,12 +18,14 @@ Raigal incluye comandos para análisis locales, correcciones automáticas, sesio
 | `raigal agent [dir]` | Sesiones de reparación en worktrees aislados (Claude, Cursor, OpenCode) |
 | `raigal hook` | Gestiona hooks en tiempo real para agentes de IA |
 | `raigal report-pr-closed` | Sincroniza el ciclo de vida (cierre/fusión) de Pull Requests con Raigal Cloud |
+| `raigal telemetry` | Inspecciona el payload enviado al panel cloud y el estado de la cola de salida |
 | `raigal login` | Inicio de sesión interactivo vía navegador OAuth o token API |
 | `raigal logout` | Elimina credenciales locales y concesiones offline en caché |
 | `raigal whoami` | Muestra credenciales activas, usuario, organización y repositorios permitidos |
 | `raigal doctor` | Comprueba binarios del sistema, herramientas y motores |
 | `raigal rules` | Muestra el catálogo de reglas y pesos de puntuación |
 | `raigal init` | Crea el archivo de configuración y flujo opcional para CI |
+| `raigal mcp` | Ejecuta el servidor Model Context Protocol (MCP) mediante stdio |
 
 ## Referencia de comandos
 

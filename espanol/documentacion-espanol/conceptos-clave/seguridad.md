@@ -37,7 +37,7 @@ En pipelines de CI, contenedores Docker o scripts de automatización, configure 
   env:
     RAIGAL_TOKEN: ${{ secrets.RAIGAL_TOKEN }}
     RAIGAL_API_URL: ${{ secrets.RAIGAL_API_URL || 'https://app.raigal.dev' }}
-  run: npx @methiu/raigal scan .
+  run: npx -y @methiu/raigal@latest ci --changes --base origin/${{ github.base_ref || 'main' }}
 ```
 {% endtab %}
 
@@ -45,7 +45,7 @@ En pipelines de CI, contenedores Docker o scripts de automatización, configure 
 ```bash
 export RAIGAL_TOKEN="rgl_live_su_token_aqui"
 export RAIGAL_API_URL="https://app.raigal.dev"
-npx @methiu/raigal whoami
+raigal whoami
 ```
 {% endtab %}
 
@@ -53,7 +53,7 @@ npx @methiu/raigal whoami
 ```powershell
 $env:RAIGAL_TOKEN="rgl_live_su_token_aqui"
 $env:RAIGAL_API_URL="https://app.raigal.dev"
-npx @methiu/raigal whoami
+raigal whoami
 ```
 {% endtab %}
 {% endtabs %}

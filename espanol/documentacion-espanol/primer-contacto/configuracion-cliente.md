@@ -120,16 +120,19 @@ Los desarrolladores pueden autenticar sus terminales para enviar métricas y usa
 
 ```bash
 # Iniciar sesión en el navegador
-npx @methiu/raigal login
+raigal login
 
-# Comprobar la organización activa
-npx @methiu/raigal whoami
-```
+# Comprobar la organización activa y repositorios permitidos
+raigal whoami
 
-Para instalar hooks en Claude Code o Cursor:
+# Comprobar herramientas locales y entornos
+raigal doctor
 
-```bash
-npx @methiu/raigal hook install
+# Capturar línea base antes de escanear repositorios heredados
+raigal hook baseline
+
+# Instalar hooks de intercepción para agentes activos
+raigal hook install --claude
 ```
 
 ## Gestión de repositorios conectados
