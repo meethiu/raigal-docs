@@ -1,231 +1,120 @@
 {
-  "$schema": "https://docs.page/schema.json",
+  "$schema": "https://mintlify.com/docs.json",
   "name": "Raigal",
-  "description": "Code quality and AI anti-pattern detection for engineering teams.",
-  "theme": {
+  "theme": "mint",
+  "colors": {
     "primary": "#84cc16",
-    "primaryDark": "#a3e635",
-    "primaryLight": "#65a30d"
+    "light": "#a3e635",
+    "dark": "#65a30d"
   },
   "logo": {
     "light": "/assets/logo-light.svg",
-    "dark": "/assets/logo-dark.svg"
+    "dark": "/assets/logo-dark.svg",
+    "href": "https://app.raigal.dev"
   },
-  "tabs": [
-    {
-      "id": "en",
-      "title": "English",
-      "href": "/en"
-    },
-    {
-      "id": "es",
-      "title": "Español",
-      "href": "/es"
+  "favicon": "/assets/logo-light.svg",
+  "navigation": {
+    "languages": [
+      {
+        "language": "en",
+        "groups": [
+          {
+            "group": "Getting Started",
+            "pages": [
+              "en/index",
+              "en/getting-started/installation",
+              "en/getting-started/quickstart",
+              "en/getting-started/first-client-setup"
+            ]
+          },
+          {
+            "group": "Core Concepts",
+            "pages": [
+              "en/core-concepts/scoring",
+              "en/core-concepts/rules",
+              "en/core-concepts/security"
+            ]
+          },
+          {
+            "group": "CLI Reference",
+            "pages": [
+              "en/cli-reference/commands",
+              "en/cli-reference/configuration",
+              "en/cli-reference/hooks"
+            ]
+          },
+          {
+            "group": "Automation & CI/CD",
+            "pages": [
+              "en/automation-and-ci-cd/ci-cd",
+              "en/automation-and-ci-cd/pull-requests",
+              "en/automation-and-ci-cd/agent-repairs",
+              "en/automation-and-ci-cd/mcp-server"
+            ]
+          },
+          {
+            "group": "Cloud Platform",
+            "pages": [
+              "en/cloud-platform/architecture",
+              "en/cloud-platform/dashboard",
+              "en/cloud-platform/admin-api"
+            ]
+          }
+        ]
+      },
+      {
+        "language": "es",
+        "groups": [
+          {
+            "group": "Primer Contacto",
+            "pages": [
+              "es/index",
+              "es/primer-contacto/instalacion",
+              "es/primer-contacto/inicio-rapido",
+              "es/primer-contacto/configuracion-cliente"
+            ]
+          },
+          {
+            "group": "Conceptos Clave",
+            "pages": [
+              "es/conceptos-clave/puntuacion",
+              "es/conceptos-clave/reglas",
+              "es/conceptos-clave/seguridad"
+            ]
+          },
+          {
+            "group": "Referencia CLI",
+            "pages": [
+              "es/referencia-cli/comandos",
+              "es/referencia-cli/configuracion",
+              "es/referencia-cli/hooks"
+            ]
+          },
+          {
+            "group": "Automatización y CI/CD",
+            "pages": [
+              "es/automatizacion-y-ci-cd/ci-cd",
+              "es/automatizacion-y-ci-cd/pull-requests",
+              "es/automatizacion-y-ci-cd/reparacion-agentes",
+              "es/automatizacion-y-ci-cd/servidor-mcp"
+            ]
+          },
+          {
+            "group": "Plataforma Cloud",
+            "pages": [
+              "es/plataforma-cloud/arquitectura",
+              "es/plataforma-cloud/tablero",
+              "es/plataforma-cloud/api-admin"
+            ]
+          }
+        ]
+      }
+    ]
+  },
+  "footer": {
+    "socials": {
+      "github": "https://github.com/meethiu/raigal",
+      "website": "https://app.raigal.dev"
     }
-  ],
-  "social": {
-    "github": "https://github.com/meethiu/raigal",
-    "website": "https://app.raigal.dev"
-  },
-  "mcp": {
-    "enabled": true
-  },
-  "sidebar": [
-    {
-      "group": "Getting Started",
-      "tab": "en",
-      "pages": [
-        {
-          "title": "Overview",
-          "href": "/en"
-        },
-        {
-          "title": "Installation",
-          "href": "/en/getting-started/installation"
-        },
-        {
-          "title": "Quickstart",
-          "href": "/en/getting-started/quickstart"
-        },
-        {
-          "title": "Organization Setup",
-          "href": "/en/getting-started/first-client-setup"
-        }
-      ]
-    },
-    {
-      "group": "Core Concepts",
-      "tab": "en",
-      "pages": [
-        {
-          "title": "Scoring Engine",
-          "href": "/en/core-concepts/scoring"
-        },
-        {
-          "title": "Rules and Engines",
-          "href": "/en/core-concepts/rules"
-        },
-        {
-          "title": "Security Model",
-          "href": "/en/core-concepts/security"
-        }
-      ]
-    },
-    {
-      "group": "CLI Reference",
-      "tab": "en",
-      "pages": [
-        {
-          "title": "Commands and Flags",
-          "href": "/en/cli-reference/commands"
-        },
-        {
-          "title": "Configuration",
-          "href": "/en/cli-reference/configuration"
-        },
-        {
-          "title": "Agent Interception Hooks",
-          "href": "/en/cli-reference/hooks"
-        }
-      ]
-    },
-    {
-      "group": "Automation & CI/CD",
-      "tab": "en",
-      "pages": [
-        {
-          "title": "CI/CD Pipelines",
-          "href": "/en/automation-and-ci-cd/ci-cd"
-        },
-        {
-          "title": "Pull Request Checks",
-          "href": "/en/automation-and-ci-cd/pull-requests"
-        },
-        {
-          "title": "Agent Repairs",
-          "href": "/en/automation-and-ci-cd/agent-repairs"
-        },
-        {
-          "title": "MCP Server",
-          "href": "/en/automation-and-ci-cd/mcp-server"
-        }
-      ]
-    },
-    {
-      "group": "Cloud Platform",
-      "tab": "en",
-      "pages": [
-        {
-          "title": "Platform Architecture",
-          "href": "/en/cloud-platform/architecture"
-        },
-        {
-          "title": "Remediation Dashboard",
-          "href": "/en/cloud-platform/dashboard"
-        },
-        {
-          "title": "Organization API",
-          "href": "/en/cloud-platform/admin-api"
-        }
-      ]
-    },
-    {
-      "group": "Primer Contacto",
-      "tab": "es",
-      "pages": [
-        {
-          "title": "Visión General",
-          "href": "/es"
-        },
-        {
-          "title": "Instalación",
-          "href": "/es/primer-contacto/instalacion"
-        },
-        {
-          "title": "Inicio Rápido",
-          "href": "/es/primer-contacto/inicio-rapido"
-        },
-        {
-          "title": "Configuración de Organización",
-          "href": "/es/primer-contacto/configuracion-cliente"
-        }
-      ]
-    },
-    {
-      "group": "Conceptos Clave",
-      "tab": "es",
-      "pages": [
-        {
-          "title": "Motor de Puntuación",
-          "href": "/es/conceptos-clave/puntuacion"
-        },
-        {
-          "title": "Reglas y Motores",
-          "href": "/es/conceptos-clave/reglas"
-        },
-        {
-          "title": "Modelo de Seguridad",
-          "href": "/es/conceptos-clave/seguridad"
-        }
-      ]
-    },
-    {
-      "group": "Referencia CLI",
-      "tab": "es",
-      "pages": [
-        {
-          "title": "Comandos y Opciones",
-          "href": "/es/referencia-cli/comandos"
-        },
-        {
-          "title": "Configuración",
-          "href": "/es/referencia-cli/configuracion"
-        },
-        {
-          "title": "Hooks de Intercepción",
-          "href": "/es/referencia-cli/hooks"
-        }
-      ]
-    },
-    {
-      "group": "Automatización y CI/CD",
-      "tab": "es",
-      "pages": [
-        {
-          "title": "Pipelines de CI/CD",
-          "href": "/es/automatizacion-y-ci-cd/ci-cd"
-        },
-        {
-          "title": "Puerta en Pull Requests",
-          "href": "/es/automatizacion-y-ci-cd/pull-requests"
-        },
-        {
-          "title": "Reparación con Agentes",
-          "href": "/es/automatizacion-y-ci-cd/reparacion-agentes"
-        },
-        {
-          "title": "Servidor MCP",
-          "href": "/es/automatizacion-y-ci-cd/servidor-mcp"
-        }
-      ]
-    },
-    {
-      "group": "Plataforma Cloud",
-      "tab": "es",
-      "pages": [
-        {
-          "title": "Arquitectura",
-          "href": "/es/plataforma-cloud/arquitectura"
-        },
-        {
-          "title": "Panel de Remediación",
-          "href": "/es/plataforma-cloud/tablero"
-        },
-        {
-          "title": "API de Organización",
-          "href": "/es/plataforma-cloud/api-admin"
-        }
-      ]
-    }
-  ]
+  }
 }
