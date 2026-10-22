@@ -37,12 +37,12 @@ Cada regla se clasifica en un nivel de impacto que define su multiplicador de de
 
 | Nivel | Multiplicador | Tope por defecto | Tipos de hallazgos habituales |
 |---|---|---|---|
-| `strict` | `1.0*` | Sin tope (`maxPerRule`) | Secretos filtrados, inyección en prompts, excepciones silenciadas |
-| `standard` | `1.0*` | Sin tope (`maxPerRule`) | Diagnósticos estándar de linters y comprobaciones fiables de defectos |
-| `maintainability` | `0.75*` | 24 | Complejidad ciclomática alta, funciones excesivamente largas |
-| `mechanical` | `0.5*` | 16 | Importaciones no utilizadas, variables locales sin referencia |
-| `style` | `0.5*` | 8 | Variaciones de formato, comentarios triviales |
-| `advisory` | `0.25*` | 8 | Auditorías omitidas y avisos informativos |
+| `strict` | `1.0x` | Sin tope (`maxPerRule`) | Secretos filtrados, inyección en prompts, excepciones silenciadas |
+| `standard` | `1.0x` | Sin tope (`maxPerRule`) | Diagnósticos estándar de linters y comprobaciones fiables de defectos |
+| `maintainability` | `0.75x` | 24 | Complejidad ciclomática alta, funciones excesivamente largas |
+| `mechanical` | `0.5x` | 16 | Importaciones no utilizadas, variables locales sin referencia |
+| `style` | `0.5x` | 8 | Variaciones de formato, comentarios triviales |
+| `advisory` | `0.25x` | 8 | Auditorías omitidas y avisos informativos |
 
 ## Catálogo de reglas habituales
 

@@ -9,17 +9,13 @@ Raigal asigna a cada repositorio una puntuación de calidad calibrada entre 0 y 
 
 Raigal evalúa las incidencias detectadas por sus seis motores de diagnóstico mediante un escalado logarítmico normalizado por densidad:
 
-
 ```text
-Densidad de Deducción = (Sum of Deducciones Acotadas{Archivos Fuente Efectivos + S
+Densidad de Deducción = (Suma de Deducciones Acotadas) / (Archivos Fuente Efectivos + S)
 ```
 
-
-
 ```text
-Puntuación = max\left(0, \operatorname{redondear\left(100 - (100 * \ln(1 + 5 * Densidad de Deducción){\ln(101 + 5 * Densidad de Deducción)\right)\right)
+Puntuación = max(0, redondear(100 - (100 * ln(1 + 5 * Densidad de Deducción)) / ln(101 + 5 * Densidad de Deducción)))
 ```
-
 
 Donde:
 * **Constante de suavizado (`S`)**: Por defecto es `5` en la configuración (con reserva interna de `10`). Evita que un aviso aislado en un proyecto pequeño de dos archivos hunda la puntuación.
@@ -30,11 +26,9 @@ Donde:
 
 Cada aviso de diagnóstico genera una penalización base según su severidad y el motor que lo detectó:
 
-
 ```text
 Deducción Base = Multiplicador de Severidad * Peso del Motor * Multiplicador de Nivel
 ```
-
 
 ### Multiplicadores de severidad
 * `error`: `3.0` (además activa código de salida 1 de inmediato en CI)
@@ -55,73 +49,47 @@ Para evitar que problemas de estilo muy repetidos (como 500 comas finales omitid
 
 | Nivel de impacto | Multiplicador | Tope base | Hallazgos habituales |
 |---|---|---|---|
-| `strict` | `1.0*` | Sin tope (`maxPerRule`) | Errores de sintaxis, secretos filtrados, promesas no controladas |
-| `standard` | `1.0*` | Sin tope (`maxPerRule`) | Diagnósticos estándar de linter, advertencias de compilador |
-| `maintainability` | `0.75*` | 24 | Complejidad ciclomática alta, funciones excesivamente largas |
-| `mechanical` | `0.5*` | 16 | Importaciones no utilizadas, variables locales sin referencia |
-| `style` | `0.5*` | 8 | Variaciones de formato, discrepancias de espaciado |
-| `advisory` | `0.25*` | 8 | Avisos informativos, documentación faltante |
+| `strict` | `1.0x` | Sin tope (`maxPerRule`) | Errores de sintaxis, secretos filtrados, promesas no controladas |
+| `standard` | `1.0x` | Sin tope (`maxPerRule`) | Diagnósticos estándar de linter, advertencias de compilador |
+| `maintainability` | `0.75x` | 24 | Complejidad ciclomática alta, funciones excesivamente largas |
+| `mechanical` | `0.5x` | 16 | Importaciones no utilizadas, variables locales sin referencia |
+| `style` | `0.5x` | 8 | Variaciones de formato, discrepancias de espaciado |
+| `advisory` | `0.25x` | 8 | Avisos informativos, documentación faltante |
 
 ### Escalado según el tamaño del repositorio
 El tope efectivo de cada regla escala proporcionalmente con el número de archivos:
 
 ```text
-Escala de Tope = max\left(1, (Archivos Fuente Efectivos{10\right)
+Escala de Tope = max(1, Archivos Fuente Efectivos / 10)
 ```
-
 
 ```text
 Tope Efectivo = min(maxPerRule, Tope del Nivel) * Escala de Tope
 ```
-
 
 ## Ejemplos prácticos
 
 ### Ejemplo 1: Microservicio (10 archivos, 1 advertencia)
 * **Hallazgo**: 1 `ai-slop/swallowed-exception` (`warning`, severidad `1.0`, motor `1.0`, nivel *strict* `1.0`).
 * **Cálculo**:
-  
 ```text
-Deducción = 1.0, \quad Densidad = (1.0{10 + 5 = (1.0{15 ≈ 0.0667
-```
-
-  
-```text
+Deducción = 1.0
+Densidad = 1.0 / (10 + 5) = 1.0 / 15 ≈ 0.0667
 Densidad Escalada = 0.0667 * 5.0 = 0.3333
+Puntuación = 100 - (100 * ln(1.3333) / ln(101.3333)) ≈ 100 - 6.23 = 94 (Healthy)
 ```
-
-  
-```text
-Puntuación = 100 - (100 * \ln(1.3333){\ln(101.3333) ≈ 100 - 6.23 = 94 \quad (Healthy)
-```
-
 
 ### Ejemplo 2: Monolito (200 archivos, 500 avisos de formato)
 * **Hallazgos**: 500 comas finales omitidas (`format/trailing-comma`, `info` `0.25`, motor `0.3`, nivel *style* `0.5`, tope `8`).
 * **Cálculo**:
-  
 ```text
 Deducciones Brutas = 500 * 0.25 * 0.3 * 0.5 = 18.75
-```
-
-  
-```text
-Escala de Tope = (200{10 = 20, \quad Tope Efectivo = 8 * 20 = 160
-```
-
-  
-```text
+Escala de Tope = 200 / 10 = 20
+Tope Efectivo = 8 * 20 = 160
 Deducciones Acotadas = min(18.75, 160) = 18.75
-```
-
-  
-```text
-Densidad = (18.75{200 + 5 = (18.75{205 ≈ 0.0915, \quad Densidad Escalada = 0.4573
-```
-
-  
-```text
-Puntuación = 100 - (100 * \ln(1.4573){\ln(101.4573) ≈ 100 - 8.15 = 92 \quad (Healthy)
+Densidad = 18.75 / (200 + 5) = 18.75 / 205 ≈ 0.0915
+Densidad Escalada = 0.0915 * 5.0 = 0.4573
+Puntuación = 100 - (100 * ln(1.4573) / ln(101.4573)) ≈ 100 - 8.15 = 92 (Healthy)
 ```
 
 

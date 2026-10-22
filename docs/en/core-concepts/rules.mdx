@@ -37,12 +37,12 @@ Every rule is classified into an impact tier that determines its deduction multi
 
 | Tier | Multiplier | Baseline cap | Typical finding types |
 |---|---|---|---|
-| `strict` | `1.0*` | Uncapped (`maxPerRule`) | Leaked secrets, prompt injections, swallowed exceptions |
-| `standard` | `1.0*` | Uncapped (`maxPerRule`) | General linter diagnostics, reliable defect checks |
-| `maintainability` | `0.75*` | 24 | Cyclomatic complexity, oversized functions, thin wrappers |
-| `mechanical` | `0.5*` | 16 | Dead imports, unreferenced local variables |
-| `style` | `0.5*` | 8 | Formatting variances, trivial comments |
-| `advisory` | `0.25*` | 8 | Skipped audits, informational notices |
+| `strict` | `1.0x` | Uncapped (`maxPerRule`) | Leaked secrets, prompt injections, swallowed exceptions |
+| `standard` | `1.0x` | Uncapped (`maxPerRule`) | General linter diagnostics, reliable defect checks |
+| `maintainability` | `0.75x` | 24 | Cyclomatic complexity, oversized functions, thin wrappers |
+| `mechanical` | `0.5x` | 16 | Dead imports, unreferenced local variables |
+| `style` | `0.5x` | 8 | Formatting variances, trivial comments |
+| `advisory` | `0.25x` | 8 | Skipped audits, informational notices |
 
 ## Common pattern rules
 

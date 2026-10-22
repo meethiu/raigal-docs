@@ -3,7 +3,7 @@ title: "Servidor Raigal MCP"
 description: "Conecte Raigal MCP a Claude Code, Cursor, Claude Desktop, Windsurf, Cline y Antigravity."
 ---
 
-El servidor Model Context Protocol (MCP) de Raigal conecta los motores de calidad y detección de patrones directamente con sus agentes de programación e IDEs mediante `npx -y -p @methiu/raigal raigal-mcp` (o `npx -y @methiu/raigal mcp`).
+El servidor Model Context Protocol (MCP) de Raigal conecta los motores de calidad y detección de patrones directamente con sus agentes de programación e IDEs mediante `npx --yes @methiu/raigal@latest mcp`.
 
 ## Requisitos y autenticación
 
@@ -23,13 +23,13 @@ Raigal MCP se autentica de dos formas:
 Ejecute el comando de configuración en su terminal:
 
 ```bash
-claude mcp add raigal -- npx -y -p @methiu/raigal raigal-mcp
+claude mcp add raigal -- npx --yes @methiu/raigal@latest mcp
 ```
 
 Con token de API explícito:
 
 ```bash
-claude mcp add raigal -e RAIGAL_TOKEN=rgl_live_... -- npx -y -p @methiu/raigal raigal-mcp
+claude mcp add raigal -e RAIGAL_TOKEN=rgl_live_... -- npx --yes @methiu/raigal@latest mcp
 ```
 
   </Tab>
@@ -44,7 +44,7 @@ claude mcp add raigal -e RAIGAL_TOKEN=rgl_live_... -- npx -y -p @methiu/raigal r
 4. Configure el servidor:
    - Nombre: `raigal`
    - Tipo: `command`
-   - Comando: `npx -y -p @methiu/raigal raigal-mcp`
+   - Comando: `npx --yes @methiu/raigal@latest mcp`
 
 Para configurar vía `.cursor/mcp.json`:
 
@@ -53,7 +53,7 @@ Para configurar vía `.cursor/mcp.json`:
   "mcpServers": {
     "raigal": {
       "command": "npx",
-      "args": ["-y", "-p", "@methiu/raigal", "raigal-mcp"],
+      "args": ["--yes", "@methiu/raigal@latest", "mcp"],
       "env": {
         "RAIGAL_TOKEN": "rgl_live_SU_TOKEN_AQUI"
       }
@@ -77,7 +77,7 @@ Agregue el servidor a su archivo de configuración de Claude Desktop:
   "mcpServers": {
     "raigal": {
       "command": "npx",
-      "args": ["-y", "-p", "@methiu/raigal", "raigal-mcp"],
+      "args": ["--yes", "@methiu/raigal@latest", "mcp"],
       "env": {
         "RAIGAL_TOKEN": "rgl_live_SU_TOKEN_AQUI"
       }
@@ -99,7 +99,7 @@ Agregue el servidor a `~/.codeium/windsurf/mcp_config.json`:
   "mcpServers": {
     "raigal": {
       "command": "npx",
-      "args": ["-y", "-p", "@methiu/raigal", "raigal-mcp"]
+      "args": ["--yes", "@methiu/raigal@latest", "mcp"]
     }
   }
 }
@@ -120,7 +120,7 @@ Agregue el servidor a `~/.codeium/windsurf/mcp_config.json`:
   "mcpServers": {
     "raigal": {
       "command": "npx",
-      "args": ["-y", "-p", "@methiu/raigal", "raigal-mcp"]
+      "args": ["--yes", "@methiu/raigal@latest", "mcp"]
     }
   }
 }
@@ -139,7 +139,7 @@ Agregue el servidor a `~/.gemini/config/mcp_config.json` o a `.agents/mcp_config
   "mcpServers": {
     "raigal": {
       "command": "npx",
-      "args": ["-y", "-p", "@methiu/raigal", "raigal-mcp"]
+      "args": ["--yes", "@methiu/raigal@latest", "mcp"]
     }
   }
 }

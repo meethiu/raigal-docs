@@ -7,13 +7,13 @@ Raigal Cloud (`https://app.raigal.dev`) unifica los datos de escaneo procedentes
 
 ```mermaid
 graph LR
-    subgraph Telemetria entrante
+    subgraph Incoming ["Telemetria Entrante"]
         Scan[raigal scan]
         CI[raigal ci - PR Gate]
         Agent[raigal agent --pr]
     end
 
-    subgraph Panel de Raigal Cloud
+    subgraph Dashboard ["Panel de Raigal Cloud"]
         Stage1[1. Pestaña Errors]
         Stage2[2. Pestaña Warnings]
         Stage3[3. Pestaña Pull Requests]

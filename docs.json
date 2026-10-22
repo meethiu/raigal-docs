@@ -10,6 +10,14 @@
   "header": {
     "links": [
       {
+        "title": "English",
+        "href": "/en"
+      },
+      {
+        "title": "Español",
+        "href": "/es"
+      },
+      {
         "title": "Dashboard",
         "href": "https://app.raigal.dev"
       },

@@ -7,13 +7,13 @@ Raigal Cloud (`https://app.raigal.dev`) aggregates scan telemetry from local dev
 
 ```mermaid
 graph LR
-    subgraph Incoming Telemetry
+    subgraph Incoming ["Incoming Telemetry"]
         Scan[raigal scan]
         CI[raigal ci - PR Gate]
         Agent[raigal agent --pr]
     end
 
-    subgraph Raigal Cloud Dashboard
+    subgraph Dashboard ["Raigal Cloud Dashboard"]
         Stage1[1. Errors Tab]
         Stage2[2. Warnings Tab]
         Stage3[3. Pull Requests Tab]

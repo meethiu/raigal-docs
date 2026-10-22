@@ -9,18 +9,18 @@ Raigal Cloud (`https://app.raigal.dev`) is the web application and coordination 
 
 ```mermaid
 graph TD
-    subgraph Client Compute Environments
+    subgraph ClientCompute ["Client Compute Environments"]
         Dev["Local Workstation: raigal scan / fix"]
         Agent["Autonomous Agent: raigal agent --pr"]
         CI["GitHub Actions / CI Runners"]
     end
 
-    subgraph GitHub Cloud
+    subgraph GitHubCloud ["GitHub Cloud"]
         GHApp["Official GitHub App (raigal-cloud)"]
         GHChecks["GitHub Checks API & Status"]
     end
 
-    subgraph Raigal Cloud Control Plane (app.raigal.dev)
+    subgraph ControlPlane ["Raigal Cloud Control Plane (app.raigal.dev)"]
         Gateway["REST API Gateway (HTTPS / TLS 1.3)"]
         Auth["Clerk Identity & GitHub Organization Sync"]
         OIDC["Zero-Token GitHub Actions OIDC Verifier"]
@@ -29,7 +29,7 @@ graph TD
         Store[("Encrypted Multi-Tenant Metadata Store")]
     end
 
-    subgraph Customer Management UI
+    subgraph CustomerUI ["Customer Management UI"]
         Board["4-Stage Remediation Kanban"]
         Drawers["Contextual Inspection Drawers"]
         Telemetry["Execution History & Diff Audits"]
