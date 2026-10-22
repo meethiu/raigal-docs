@@ -7,95 +7,47 @@ Raigal catches the sloppy patterns AI coding tools leave behind: redundant comme
 
 Connected to [Raigal Cloud](https://app.raigal.dev) and the official [Raigal GitHub App](https://github.com/apps/raigal-cloud), it evaluates pull requests, protects main branches, tracks issues on a 4-stage board, and coordinates automated fixes with local coding agents.
 
-<Info>
-  Raigal runs AST parsing, linting, and pattern checks locally inside your runner. Your source code is never uploaded to Raigal servers. During pull request checks, an in-memory secret-masked patch diff (under 20 KB) is sent to display changes in the dashboard.
-</Info>
+<Check>
+  **Your source code is never uploaded to Raigal servers**. During pull request checks, an in-memory secret-masked patch diff (under 20 KB) is sent to display changes in the dashboard.
+</Check>
 
 ## What Raigal catches
 
 AI assistants like Claude Code, Cursor, Copilot, and OpenCode speed up development, but frequently leave behind structural defects:
 
-* Narrative comments that repeat function names or obvious code.
-* Empty `catch` blocks that hide runtime failures.
-* Unsafe type assertions (`as any`, `as unknown as T`) that bypass the compiler.
-* Leftover debugging statements, console logs, and unreachable branches.
-* Unsanitized SQL, dynamic `eval()`, and unsandboxed agent tools.
+- Narrative comments that repeat function names or obvious code.
+- Empty `catch` blocks that hide runtime failures.
+- Unsafe type assertions (`as any`, `as unknown as T`) that bypass the compiler.
+- Leftover debugging statements, console logs, and unreachable branches.
+- Unsanitized SQL, dynamic `eval()`, and unsandboxed agent tools.
 
 Raigal runs through local agent hooks, in CI on every pull request, and during terminal audits.
 
 ## Components
 
-<table>
-  <thead>
-    <tr>
-      <th>Component</th>
-      <th>Description</th>
-      <th>Link</th>
-    </tr>
-  </thead>
-  <tbody>
-    <tr>
-      <td><strong>Raigal Cloud</strong></td>
-      <td>Web dashboard at <code>app.raigal.dev</code> with issue tracking, score history, and team metrics.</td>
-      <td><a href="/cloud-platform/dashboard">Cloud dashboard</a></td>
-    </tr>
-    <tr>
-      <td><strong>GitHub App</strong></td>
-      <td>Pull request checks, commit statuses, and branch protection enforcement.</td>
-      <td><a href="/automation-and-ci-cd/pull-requests">GitHub App setup</a></td>
-    </tr>
-    <tr>
-      <td><strong>Scoring engine (0-100)</strong></td>
-      <td>Density-weighted score normalized by file count, with dynamic caps and logarithmic scaling.</td>
-      <td><a href="/core-concepts/scoring">Scoring engine</a></td>
-    </tr>
-    <tr>
-      <td><strong>CLI and agent hooks</strong></td>
-      <td>Pre-commit checks, safe autofixes (<code>raigal fix</code>), and real-time interception for coding agents.</td>
-      <td><a href="/cli-reference/commands">CLI reference</a></td>
-    </tr>
-    <tr>
-      <td><strong>Agent repairs</strong></td>
-      <td>Isolated git worktrees where local agents fix issues and open pull requests.</td>
-      <td><a href="/automation-and-ci-cd/agent-repairs">Agent repairs</a></td>
-    </tr>
-    <tr>
-      <td><strong>GitHub Actions OIDC</strong></td>
-      <td>Tokenless authentication for CI runners using cryptographic GitHub OIDC tokens.</td>
-      <td><a href="/core-concepts/security">Security model</a></td>
-    </tr>
-    <tr>
-      <td><strong>Raigal MCP</strong></td>
-      <td>Model Context Protocol server connecting Raigal to Claude Code, Cursor, Windsurf, Cline, and Antigravity.</td>
-      <td><a href="/automation-and-ci-cd/mcp-server">MCP server</a></td>
-    </tr>
-  </tbody>
-</table>
+| Component | Description | Link |
+| --- | --- | --- |
+| <strong>Raigal Cloud</strong> | Web dashboard at <code>app.raigal.dev</code> with issue tracking, score history, and team metrics. | <a href="/cloud-platform/dashboard">Cloud dashboard</a> |
+| <strong>GitHub App</strong> | Pull request checks, commit statuses, and branch protection enforcement. | <a href="/automation-and-ci-cd/pull-requests">GitHub App setup</a> |
+| <strong>Scoring engine (0-100)</strong> | Density-weighted score normalized by file count, with dynamic caps and logarithmic scaling. | <a href="/core-concepts/scoring">Scoring engine</a> |
+| <strong>CLI and agent hooks</strong> | Pre-commit checks, safe autofixes (<code>raigal fix</code>), and real-time interception for coding agents. | <a href="/cli-reference/commands">CLI reference</a> |
+| <strong>Agent repairs</strong> | Isolated git worktrees where local agents fix issues and open pull requests. | <a href="/automation-and-ci-cd/agent-repairs">Agent repairs</a> |
+| <strong>GitHub Actions OIDC</strong> | Tokenless authentication for CI runners using cryptographic GitHub OIDC tokens. | <a href="/core-concepts/security">Security model</a> |
+| <strong>Raigal MCP</strong> | Model Context Protocol server connecting Raigal to Claude Code, Cursor, Windsurf, Cline, and Antigravity. | <a href="/automation-and-ci-cd/mcp-server">MCP server</a> |
 
 ## Getting started
 
 <Steps>
   <Step title="1. Sign in to Raigal Cloud">
-
-Create a workspace at [app.raigal.dev](https://app.raigal.dev) with a 14-day evaluation trial and invite your team. [Organization onboarding guide](/getting-started/first-client-setup)
-
+    Create a workspace at [app.raigal.dev](https://app.raigal.dev) with a 14-day evaluation trial and invite your team. [Organization onboarding guide](/getting-started/first-client-setup)
   </Step>
-
   <Step title="2. Install the Raigal GitHub App">
-
-Connect your repositories with the [Raigal GitHub App](https://github.com/apps/raigal-cloud) to run checks on pull requests. [Pull request checks](/automation-and-ci-cd/pull-requests)
-
+    Connect your repositories with the [Raigal GitHub App](https://github.com/apps/raigal-cloud) to run checks on pull requests. [Pull request checks](/automation-and-ci-cd/pull-requests)
   </Step>
-
   <Step title="3. Add the CI workflow">
-
-Add a GitHub Actions workflow to check pull requests and send scores to your dashboard. [CI/CD pipelines](/automation-and-ci-cd/ci-cd)
-
+    Add a GitHub Actions workflow to check pull requests and send scores to your dashboard. [CI/CD pipelines](/automation-and-ci-cd/ci-cd)
   </Step>
-
   <Step title="4. Set up local tools and hooks">
-
-Install the CLI (`raigal scan`, `raigal fix`) and set up interception hooks for Claude Code or Cursor. [Quickstart guide](/getting-started/quickstart)
-
+    Install the CLI (`raigal scan`, `raigal fix`) and set up interception hooks for Claude Code or Cursor. [Quickstart guide](/getting-started/quickstart)
   </Step>
 </Steps>
