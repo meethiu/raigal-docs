@@ -12,7 +12,10 @@
     "dark": "/assets/logo-dark.svg",
     "href": "https://app.raigal.dev"
   },
-  "favicon": "/assets/logo-light.svg",
+  "favicon": {
+    "light": "/images/raigal_small_dark_tinylogo_full.png",
+    "dark": "/images/raigal_small_dark_tinylogo_full.png"
+  },
   "navigation": {
     "languages": [
       {
