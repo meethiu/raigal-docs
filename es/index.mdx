@@ -3,99 +3,51 @@ title: "Visión general de Raigal"
 description: "Control de calidad de código y detección de patrones de IA para equipos de ingeniería."
 ---
 
-Raigal detecta los malos patrones que suelen dejar los asistentes de código de IA: comentarios obvios, errores silenciados en bloques catch, conversiones de tipos inseguras (`as any`) y llamadas de riesgo. Reúne formato, linters, análisis de complejidad y seguridad en un solo comando que devuelve una nota de 0 a 100.
+Raigal detecta los malos patrones que suelen dejar los asistentes de código de IA: comentarios obvios, errores silenciados en bloques catch, conversiones de tipos inseguras y llamadas de riesgo. Reúne formato, linters, análisis de complejidad y seguridad en un solo comando que devuelve una nota de 0 a 100.
 
-Junto con [Raigal Cloud](https://app.raigal.dev) y la [GitHub App oficial](https://github.com/apps/raigal-cloud), evalúa pull requests, bloquea fusiones si no se cumplen los mínimos de calidad, organiza los problemas en un tablero de 4 fases y coordina sesiones de reparación con agentes de código.
+Junto con [Raigal Cloud](https://app.raigal.dev) y la [GitHub App](https://github.com/apps/raigal-cloud), evalúa pull requests, bloquea fusiones si no se cumplen los mínimos de calidad, organiza los problemas en un tablero de 4 fases y coordina sesiones de reparación con agentes de código.
 
-<Info>
-  Raigal analiza el código en tu máquina o runner de CI. Tu código fuente completo nunca se envía ni se almacena en los servidores de Raigal. En las revisiones de pull requests, solo se envía un diff seguro con secretos enmascarados (de menos de 20 KB) para mostrar los cambios en el panel.
-</Info>
+<Check>
+  **Tu código fuente completo nunca se envía ni se almacena en los servidores de Raigal**. En las revisiones de pull requests, solo se envía un diff seguro con secretos enmascarados para mostrar los cambios en el panel.
+</Check>
 
 ## Qué detecta Raigal
 
 Herramientas como Claude Code, Cursor, Copilot u OpenCode aceleran el desarrollo, pero suelen dejar defectos repetitivos:
 
-* Comentarios narrativos que solo repiten lo que ya dice el código.
-* Bloques `catch` vacíos o excepciones silenciadas sin registrar.
-* Aserciones de tipo laxas (`as any`, `as unknown as T`) para saltarse el tipado.
-* Llamadas a `console.log`, código inaccesible o depuraciones olvidadas.
-* Consultas SQL concatenadas, llamadas a `eval()` o herramientas de agentes sin aislamiento.
+- Comentarios narrativos que solo repiten lo que ya dice el código.
+- Bloques `catch` vacíos o excepciones silenciadas sin registrar.
+- Aserciones de tipo laxas (`as any`, `as unknown as T`) para saltarse el tipado.
+- Llamadas a `console.log`, código inaccesible o depuraciones olvidadas.
+- Consultas SQL concatenadas, llamadas a `eval()` o herramientas de agentes sin aislamiento.
 
 Raigal funciona en local mediante hooks para agentes, en CI en cada pull request y mediante escaneos directos en el terminal.
 
 ## Componentes
 
-<table>
-  <thead>
-    <tr>
-      <th>Componente</th>
-      <th>Descripción</th>
-      <th>Enlace</th>
-    </tr>
-  </thead>
-  <tbody>
-    <tr>
-      <td><strong>Raigal Cloud</strong></td>
-      <td>Panel web en <code>app.raigal.dev</code> con seguimiento de problemas, historial de puntuación y métricas del equipo.</td>
-      <td><a href="/es/cloud-platform/dashboard">Panel web</a></td>
-    </tr>
-    <tr>
-      <td><strong>GitHub App</strong></td>
-      <td>Comprobaciones en pull requests, estados de commit y protección de ramas.</td>
-      <td><a href="/es/automation-and-ci-cd/pull-requests">Instalación de la GitHub App</a></td>
-    </tr>
-    <tr>
-      <td><strong>Motor de puntuación (0-100)</strong></td>
-      <td>Nota ponderada por densidad y número de archivos, con topes dinámicos y escala logarítmica.</td>
-      <td><a href="/es/core-concepts/scoring">Motor de puntuación</a></td>
-    </tr>
-    <tr>
-      <td><strong>CLI y hooks para agentes</strong></td>
-      <td>Comprobaciones pre-commit, correcciones automáticas (`raigal fix`) e intercepción en tiempo real de cambios de agentes.</td>
-      <td><a href="/es/cli-reference/commands">Referencia de la CLI</a></td>
-    </tr>
-    <tr>
-      <td><strong>Reparación con agentes</strong></td>
-      <td>Entornos git aislados donde agentes locales corrigen problemas y abren pull requests automáticamente.</td>
-      <td><a href="/es/automation-and-ci-cd/agent-repairs">Reparación con agentes</a></td>
-    </tr>
-    <tr>
-      <td><strong>OIDC en GitHub Actions</strong></td>
-      <td>Autenticación sin secretos fijos para runners de CI mediante tokens criptográficos de GitHub.</td>
-      <td><a href="/es/core-concepts/security">Modelo de seguridad</a></td>
-    </tr>
-    <tr>
-      <td><strong>Servidor MCP</strong></td>
-      <td>Servidor Model Context Protocol que conecta Raigal con Claude Code, Cursor, Windsurf, Cline y Antigravity.</td>
-      <td><a href="/es/automation-and-ci-cd/mcp-server">Servidor MCP</a></td>
-    </tr>
-  </tbody>
-</table>
+| Componente | Descripción | Enlace |
+| --- | --- | --- |
+| <strong>Raigal Cloud</strong> | Panel web en <code>app.raigal.dev</code> con seguimiento de problemas, historial de puntuación y métricas del equipo. | <a href="/es/cloud-platform/dashboard">Panel web</a> |
+| <strong>GitHub App</strong> | Comprobaciones en pull requests, estados de commit y protección de ramas. | <a href="/es/automation-and-ci-cd/pull-requests">Instalación de la GitHub App</a> |
+| <strong>Motor de puntuación (0-100)</strong> | Nota ponderada por densidad y número de archivos, con topes dinámicos y escala logarítmica. | <a href="/es/core-concepts/scoring">Motor de puntuación</a> |
+| <strong>CLI y hooks para agentes</strong> | Comprobaciones pre-commit, correcciones automáticas (`raigal fix`) e intercepción en tiempo real de cambios de agentes. | <a href="/es/cli-reference/commands">Referencia de la CLI</a> |
+| <strong>Reparación con agentes</strong> | Entornos git aislados donde agentes locales corrigen problemas y abren pull requests automáticamente. | <a href="/es/automation-and-ci-cd/agent-repairs">Reparación con agentes</a> |
+| <strong>OIDC en GitHub Actions</strong> | Autenticación sin secretos fijos para runners de CI mediante tokens criptográficos de GitHub. | <a href="/es/core-concepts/security">Modelo de seguridad</a> |
+| <strong>Servidor MCP</strong> | Servidor Model Context Protocol que conecta Raigal con Claude Code, Cursor, Windsurf, Cline y Antigravity. | <a href="/es/automation-and-ci-cd/mcp-server">Servidor MCP</a> |
 
 ## Primeros pasos
 
 <Steps>
   <Step title="1. Inicia sesión en Raigal Cloud">
-
-Crea el espacio de trabajo de tu organización en [app.raigal.dev](https://app.raigal.dev) con una prueba de 14 días e invita a tu equipo. [Guía de configuración de la organización](/es/getting-started/first-client-setup)
-
+    Crea el espacio de trabajo de tu organización en [app.raigal.dev](https://app.raigal.dev) con una prueba de 14 días e invita a tu equipo. [Guía de configuración de la organización](/es/getting-started/first-client-setup)
   </Step>
-
   <Step title="2. Instala la GitHub App de Raigal">
-
-Conecta tus repositorios con la [GitHub App oficial de Raigal](https://github.com/apps/raigal-cloud) para revisar los pull requests automáticamente. [Control de calidad en pull requests](/es/automation-and-ci-cd/pull-requests)
-
+    Conecta tus repositorios con la [GitHub App oficial de Raigal](https://github.com/apps/raigal-cloud) para revisar los pull requests automáticamente. [Control de calidad en pull requests](/es/automation-and-ci-cd/pull-requests)
   </Step>
-
   <Step title="3. Añade el flujo de CI">
-
-Configura GitHub Actions para evaluar cada pull request y enviar las notas al panel web. [Pipelines de CI/CD](/es/automation-and-ci-cd/ci-cd)
-
+    Configura GitHub Actions para evaluar cada pull request y enviar las notas al panel web. [Pipelines de CI/CD](/es/automation-and-ci-cd/ci-cd)
   </Step>
-
   <Step title="4. Configura las herramientas locales y hooks">
-
-Instala la CLI (`raigal scan`, `raigal fix`) y activa los hooks para Claude Code o Cursor. [Guía de inicio rápido](/es/getting-started/quickstart)
-
+    Instala la CLI (`raigal scan`, `raigal fix`) y activa los hooks para Claude Code o Cursor. [Guía de inicio rápido](/es/getting-started/quickstart)
   </Step>
 </Steps>
